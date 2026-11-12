@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { signIn } from "@/auth";
+import { MarcaGiro } from "@/components/marca";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Entrar · Giro" };
@@ -9,20 +10,6 @@ const MENSAGENS: Record<string, string> = {
   AccessDenied: "Este e-mail não tem acesso ao Giro. Entre com a conta autorizada.",
 };
 const MENSAGEM_PADRAO = "Não foi possível entrar agora. Tente de novo.";
-
-// Marca: roleta de 4 quadrantes (Brasa/tinta), centro vazado, ponteiro dourado.
-function MarcaGiro({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 100 108" className={className} aria-hidden="true">
-      <path d="M50 64 L50 24 A40 40 0 0 1 90 64 Z" className="fill-ac" />
-      <path d="M50 64 L90 64 A40 40 0 0 1 50 104 Z" className="fill-ink" />
-      <path d="M50 64 L50 104 A40 40 0 0 1 10 64 Z" className="fill-ac" />
-      <path d="M50 64 L10 64 A40 40 0 0 1 50 24 Z" className="fill-ink" />
-      <circle cx="50" cy="64" r="13" className="fill-bg" />
-      <path d="M40 4 H60 L50 30 Z" className="fill-gold" />
-    </svg>
-  );
-}
 
 async function MensagemErro({ searchParams }: Pick<PageProps<"/login">, "searchParams">) {
   const { error } = await searchParams;
