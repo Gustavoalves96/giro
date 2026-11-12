@@ -14,7 +14,7 @@ Uma sessão do Claude Code por arquivo. Em cada sessão, anexe **só** o arquivo
 |---|---|---|---|
 | [x] | 00 | [Fundação](00-fundacao.md) | — |
 | [x] | 01 | [Banco](01-banco.md) | 00 |
-| [ ] | 02 | [Auth + deploy](02-auth-deploy.md) | 01 |
+| [x] | 02 | [Auth + deploy](02-auth-deploy.md) | 01 |
 | [ ] | 03 | [Layout, navegação e Meu perfil](03-layout-navegacao.md) | 02 |
 | [ ] | 04 | [Disciplinas](04-disciplinas.md) | 03 |
 | [ ] | 05 | [Tópicos + questões manuais](05-topicos-questoes.md) | 04 |
