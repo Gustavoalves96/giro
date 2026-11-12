@@ -1,0 +1,123 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Tokens do Giro (giro — especificação de design.md › Paleta) */
+:root {
+  --bg: #f4f5f7;
+  --sf: #ffffff;
+  --sf2: #edeef2;
+  --ink: #15141f;
+  --ink2: #474857;
+  --ink3: #666876;
+  --line: #e0e2e8;
+  --ac: #e8492a;
+  --acink: #b8341a;
+  --ok: #0a7f57;
+  --warn: #9a5800;
+  --gold: #e9a800;
+  /* texto sobre Brasa: só ≥ 19 px negrito */
+  --on-ac: #ffffff;
+  --radius: 0.75rem;
+}
+
+.dark {
+  --bg: #100f17;
+  --sf: #1a1922;
+  --sf2: #24232e;
+  --ink: #f2f1f6;
+  --ink2: #c6c5d1;
+  --ink3: #9c9baa;
+  --line: #2f2e3b;
+  --ac: #ff6a45;
+  --acink: #ff8c6e;
+  --ok: #43d39e;
+  --warn: #f6b65a;
+  --gold: #ffc83d;
+  --on-ac: #1b0c08;
+}
+
+/* Variáveis do shadcn apontando para os tokens (valem nos dois temas) */
+:root {
+  --background: var(--bg);
+  --foreground: var(--ink);
+  --card: var(--sf);
+  --card-foreground: var(--ink);
+  --popover: var(--sf);
+  --popover-foreground: var(--ink);
+  --primary: var(--ink);
+  --primary-foreground: var(--bg);
+  --secondary: var(--sf2);
+  --secondary-foreground: var(--ink);
+  --muted: var(--sf2);
+  --muted-foreground: var(--ink3);
+  --accent: var(--sf2);
+  --accent-foreground: var(--ink);
+  /* erro nunca é vermelho */
+  --destructive: var(--warn);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--ac);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-sf: var(--sf);
+  --color-sf2: var(--sf2);
+  --color-ink: var(--ink);
+  --color-ink2: var(--ink2);
+  --color-ink3: var(--ink3);
+  --color-line: var(--line);
+  --color-ac: var(--ac);
+  --color-acink: var(--acink);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-gold: var(--gold);
+  --color-on-ac: var(--on-ac);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --font-sans: var(--font-atkinson);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* Bricolage Grotesque: títulos, números e roleta, sempre com −0,02 em */
+@utility font-display {
+  font-family: var(--font-bricolage);
+  letter-spacing: -0.02em;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background font-sans text-foreground;
+  }
+}
