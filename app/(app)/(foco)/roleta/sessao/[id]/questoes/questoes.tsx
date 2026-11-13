@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { finalizar } from "@/app/(app)/roleta/actions";
 import { BarraProgresso } from "@/components/quiz/BarraProgresso";
+import { Procedimento } from "@/components/quiz/Procedimento";
 import { Questao, type QuestaoExibida } from "@/components/quiz/Questao";
 import { Button } from "@/components/ui/button";
 import { resumoSessao, type RespostaPontuada } from "@/lib/domain/pontuacao";
@@ -20,6 +21,7 @@ export function QuestoesSessao({ sessaoId, feitas, questoes }: Props) {
   const resumo = resumoSessao(respostas);
   const total = feitas.length + questoes.length;
   const atual = questoes[i];
+  const Item = atual?.tipo === "procedimento" ? Procedimento : Questao;
 
   // A pontuação que vale é a que o servidor calcula das respostas gravadas; a do topo é só o placar.
   function verResultado() {
@@ -47,7 +49,7 @@ export function QuestoesSessao({ sessaoId, feitas, questoes }: Props) {
         />
       )}
       {atual && !finalizando ? (
-        <Questao
+        <Item
           key={atual.id}
           questao={atual}
           feedback="imediato"

@@ -6,6 +6,7 @@ import {
   jsonb,
   pgEnum,
   pgTable,
+  primaryKey,
   real,
   text,
   timestamp,
@@ -106,6 +107,21 @@ export const respostas = pgTable(
     respondidaEm: timestamp("respondida_em", tz).notNull().defaultNow(),
   },
   (t) => [index("respostas_questao_id_respondida_em_idx").on(t.questaoId, t.respondidaEm)],
+);
+
+// Nota de cada passo na conferência de um procedimento (resposta_dada = 'checklist').
+export const notaPasso = pgEnum("nota_passo", ["lembrei", "com_erro", "esqueci"]);
+
+export const respostasPassos = pgTable(
+  "respostas_passos",
+  {
+    respostaId: uuid("resposta_id")
+      .notNull()
+      .references(() => respostas.id, { onDelete: "cascade" }),
+    passoId: text("passo_id").notNull(), // id estável do passo em questoes.checklist
+    nota: notaPasso("nota").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.respostaId, t.passoId] })],
 );
 
 // Estado FSRS por questão (ts-fsrs).

@@ -3,9 +3,11 @@
 import { z } from "zod";
 import { requireUser } from "@/lib/auth/require-user";
 import { definirMarcacao } from "@/lib/db/questoes";
-import { getGabarito, registrarResposta } from "@/lib/db/quiz";
+import { getGabarito, getProcedimento, registrarConferencia, registrarResposta } from "@/lib/db/quiz";
+import type { Checklist } from "@/lib/db/schema";
 import { sessaoAberta } from "@/lib/db/sessoes";
 import { IdSchema } from "@/lib/disciplinas/schema";
+import { avaliarProcedimento, NOTAS, notasCobremPassos } from "@/lib/domain/procedimento";
 
 // Ações do componente de questão (components/quiz), usadas por roleta, revisão, erros e simulado.
 
@@ -46,6 +48,61 @@ export async function responder(entrada: z.input<typeof ResponderSchema>): Promi
     tempoMs: r.tempoMs,
   });
   return { acertou, gabarito: q.gabarito, explicacao: q.explicacao, fonte: q.fonte };
+}
+
+// ── Procedimento: ela vê só o nome; o checklist sai daqui quando pede para conferir ──
+
+async function procedimentoAtivo(questaoId: string) {
+  const q = await getProcedimento(questaoId);
+  if (!q || q.tipo !== "procedimento" || !q.checklist) throw new Error("Procedimento não encontrado.");
+  if (!q.ativa) throw new Error("Procedimento inativo.");
+  return { ...q, checklist: q.checklist };
+}
+
+export async function abrirChecklist(questaoId: string): Promise<Checklist> {
+  await requireUser();
+  return (await procedimentoAtivo(IdSchema.parse(questaoId))).checklist;
+}
+
+const ConferirSchema = z.object({
+  questaoId: IdSchema,
+  sessaoId: IdSchema.nullable(),
+  notas: z.record(z.string().min(1).max(100), z.enum(NOTAS)),
+  tempoMs: ResponderSchema.shape.tempoMs,
+});
+
+export type ConferenciaProcedimento =
+  | {
+      ok: true;
+      fracao: number;
+      criticosEsquecidos: string[];
+      acertou: boolean;
+      pontosDeAtencao: string;
+      fonte: string | null;
+      tempoMs: number;
+    }
+  // os passos mudaram desde que abriu (editado no meio): a tela recarrega com o checklist atual
+  | { ok: false; mensagem: string; checklist: Checklist };
+
+export async function conferirProcedimento(entrada: z.input<typeof ConferirSchema>): Promise<ConferenciaProcedimento> {
+  await requireUser();
+  const r = ConferirSchema.parse(entrada);
+  const [q, aberta] = await Promise.all([procedimentoAtivo(r.questaoId), r.sessaoId ? sessaoAberta(r.sessaoId) : true]);
+  if (!aberta) throw new Error("Sessão já finalizada.");
+  const { passos } = q.checklist;
+  if (!notasCobremPassos(passos, r.notas))
+    return {
+      ok: false,
+      mensagem: "O checklist deste procedimento mudou enquanto você conferia. Recarregamos os passos: confira de novo.",
+      checklist: q.checklist,
+    };
+
+  const av = avaliarProcedimento(passos, r.notas);
+  await registrarConferencia(
+    { questaoId: r.questaoId, sessaoId: r.sessaoId, respostaDada: "checklist", acertou: av.acertou, tempoMs: r.tempoMs },
+    r.notas,
+  );
+  return { ok: true, ...av, pontosDeAtencao: q.explicacao, fonte: q.fonte, tempoMs: r.tempoMs };
 }
 
 export async function sinalizarErro(questaoId: string, valor: boolean) {

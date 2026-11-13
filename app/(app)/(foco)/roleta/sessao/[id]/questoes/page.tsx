@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import type { QuestaoExibida } from "@/components/quiz/Questao";
 import { listarCandidatasSessao, respostasDaSessao } from "@/lib/db/sessoes";
-import { opcoesDaQuestao, selecionarQuestoes } from "@/lib/domain/selecao-questoes";
+import { MAX_PROCEDIMENTOS_POR_RODADA, opcoesDaQuestao, selecionarRodada } from "@/lib/domain/selecao-questoes";
 import { carregarSessao, rota } from "../carregar";
 import { QuestoesSessao } from "./questoes";
 
@@ -22,21 +22,26 @@ async function Conteudo({ params }: Props) {
     respostasDaSessao(s.id),
     s.topicoId ? listarCandidatasSessao(s.topicoId, s.id) : [],
   ]);
-  const questoes: QuestaoExibida[] = selecionarQuestoes(candidatas, Math.max(0, POR_SESSAO - feitas.length), new Date()).map(
-    (q) => ({
-      id: q.id,
-      tipo: q.tipo,
-      enunciado: q.enunciado,
-      disciplina: q.disciplina,
-      cor: q.cor,
-      sinalizadaComErro: q.sinalizadaComErro,
-      opcoes: opcoesDaQuestao(q.alternativas),
-    }),
-  );
+  const procsFeitos = feitas.filter((f) => f.tipo === "procedimento").length;
+  // procedimento vai só com o nome (opcoes vazias); o checklist sai na hora de conferir
+  const questoes: QuestaoExibida[] = selecionarRodada(
+    candidatas,
+    Math.max(0, POR_SESSAO - feitas.length),
+    new Date(),
+    MAX_PROCEDIMENTOS_POR_RODADA - procsFeitos,
+  ).map((q) => ({
+    id: q.id,
+    tipo: q.tipo,
+    enunciado: q.enunciado,
+    disciplina: q.disciplina,
+    cor: q.cor,
+    sinalizadaComErro: q.sinalizadaComErro,
+    opcoes: q.tipo === "procedimento" ? [] : opcoesDaQuestao(q.alternativas),
+  }));
   return (
     <QuestoesSessao
       sessaoId={s.id}
-      feitas={feitas.map(({ acertou, tempoMs }) => ({ acertou, tempoMs }))}
+      feitas={feitas.map(({ acertou, tempoMs, fracao }) => ({ acertou, tempoMs, fracao }))}
       questoes={questoes}
     />
   );

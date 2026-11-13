@@ -22,6 +22,24 @@ export function selecionarQuestoes<T extends Candidata>(candidatas: T[], n: numb
     .slice(0, n);
 }
 
+export const MAX_PROCEDIMENTOS_POR_RODADA = 1;
+
+/**
+ * Mesma prioridade de selecionarQuestoes, com no máximo `maxProcedimentos` procedimentos no lote
+ * (passe o limite da rodada menos os procedimentos já respondidos nela).
+ */
+export function selecionarRodada<T extends Candidata & { tipo: string }>(
+  candidatas: T[],
+  n: number,
+  agora: Date,
+  maxProcedimentos: number,
+): T[] {
+  let procs = 0;
+  return selecionarQuestoes(candidatas, candidatas.length, agora)
+    .filter((c) => c.tipo !== "procedimento" || procs++ < maxProcedimentos)
+    .slice(0, n);
+}
+
 /** Embaralha e reetiqueta A–E na exibição; `mapa[letraExibida]` = letra original (a que vai para o servidor). */
 export function embaralharAlternativas(alternativas: Alternativa[], rng: () => number = Math.random) {
   const a = [...alternativas];

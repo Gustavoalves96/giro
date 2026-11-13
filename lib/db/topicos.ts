@@ -73,8 +73,8 @@ export async function listarTopicosRoleta() {
     .where(
       and(
         eq(disciplinas.arquivada, false),
-        // procedimento só entra na rodada na sessão 11: tópico só com procedimentos fica fora
-        sql`exists (select 1 from questoes q where q.topico_id = "topicos"."id" and q.ativa and q.tipo <> 'procedimento')`,
+        // questão ou procedimento ativo: tópico só com procedimentos também ganha fatia
+        sql`exists (select 1 from questoes q where q.topico_id = "topicos"."id" and q.ativa)`,
       ),
     )
     .orderBy(asc(disciplinas.ordem), asc(disciplinas.criadoEm), asc(topicos.criadoEm), asc(topicos.nome));

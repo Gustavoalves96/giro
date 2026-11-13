@@ -1,15 +1,17 @@
-// Pontuação por questão (CLAUDE.md §4.4). Funções puras.
+// Pontuação por questão (CLAUDE.md §4.4) e por procedimento (sessão 11). Funções puras.
 
-export type RespostaPontuada = { acertou: boolean; tempoMs: number };
+/** `fracao` (0..1) só em procedimento: a fração lembrada do checklist. Questão: ausente ou null. */
+export type RespostaPontuada = { acertou: boolean; tempoMs: number; fracao?: number | null };
 
 /**
- * Acerto: 10 + bônus de tempo round(max(0, 5 × (1 − s/60))); ×1,5 a partir do 3º acerto seguido. Erro: 0.
- * `sequenciaAtual` = acertos seguidos contando esta questão.
+ * Questão — acerto: 10 + bônus de tempo round(max(0, 5 × (1 − s/60))); erro: 0.
+ * Procedimento — round(10 × fração), sem bônus de tempo (vale mesmo sem "acertou": crédito parcial).
+ * Os dois: ×1,5 a partir do 3º acerto seguido. `sequenciaAtual` = acertos seguidos contando este item.
  */
-export function pontosQuestao({ acertou, tempoMs, sequenciaAtual }: RespostaPontuada & { sequenciaAtual: number }) {
-  if (!acertou) return 0;
-  const pontos = 10 + Math.round(Math.max(0, 5 * (1 - tempoMs / 1000 / 60)));
-  return sequenciaAtual >= 3 ? Math.round(pontos * 1.5) : pontos;
+export function pontosQuestao({ acertou, tempoMs, fracao, sequenciaAtual }: RespostaPontuada & { sequenciaAtual: number }) {
+  const pontos =
+    fracao != null ? Math.round(10 * fracao) : acertou ? 10 + Math.round(Math.max(0, 5 * (1 - tempoMs / 1000 / 60))) : 0;
+  return acertou && sequenciaAtual >= 3 ? Math.round(pontos * 1.5) : pontos;
 }
 
 /** Total de pontos, acertos, maior sequência e a sequência no fim (para o selo e a próxima questão). */

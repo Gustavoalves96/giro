@@ -1,5 +1,6 @@
 import { and, asc, desc, eq, isNotNull, isNull, lt, lte, max, ne, sql } from "drizzle-orm";
 import { db } from "./index";
+import { fracaoLembrada, type Nota } from "@/lib/domain/procedimento";
 import { disciplinas, questoes, respostas, revisoes, sessoes, topicos } from "./schema";
 
 // Sessão da roleta (estudo → questões → resultado).
@@ -80,7 +81,6 @@ export async function listarCandidatasSessao(topicoId: string, sessaoId: string)
       and(
         eq(questoes.topicoId, topicoId),
         eq(questoes.ativa, true),
-        ne(questoes.tipo, "procedimento"), // até a sessão 11
         sql`not exists (select 1 from respostas r where r.questao_id = "questoes"."id" and r.sessao_id = ${sessaoId})`,
       ),
     )
@@ -88,18 +88,23 @@ export async function listarCandidatasSessao(topicoId: string, sessaoId: string)
 }
 
 // Respostas da sessão em ordem, com o enunciado (resultado e retomada das questões).
+// Procedimento: notas dos passos e a fração lembrada (para pontos e resultado); questão: notas e fracao null.
 export async function respostasDaSessao(sessaoId: string) {
-  return db
+  const linhas = await db
     .select({
       questaoId: respostas.questaoId,
+      tipo: questoes.tipo,
       enunciado: questoes.enunciado,
+      checklist: questoes.checklist,
       acertou: respostas.acertou,
       tempoMs: respostas.tempoMs,
+      notas: sql<{ passoId: string; nota: Nota }[] | null>`(select json_agg(json_build_object('passoId', rp.passo_id, 'nota', rp.nota)) from respostas_passos rp where rp.resposta_id = "respostas"."id")`,
     })
     .from(respostas)
     .innerJoin(questoes, eq(questoes.id, respostas.questaoId))
     .where(eq(respostas.sessaoId, sessaoId))
     .orderBy(asc(respostas.respondidaEm), asc(respostas.id));
+  return linhas.map((l) => ({ ...l, fracao: l.notas ? fracaoLembrada(l.notas.map((n) => n.nota)) : null }));
 }
 
 /**

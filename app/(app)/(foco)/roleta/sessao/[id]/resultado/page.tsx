@@ -32,6 +32,12 @@ function comPontos<T extends { acertou: boolean; tempoMs: number }>(rs: T[]) {
   });
 }
 
+// Passos esquecidos (até 3), na ordem do checklist atual; passo apagado depois da conferência some da lista.
+function esquecidos(r: Awaited<ReturnType<typeof respostasDaSessao>>[number]) {
+  const nota = new Map(r.notas?.map((n) => [n.passoId, n.nota]));
+  return (r.checklist?.passos ?? []).filter((p) => nota.get(p.id) === "esqueci").slice(0, 3).map((p) => p.texto);
+}
+
 type Props = PageProps<"/roleta/sessao/[id]/resultado">;
 
 // Tudo vem do banco: o resultado é o mesmo se recarregar ou abrir depois.
@@ -138,10 +144,28 @@ async function Conteudo({ params }: Props) {
                   {l.acertou ? <Check className="size-5" aria-hidden /> : <X className="size-5" aria-hidden />}
                   <span className="sr-only">{l.acertou ? "Acertou" : "Errou"}</span>
                 </span>
-                <p className="line-clamp-2 min-w-0 flex-1 leading-snug">
-                  <span className="text-ink3 tabular-nums">{i + 1}. </span>
-                  {l.enunciado}
-                </p>
+                <div className="min-w-0 flex-1">
+                  <p className="line-clamp-2 leading-snug">
+                    <span className="text-ink3 tabular-nums">{i + 1}. </span>
+                    {l.enunciado}
+                  </p>
+                  {l.fracao != null && (
+                    <>
+                      <p className="mt-1 text-[14px] text-ink2" data-fracao={l.fracao}>
+                        Procedimento · <span className="font-bold tabular-nums">{Math.round(l.fracao * 100)}% lembrado</span>
+                      </p>
+                      {esquecidos(l).length > 0 && (
+                        <ul className="mt-1 text-[14px] text-ink2">
+                          {esquecidos(l).map((t, k) => (
+                            <li key={k} className="line-clamp-1">
+                              <span className="font-bold text-warn">Esqueceu:</span> {t}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </>
+                  )}
+                </div>
                 <span className={cn("shrink-0 font-bold tabular-nums", l.acertou ? "text-ink" : "text-ink3")}>+{l.pontos} XP</span>
               </li>
             ))}

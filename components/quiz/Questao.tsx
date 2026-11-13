@@ -332,12 +332,12 @@ export function Questao({ questao, feedback, sessaoId, sequenciaAntes, onRespond
   );
 }
 
-function Kbd({ children }: { children: React.ReactNode }) {
+export function Kbd({ children }: { children: React.ReactNode }) {
   return <kbd className="rounded-md border border-line bg-sf2 px-1.5 py-0.5 font-sans text-[12px] font-bold text-ink2">{children}</kbd>;
 }
 
 /** "sequência x3!": escala 0,6 → 1,12 → 1 aos 150 ms; na 5ª seguida, mini confete só no selo. */
-function SeloSequencia({ n, reduzir }: { n: number; reduzir: boolean }) {
+export function SeloSequencia({ n, reduzir }: { n: number; reduzir: boolean }) {
   return (
     <motion.div
       className="relative mt-3 w-fit"

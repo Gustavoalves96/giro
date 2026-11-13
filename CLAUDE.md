@@ -7,7 +7,7 @@
 Aplicação web pessoal de **prática ativa** para uma estudante de medicina (uma única usuária).
 O diferencial é **gamificar a prática**: uma roleta animada sorteia um tópico, ela estuda por 10 minutos e depois responde questões, ganha pontos e acompanha a evolução.
 
-Além das questões, o tópico tem **procedimentos** (manobras e exames, ex.: "Coleta de citopatológico"): o nome e um **checklist de passos** que ela tenta lembrar de cabeça e depois confere. Conteúdo só das fontes dela (NotebookLM ou cadastro manual), nunca gerado por IA na hora. Cadastro e importação existem desde a sessão 10; a prática na rodada entra na sessão 11 (até lá, procedimento fica fora da roleta, da rodada e de `/dev/questao`).
+Além das questões, o tópico tem **procedimentos** (manobras e exames, ex.: "Coleta de citopatológico"): o nome e um **checklist de passos** que ela tenta lembrar de cabeça e depois confere. Conteúdo só das fontes dela (NotebookLM ou cadastro manual), nunca gerado por IA na hora. Cadastro e importação desde a sessão 10; na rodada desde a 11 (no máximo 1 por rodada, `components/quiz/Procedimento.tsx`, Server Action `conferirProcedimento`, notas em `respostas_passos`). `/dev/questao` continua só com questões.
 
 **Princípio central:** o sistema é para *praticar, medir e repetir*. Ler e entender o material fica no **NotebookLM**, que já faz isso bem (upload de PDFs, resumos, mapas mentais, áudio, chat com fontes). O sistema **não** reimplementa nada disso. Ele se integra por links.
 
@@ -74,6 +74,10 @@ respostas
   id uuid pk, questao_id fk, sessao_id fk null,
   resposta_dada text, acertou bool, tempo_ms int, respondida_em timestamptz
 
+respostas_passos                        -- só procedimento (resposta_dada = 'checklist'): uma nota por passo
+  resposta_id fk → respostas on delete cascade, passo_id text (id do passo no checklist),
+  nota enum('lembrei','com_erro','esqueci'), pk (resposta_id, passo_id)
+
 revisoes                                -- estado FSRS por questão
   questao_id pk/fk, due timestamptz, stability real, difficulty real,
   elapsed_days int, scheduled_days int, reps int, lapses int,
@@ -131,6 +135,7 @@ Só entram tópicos com pelo menos 1 questão ativa. Se a lista ficar vazia, mos
 - Bônus de tempo: `+ max(0, 5 × (1 - tempo_s / 60))`, arredondado (responder rápido vale até +5)
 - Sequência: a partir do 3º acerto seguido, `×1.5` nos pontos daquela questão
 - Erro: 0 pts (sem penalidade negativa)
+- **Procedimento:** fração = (lembrei + 0,5 × com erro) / passos; acertou = fração ≥ 0,8 e nenhum crítico esquecido (`lib/domain/procedimento.ts`). Vale `round(10 × fração)` mesmo sem acertar (crédito parcial), sem bônus de tempo; entra na sequência como acerto/erro (×1,5 só quando acertou)
 
 ### 4.5 Repetição espaçada (FSRS)
 - Toda resposta atualiza `revisoes` via `ts-fsrs`.
