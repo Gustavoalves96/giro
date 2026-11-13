@@ -21,7 +21,7 @@ Uma sessão do Claude Code por arquivo. Em cada sessão, anexe **só** o arquivo
 | [x] | 06 | [Importação NotebookLM](06-importacao-notebooklm.md) | 05 |
 | [x] | 07 | [Roleta](07-roleta.md) | 05 |
 | [x] | 08 | [Componente de questão + pontuação](08-questao-pontuacao.md) | 05 |
-| [ ] | 09 | [Sessão da roleta](09-sessao-roleta.md) | 07, 08 |
+| [x] | 09 | [Sessão da roleta](09-sessao-roleta.md) | 07, 08 |
 | [ ] | 10 | [FSRS + Revisão do dia](10-fsrs-revisao.md) | 09 |
 | [ ] | 11 | [Caderno de erros](11-caderno-erros.md) | 09 |
 | [ ] | 12 | [Início (painel)](12-inicio.md) | 10 |
@@ -43,6 +43,7 @@ Uma sessão do Claude Code por arquivo. Em cada sessão, anexe **só** o arquivo
 - **Lógica de negócio** em `lib/domain/` como funções puras com teste Vitest, escrita na sessão que precisa dela.
 - **Lacunas do design resolvidas sem coluna nova:** "Foque em" = linhas de `topicos.descricao` (some se vazio); "Rodada de hoje · x de 2" = meta fixa de 2 sessões por dia (constante); "+2 min" só no cliente.
 - **Tempo de estudo:** padrão editável em Meu perfil (`perfil.estudo_segundos`, padrão 600 s) e ajustável na roleta só para a rodada (sessão 09). Textos não citam "10 minutos" fixo; slogan: "Gire. Estude. Domine o tópico."
+- **Sair no meio da rodada** (sessão 09): pede confirmação e deixa a sessão **aberta** (`finalizada_em` null). Ela não conta pontos, XP, recorde nem domínio; as respostas já dadas ficam gravadas (com `sessao_id`) e entram no domínio na próxima rodada finalizada do tópico. Estatísticas e painel contam só sessões finalizadas. A URL da sessão continua de onde parou.
 - **Deploy cedo** (sessão 02), para OAuth e Neon serem testados em produção desde o começo.
 
 ## Definição de pronto (toda sessão)

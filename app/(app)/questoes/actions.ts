@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireUser } from "@/lib/auth/require-user";
 import { definirMarcacao } from "@/lib/db/questoes";
 import { getGabarito, registrarResposta } from "@/lib/db/quiz";
+import { sessaoAberta } from "@/lib/db/sessoes";
 import { IdSchema } from "@/lib/disciplinas/schema";
 
 // Ações do componente de questão (components/quiz), usadas por roleta, revisão, erros e simulado.
@@ -28,8 +29,10 @@ export type Conferencia = { acertou: boolean; gabarito: string; explicacao: stri
 export async function responder(entrada: z.input<typeof ResponderSchema>): Promise<Conferencia> {
   await requireUser();
   const r = ResponderSchema.parse(entrada);
-  const q = await getGabarito(r.questaoId);
+  const [q, aberta] = await Promise.all([getGabarito(r.questaoId), r.sessaoId ? sessaoAberta(r.sessaoId) : true]);
   if (!q) throw new Error("Questão não encontrada.");
+  // sessão finalizada não recebe mais respostas: o resumo gravado tem que bater com elas
+  if (!aberta) throw new Error("Sessão já finalizada.");
   const validas = q.alternativas?.length ? q.alternativas.map((a) => a.letra) : ["V", "F"];
   if (r.respostaDada !== null && !validas.includes(r.respostaDada)) throw new Error("Resposta inválida.");
 

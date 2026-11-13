@@ -14,3 +14,10 @@ export async function salvarNomePerfil(nome: string) {
     .values({ id: 1, nome })
     .onConflictDoUpdate({ target: perfil.id, set: { nome, atualizadoEm: new Date() } });
 }
+
+export async function salvarEstudoPerfil(estudoSegundos: number) {
+  await db
+    .insert(perfil)
+    .values({ id: 1, estudoSegundos })
+    .onConflictDoUpdate({ target: perfil.id, set: { estudoSegundos, atualizadoEm: new Date() } });
+}

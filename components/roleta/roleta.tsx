@@ -3,10 +3,12 @@
 import { ExternalLink, Play, RotateCw, SlidersHorizontal } from "lucide-react";
 import { animate, motion, useMotionValue, useMotionValueEvent, useReducedMotion } from "motion/react";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { girar, type ResultadoGiro } from "@/app/(app)/roleta/actions";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { comecarEstudo, girar, type ResultadoGiro } from "@/app/(app)/roleta/actions";
 import { BarraDominio } from "@/components/barra-dominio";
 import { CHAVE_REDUZIR, lerReduzirPainel } from "@/components/movimento-reduzido";
+import { SeletorEstudo } from "@/components/seletor-estudo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TEXTO_SOBRE_TINTA, tintaClara } from "@/lib/cores";
@@ -19,7 +21,11 @@ type Estado = "antes" | "girando" | "sorteado";
 const ROTULO = "text-[13px] font-bold tracking-[0.06em] text-ink3 uppercase";
 const esperar = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-export function Roleta({ candidatos }: { candidatos: Candidato[] }) {
+export function Roleta({ candidatos, estudoPadrao }: { candidatos: Candidato[]; estudoPadrao: number }) {
+  const router = useRouter();
+  // tempo só desta rodada; começa no padrão do perfil e não o altera
+  const [estudo, setEstudo] = useState(estudoPadrao);
+  const [comecando, iniciarEstudo] = useTransition();
   const disciplinas = useMemo(() => {
     const m = new Map<string, { id: string; nome: string; cor: string; topicos: number }>();
     for (const c of candidatos) {
@@ -228,11 +234,35 @@ export function Roleta({ candidatos }: { candidatos: Candidato[] }) {
               <p className="mt-1 text-ink2">{giro.motivo}</p>
             </div>
             <div className="mt-5 flex flex-col gap-2">
-              <Button asChild variant="destaque">
-                <Link href={`/roleta/estudar/${sorteado.topicoId}`}>
-                  <Play aria-hidden />
-                  Começar estudo · 10 min
-                </Link>
+              <div className="flex items-center justify-between gap-3">
+                <label htmlFor="tempo-rodada" className="text-ink2">
+                  Tempo desta rodada
+                </label>
+                <SeletorEstudo
+                  id="tempo-rodada"
+                  value={estudo}
+                  onChange={(e) => setEstudo(Number(e.target.value))}
+                  disabled={comecando}
+                  className="w-[116px] shrink-0"
+                />
+              </div>
+              <Button
+                variant="destaque"
+                // painel de 340 px (lg): sem o ícone, "Começar estudo · 45 min" cabe em 20 px
+                className="px-4 has-[>svg]:px-4 lg:max-xl:[&>svg]:hidden"
+                disabled={comecando || girando}
+                onClick={() =>
+                  iniciarEstudo(async () => {
+                    try {
+                      router.push(await comecarEstudo(sorteado.topicoId, estudo));
+                    } catch {
+                      setErro("Não foi possível começar agora. Tente de novo.");
+                    }
+                  })
+                }
+              >
+                <Play aria-hidden />
+                <span className="truncate">{comecando ? "Abrindo…" : `Começar estudo · ${estudo / 60} min`}</span>
               </Button>
               <Button variant="secondary" onClick={girarRoleta} disabled={girando}>
                 <RotateCw aria-hidden />
@@ -250,6 +280,11 @@ export function Roleta({ candidatos }: { candidatos: Candidato[] }) {
                 <SlidersHorizontal aria-hidden />
                 Ajustar filtros
               </Button>
+              {erro && (
+                <p role="status" className="text-warn">
+                  {erro}
+                </p>
+              )}
             </div>
           </motion.section>
         ) : (

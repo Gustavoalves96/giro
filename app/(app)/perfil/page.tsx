@@ -5,7 +5,9 @@ import { auth } from "@/auth";
 import { SeletorTema } from "@/components/seletor-tema";
 import { Button } from "@/components/ui/button";
 import { getPerfil } from "@/lib/db/perfil";
+import { ESTUDO_PADRAO } from "@/lib/perfil/schema";
 import { sair } from "./actions";
+import { FormEstudo } from "./form-estudo";
 import { FormNome } from "./form-nome";
 
 export const metadata: Metadata = { title: "Meu perfil · Giro" };
@@ -24,6 +26,10 @@ async function Conta() {
       <section className={CARD}>
         <Rotulo>Nome</Rotulo>
         <FormNome nomeAtual={perfil?.nome ?? ""} />
+      </section>
+      <section className={CARD}>
+        <Rotulo>Estudo</Rotulo>
+        <FormEstudo atual={perfil?.estudoSegundos ?? ESTUDO_PADRAO} />
       </section>
       <section className={CARD}>
         <Rotulo>Conta</Rotulo>

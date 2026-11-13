@@ -1,0 +1,1 @@
+ALTER TABLE "perfil" ADD COLUMN "estudo_segundos" integer DEFAULT 600 NOT NULL;

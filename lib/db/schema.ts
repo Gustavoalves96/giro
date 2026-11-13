@@ -138,10 +138,11 @@ export const explicacoesIa = pgTable("explicacoes_ia", {
   geradoEm: timestamp("gerado_em", tz).notNull().defaultNow(),
 });
 
-// Linha única (id = 1): nome usado na saudação, editável em /perfil.
+// Linha única (id = 1): nome usado na saudação e tempo de estudo padrão, editáveis em /perfil.
 export const perfil = pgTable("perfil", {
   id: integer("id").primaryKey().default(1),
   nome: text("nome"),
+  estudoSegundos: integer("estudo_segundos").notNull().default(600), // tempo de estudo padrão da roleta
   atualizadoEm: timestamp("atualizado_em", tz).notNull().defaultNow(),
 });
 
