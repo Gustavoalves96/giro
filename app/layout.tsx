@@ -17,7 +17,7 @@ const atkinson = Atkinson_Hyperlegible({
 
 export const metadata: Metadata = {
   title: "Giro",
-  description: "Gire. Estude 10 minutos. Domine o tópico.",
+  description: "Gire. Estude. Domine o tópico.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

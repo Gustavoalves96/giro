@@ -28,7 +28,7 @@ export default function LoginPage({ searchParams }: PageProps<"/login">) {
       <div className="flex w-full max-w-sm flex-col items-center text-center">
         <MarcaGiro className="size-28" />
         <h1 className="mt-5 font-display text-[34px] font-extrabold text-ink">giro</h1>
-        <p className="mt-2 text-lg text-ink2">Gire. Estude 10 minutos. Domine o tópico.</p>
+        <p className="mt-2 text-lg text-ink2">Gire. Estude. Domine o tópico.</p>
 
         <Suspense>
           <MensagemErro searchParams={searchParams} />

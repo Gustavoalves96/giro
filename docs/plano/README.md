@@ -42,6 +42,7 @@ Uma sessão do Claude Code por arquivo. Em cada sessão, anexe **só** o arquivo
 - **Cor da disciplina:** guarda só a cor cheia; a tinta clara é calculada com `color-mix(in srgb, <cor> 20%, white)`.
 - **Lógica de negócio** em `lib/domain/` como funções puras com teste Vitest, escrita na sessão que precisa dela.
 - **Lacunas do design resolvidas sem coluna nova:** "Foque em" = linhas de `topicos.descricao` (some se vazio); "Rodada de hoje · x de 2" = meta fixa de 2 sessões por dia (constante); "+2 min" só no cliente.
+- **Tempo de estudo:** padrão editável em Meu perfil (`perfil.estudo_segundos`, padrão 600 s) e ajustável na roleta só para a rodada (sessão 09). Textos não citam "10 minutos" fixo; slogan: "Gire. Estude. Domine o tópico."
 - **Deploy cedo** (sessão 02), para OAuth e Neon serem testados em produção desde o começo.
 
 ## Definição de pronto (toda sessão)
