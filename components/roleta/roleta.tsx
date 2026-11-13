@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { girar, type ResultadoGiro } from "@/app/(app)/roleta/actions";
 import { BarraDominio } from "@/components/barra-dominio";
+import { CHAVE_REDUZIR, lerReduzirPainel } from "@/components/movimento-reduzido";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TEXTO_SOBRE_TINTA, tintaClara } from "@/lib/cores";
@@ -15,7 +16,6 @@ import { Roda } from "./roda";
 
 type Estado = "antes" | "girando" | "sorteado";
 
-const CHAVE_REDUZIR = "giro:movimento-reduzido";
 const ROTULO = "text-[13px] font-bold tracking-[0.06em] text-ink3 uppercase";
 const esperar = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -41,10 +41,8 @@ export function Roleta({ candidatos }: { candidatos: Candidato[] }) {
   // Interruptor do painel, guardado neste navegador; soma com o prefers-reduced-motion.
   const [reduzirPainel, setReduzirPainel] = useState(false);
   useEffect(() => {
-    try {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage só existe no cliente
-      setReduzirPainel(localStorage.getItem(CHAVE_REDUZIR) === "1");
-    } catch {}
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage só existe no cliente
+    setReduzirPainel(lerReduzirPainel());
   }, []);
   const reduzir = useReducedMotion() === true || reduzirPainel;
   function trocarReduzir() {

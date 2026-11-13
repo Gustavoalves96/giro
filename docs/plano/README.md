@@ -20,7 +20,7 @@ Uma sessão do Claude Code por arquivo. Em cada sessão, anexe **só** o arquivo
 | [x] | 05 | [Tópicos + questões manuais](05-topicos-questoes.md) | 04 |
 | [x] | 06 | [Importação NotebookLM](06-importacao-notebooklm.md) | 05 |
 | [x] | 07 | [Roleta](07-roleta.md) | 05 |
-| [ ] | 08 | [Componente de questão + pontuação](08-questao-pontuacao.md) | 05 |
+| [x] | 08 | [Componente de questão + pontuação](08-questao-pontuacao.md) | 05 |
 | [ ] | 09 | [Sessão da roleta](09-sessao-roleta.md) | 07, 08 |
 | [ ] | 10 | [FSRS + Revisão do dia](10-fsrs-revisao.md) | 09 |
 | [ ] | 11 | [Caderno de erros](11-caderno-erros.md) | 09 |
