@@ -17,8 +17,30 @@ Responda SOMENTE com JSON válido, sem texto antes ou depois, neste formato:
 "gabarito":"A","explicacao":"...","fonte":"...","dificuldade":"media"}]}
 Para verdadeiro/falso use "tipo":"verdadeiro_falso", omita "alternativas" e use "gabarito":"V" ou "F".`;
 
-export function montarPrompt({ quantidade, topico, disciplina }: { quantidade: number; topico: string; disciplina: string }) {
-  return PROMPT_NOTEBOOKLM.replace("{{quantidade}}", String(quantidade))
-    .replace("{{topico}}", topico)
-    .replace("{{disciplina}}", disciplina);
-}
+// Procedimentos (manobras e exames): checklist de passos, só das fontes dela (CLAUDE.md §5).
+export const PROMPT_PROCEDIMENTOS = `Você é um professor de medicina preparando roteiros de habilidades clínicas (manobras e exames).
+Com base EXCLUSIVAMENTE nas fontes deste caderno, descreva {{quantidade}} procedimentos do tópico
+"{{topico}}" da disciplina "{{disciplina}}".
+
+Regras:
+- Use só procedimentos que aparecem nas fontes, com o nome usado nelas.
+- Passos na ordem em que se executam, curtos, começando cada um por UM verbo
+  (ex.: "Higienizar as mãos", "Posicionar a paciente em litotomia").
+- Marque "critico": true SOMENTE no passo que, se esquecido, compromete o exame ou a segurança
+  (ex.: identificação, consentimento, higiene, técnica estéril). Nos demais, "critico": false.
+- Em "material", liste o que é preciso separar antes (lista vazia se não houver).
+- Em "pontosDeAtencao", 2 a 4 frases com indicação, cuidados e erros comuns.
+- Em "fonte", indique de qual material/slide/página veio o roteiro.
+- Não invente nem complete passos que não estejam nas fontes.
+
+Responda SOMENTE com JSON válido, sem texto antes ou depois, neste formato:
+{"procedimentos":[{"nome":"...","material":["..."],"passos":[{"texto":"...","critico":true},
+{"texto":"...","critico":false}],"pontosDeAtencao":"...","fonte":"..."}]}`;
+
+type Dados = { quantidade: number; topico: string; disciplina: string };
+
+const preencher = (modelo: string, { quantidade, topico, disciplina }: Dados) =>
+  modelo.replace("{{quantidade}}", String(quantidade)).replace("{{topico}}", topico).replace("{{disciplina}}", disciplina);
+
+export const montarPrompt = (dados: Dados) => preencher(PROMPT_NOTEBOOKLM, dados);
+export const montarPromptProcedimentos = (dados: Dados) => preencher(PROMPT_PROCEDIMENTOS, dados);

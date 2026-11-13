@@ -1,4 +1,4 @@
-import { asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, ne, sql } from "drizzle-orm";
 import { db } from "./index";
 import { type NovaQuestao, questoes } from "./schema";
 
@@ -14,6 +14,7 @@ export async function listarQuestoes(topicoId: string) {
       alternativas: questoes.alternativas,
       gabarito: questoes.gabarito,
       explicacao: questoes.explicacao,
+      checklist: questoes.checklist,
       fonte: questoes.fonte,
       dificuldade: questoes.dificuldade,
       origem: questoes.origem,
@@ -32,9 +33,17 @@ export async function criarQuestao(topicoId: string, dados: DadosQuestao) {
   await db.insert(questoes).values({ ...dados, topicoId });
 }
 
-// Para a detecção de duplicatas da importação.
-export async function listarEnunciados(topicoId: string) {
-  const linhas = await db.select({ enunciado: questoes.enunciado }).from(questoes).where(eq(questoes.topicoId, topicoId));
+// Para a detecção de duplicatas da importação: questões com questões, procedimentos com procedimentos.
+export async function listarEnunciados(topicoId: string, procedimentos = false) {
+  const linhas = await db
+    .select({ enunciado: questoes.enunciado })
+    .from(questoes)
+    .where(
+      and(
+        eq(questoes.topicoId, topicoId),
+        procedimentos ? eq(questoes.tipo, "procedimento") : ne(questoes.tipo, "procedimento"),
+      ),
+    );
   return linhas.map((l) => l.enunciado);
 }
 

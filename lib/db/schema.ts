@@ -16,12 +16,19 @@ import {
 const tz = { withTimezone: true } as const;
 const criadoEm = () => timestamp("criado_em", tz).notNull().defaultNow();
 
-export const tipoQuestao = pgEnum("tipo_questao", ["multipla_escolha", "verdadeiro_falso", "caso_clinico"]);
+export const tipoQuestao = pgEnum("tipo_questao", [
+  "multipla_escolha",
+  "verdadeiro_falso",
+  "caso_clinico",
+  "procedimento",
+]);
 export const dificuldade = pgEnum("dificuldade", ["facil", "media", "dificil"]);
 export const origemQuestao = pgEnum("origem_questao", ["notebooklm", "prova_antiga", "manual", "ia"]);
 export const modoSessao = pgEnum("modo_sessao", ["roleta", "simulado", "revisao", "erros"]);
 
 export type Alternativa = { letra: "A" | "B" | "C" | "D" | "E"; texto: string };
+// Só procedimentos: ordem do array = ordem dos passos; id estável para a nota de cada passo (sessão 11).
+export type Checklist = { material: string[]; passos: { id: string; texto: string; critico: boolean }[] };
 
 export const disciplinas = pgTable("disciplinas", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -58,9 +65,10 @@ export const questoes = pgTable(
       .references(() => topicos.id, { onDelete: "cascade" }),
     tipo: tipoQuestao("tipo").notNull(),
     enunciado: text("enunciado").notNull(),
-    alternativas: jsonb("alternativas").$type<Alternativa[]>(), // null em V/F
-    gabarito: text("gabarito").notNull(),
-    explicacao: text("explicacao").notNull(),
+    alternativas: jsonb("alternativas").$type<Alternativa[]>(), // null em V/F e procedimento
+    gabarito: text("gabarito").notNull(), // '' em procedimento
+    explicacao: text("explicacao").notNull(), // procedimento: pontos de atenção
+    checklist: jsonb("checklist").$type<Checklist>(), // só procedimento
     fonte: text("fonte"),
     dificuldade: dificuldade("dificuldade").notNull().default("media"),
     origem: origemQuestao("origem").notNull(),

@@ -22,7 +22,7 @@ Uma sessão do Claude Code por arquivo. Em cada sessão, anexe **só** o arquivo
 | [x] | 07 | [Roleta](07-roleta.md) | 05 |
 | [x] | 08 | [Componente de questão + pontuação](08-questao-pontuacao.md) | 05 |
 | [x] | 09 | [Sessão da roleta](09-sessao-roleta.md) | 07, 08 |
-| [ ] | 10 | [Procedimentos: cadastro e importação](10-procedimentos-cadastro.md) | 05, 06, 09 |
+| [x] | 10 | [Procedimentos: cadastro e importação](10-procedimentos-cadastro.md) | 05, 06, 09 |
 | [ ] | 11 | [Procedimentos na rodada](11-procedimentos-rodada.md) | 09, 10 |
 | [ ] | 12 | [FSRS + Revisão do dia](12-fsrs-revisao.md) | 09, 11 |
 | [ ] | 13 | [Caderno de erros](13-caderno-erros.md) | 09, 11 |

@@ -3,6 +3,7 @@ export const ROTULO_TIPO = {
   multipla_escolha: "Múltipla escolha",
   caso_clinico: "Caso clínico",
   verdadeiro_falso: "Verdadeiro ou falso",
+  procedimento: "Procedimento",
 } as const;
 
 export const ROTULO_DIFICULDADE = { facil: "Fácil", media: "Média", dificil: "Difícil" } as const;

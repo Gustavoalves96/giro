@@ -80,6 +80,7 @@ export async function listarCandidatasSessao(topicoId: string, sessaoId: string)
       and(
         eq(questoes.topicoId, topicoId),
         eq(questoes.ativa, true),
+        ne(questoes.tipo, "procedimento"), // até a sessão 11
         sql`not exists (select 1 from respostas r where r.questao_id = "questoes"."id" and r.sessao_id = ${sessaoId})`,
       ),
     )

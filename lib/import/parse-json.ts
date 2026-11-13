@@ -1,15 +1,16 @@
 import { z } from "zod";
-import { type QuestaoImport, QuestaoImportSchema } from "./schemas";
+import { type ProcedimentoImport, ProcedimentoSchema, type QuestaoImport, QuestaoImportSchema } from "./schemas";
 
 // Leitura da resposta colada do NotebookLM (CLAUDE.md §5). Puro: roda no cliente (prévia) e de novo no servidor.
 
 export type ErroLeitura = { causa: string; oQueFazer: string };
-export type Leitura =
+export type Leitura<T = QuestaoImport> =
   | { ok: false; erro: ErroLeitura }
   | {
       ok: true;
-      validas: QuestaoImport[];
+      validas: T[];
       invalidas: { indice: number; motivo: string }[];
+      /** enunciado = enunciado da questão ou nome do procedimento */
       duplicadas: { indice: number; enunciado: string; motivo: string }[];
     };
 
@@ -29,15 +30,54 @@ export function extrairJson(texto: string) {
   return fim > inicio ? texto.slice(inicio, fim + 1) : texto.slice(inicio);
 }
 
-const EnvelopeSchema = z.object({ questoes: z.array(z.unknown()).min(1) });
+// O que muda entre importar questões e procedimentos: chave do envelope, schema, campo comparado e palavras.
+type Tipo<T> = {
+  chave: "questoes" | "procedimentos";
+  schema: z.ZodType<T, unknown>;
+  nome: (item: T) => string;
+  plural: string;
+  artigo: string;
+  item: string;
+  repetida: string;
+};
+
+const QUESTOES: Tipo<QuestaoImport> = {
+  chave: "questoes",
+  schema: QuestaoImportSchema,
+  nome: (q) => q.enunciado,
+  plural: "questões",
+  artigo: "as",
+  item: "A questão",
+  repetida: "Repetida nesta resposta.",
+};
+
+const PROCEDIMENTOS: Tipo<ProcedimentoImport> = {
+  chave: "procedimentos",
+  schema: ProcedimentoSchema,
+  nome: (p) => p.nome,
+  plural: "procedimentos",
+  artigo: "os",
+  item: "O procedimento",
+  repetida: "Repetido nesta resposta.",
+};
 
 // Só vale onde o schema não tem mensagem própria (ex.: "alternativas" como texto em vez de lista).
-const motivoGenerico = (iss: { path?: PropertyKey[] }) =>
-  iss.path?.length ? `O campo “${iss.path.join(".")}” veio num formato errado.` : "A questão não está no formato esperado.";
+const motivoGenerico = (item: string) => (iss: { path?: PropertyKey[] }) =>
+  iss.path?.length ? `O campo “${iss.path.join(".")}” veio num formato errado.` : `${item} não está no formato esperado.`;
 
 const REFAZER = "Cole o prompt do passo 1 de novo no NotebookLM e copie a resposta inteira.";
 
-export function lerResposta(texto: string, enunciadosExistentes: string[]): Leitura {
+/** questões coladas; enunciadosExistentes = questões do tópico (duplicatas) */
+export function lerResposta(texto: string, enunciadosExistentes: string[]) {
+  return lerItens(texto, enunciadosExistentes, QUESTOES);
+}
+
+/** procedimentos colados; nomesExistentes = procedimentos do tópico (duplicatas) */
+export function lerProcedimentos(texto: string, nomesExistentes: string[]) {
+  return lerItens(texto, nomesExistentes, PROCEDIMENTOS);
+}
+
+function lerItens<T>(texto: string, existentes: string[], tipo: Tipo<T>): Leitura<T> {
   if (!texto.trim()) {
     return { ok: false, erro: { causa: "A caixa está vazia.", oQueFazer: "Cole a resposta do NotebookLM aqui." } };
   }
@@ -46,7 +86,7 @@ export function lerResposta(texto: string, enunciadosExistentes: string[]): Leit
     return {
       ok: false,
       erro: {
-        causa: "Não achei as questões no texto colado: ele não tem nenhum trecho em JSON (entre { e }).",
+        causa: `Não achei ${tipo.artigo} ${tipo.plural} no texto colado: ele não tem nenhum trecho em JSON (entre { e }).`,
         oQueFazer:
           "Confira se copiou a resposta inteira. Se o NotebookLM respondeu em texto corrido, cole o prompt do passo 1 de novo no caderno.",
       },
@@ -60,36 +100,33 @@ export function lerResposta(texto: string, enunciadosExistentes: string[]): Leit
       ok: false,
       erro: {
         causa: "A resposta parece cortada ou com um erro de formatação (falta uma aspa, vírgula ou chave).",
-        oQueFazer: `Peça ao NotebookLM “responda de novo só com o JSON completo” e cole outra vez. Se continuar, gere menos questões por vez.`,
+        oQueFazer: `Peça ao NotebookLM “responda de novo só com o JSON completo” e cole outra vez. Se continuar, gere menos ${tipo.plural} por vez.`,
       },
     };
   }
-  const envelope = EnvelopeSchema.safeParse(dados);
+  const envelope = z.object({ [tipo.chave]: z.array(z.unknown()).min(1) }).safeParse(dados);
   if (!envelope.success) {
     return {
       ok: false,
-      erro: { causa: "O texto não traz a lista de questões no formato que o Giro espera.", oQueFazer: REFAZER },
+      erro: { causa: `O texto não traz a lista de ${tipo.plural} no formato que o Giro espera.`, oQueFazer: REFAZER },
     };
   }
 
-  const vistos = new Set(enunciadosExistentes.map(normalizarEnunciado));
-  const validas: QuestaoImport[] = [];
+  const vistos = new Set(existentes.map(normalizarEnunciado));
+  const validas: T[] = [];
   const invalidas: { indice: number; motivo: string }[] = [];
   const duplicadas: { indice: number; enunciado: string; motivo: string }[] = [];
-  envelope.data.questoes.forEach((bruta, indice) => {
-    const q = QuestaoImportSchema.safeParse(bruta, { error: motivoGenerico });
+  envelope.data[tipo.chave].forEach((bruta, indice) => {
+    const q = tipo.schema.safeParse(bruta, { error: motivoGenerico(tipo.item) });
     if (!q.success) {
       invalidas.push({ indice, motivo: q.error.issues[0].message });
       return;
     }
-    const chave = normalizarEnunciado(q.data.enunciado);
+    const nome = tipo.nome(q.data);
+    const chave = normalizarEnunciado(nome);
     if (vistos.has(chave)) {
-      const noLote = validas.some((v) => normalizarEnunciado(v.enunciado) === chave);
-      duplicadas.push({
-        indice,
-        enunciado: q.data.enunciado,
-        motivo: noLote ? "Repetida nesta resposta." : "Já existe neste tópico.",
-      });
+      const noLote = validas.some((v) => normalizarEnunciado(tipo.nome(v)) === chave);
+      duplicadas.push({ indice, enunciado: nome, motivo: noLote ? tipo.repetida : "Já existe neste tópico." });
       return;
     }
     vistos.add(chave);

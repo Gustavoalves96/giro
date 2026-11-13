@@ -6,27 +6,98 @@ import { useId, useState, useTransition } from "react";
 import { CAMPO, EditorResponsivo } from "@/components/editor-responsivo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { type Leitura, lerResposta } from "@/lib/import/parse-json";
-import { montarPrompt } from "@/lib/prompts/notebooklm";
+import { type Leitura, lerProcedimentos, lerResposta } from "@/lib/import/parse-json";
+import { montarPrompt, montarPromptProcedimentos } from "@/lib/prompts/notebooklm";
 import { ROTULO_TIPO } from "@/lib/questoes/rotulos";
 import { cn } from "@/lib/utils";
-import { importarQuestoes } from "./actions";
+import { type EstadoImportacao, importarProcedimentos, importarQuestoes } from "./actions";
+
+type Tipo = "questoes" | "procedimentos";
 
 type Props = {
+  tipo: Tipo;
   topicoId: string;
   topico: string;
   disciplina: string;
   notebooklmUrl: string | null;
-  /** enunciados já no tópico, para marcar duplicatas na prévia */
+  /** enunciados (ou nomes de procedimento) já no tópico, para marcar duplicatas na prévia */
   enunciados: string[];
 };
 
+// O que a prévia mostra de cada item válido.
+type ItemPrevia = { titulo: string; chips: string[]; detalhe: string };
+
+function resumir<T>(leitura: Leitura<T>, item: (t: T) => ItemPrevia): Leitura<ItemPrevia> {
+  return leitura.ok ? { ...leitura, validas: leitura.validas.map(item) } : leitura;
+}
+
+const plural = (n: number, um: string, varios: string) => (n === 1 ? `1 ${um}` : `${n} ${varios}`);
+
+// Tudo o que muda entre os dois painéis (inclusive o gênero das palavras).
+const TIPOS = {
+  questoes: {
+    descricao: "O NotebookLM cria as questões a partir dos seus arquivos; o Giro só lê a resposta.",
+    // nome acessível: começa pelo texto visível (WCAG 2.5.3) e diz qual dos dois painéis
+    rotuloBotao: "Gerar com NotebookLM: questões",
+    quantidade: { rotulo: "Quantas questões", padrao: 10, max: 30 },
+    prompt: montarPrompt,
+    ler: (texto: string, existentes: string[]) =>
+      resumir(lerResposta(texto, existentes), (q) => ({
+        titulo: q.enunciado,
+        chips: [ROTULO_TIPO[q.tipo]],
+        detalhe: [`resposta ${q.gabarito}`, q.fonte].filter(Boolean).join(" · "),
+      })),
+    importar: importarQuestoes,
+    itens: (n: number) => plural(n, "questão", "questões"),
+    validas: (n: number) => (n === 1 ? "válida" : "válidas"),
+    repetidas: (n: number) => (n === 1 ? "repetida" : "repetidas"),
+    ordinal: (n: number) => `${n}ª questão`,
+    importadas: (n: number) => (n === 1 ? "1 questão importada." : `${n} questões importadas.`),
+    nadaNovo: "Nada novo: essas questões já estão no tópico.",
+    comProblema: "Com problema (não serão importadas)",
+    ignoradas: "Repetidas (ignoradas)",
+    nenhuma: "Nenhuma questão nova para importar.",
+  },
+  procedimentos: {
+    descricao:
+      "O NotebookLM monta o passo a passo a partir dos seus roteiros; o Giro só lê a resposta. Confira a ordem e os passos críticos.",
+    rotuloBotao: "Gerar com NotebookLM: procedimentos",
+    quantidade: { rotulo: "Quantos procedimentos", padrao: 3, max: 10 },
+    prompt: montarPromptProcedimentos,
+    ler: (texto: string, existentes: string[]) =>
+      resumir(lerProcedimentos(texto, existentes), (p) => {
+        const criticos = p.passos.filter((x) => x.critico).length;
+        return {
+          titulo: p.nome,
+          chips: [plural(p.passos.length, "passo", "passos"), plural(criticos, "crítico", "críticos")],
+          detalhe: [p.material.length ? `Material: ${p.material.join(", ")}` : "Sem material", p.fonte]
+            .filter(Boolean)
+            .join(" · "),
+        };
+      }),
+    importar: importarProcedimentos,
+    itens: (n: number) => plural(n, "procedimento", "procedimentos"),
+    validas: (n: number) => (n === 1 ? "válido" : "válidos"),
+    repetidas: (n: number) => (n === 1 ? "repetido" : "repetidos"),
+    ordinal: (n: number) => `${n}º procedimento`,
+    importadas: (n: number) => (n === 1 ? "1 procedimento importado." : `${n} procedimentos importados.`),
+    nadaNovo: "Nada novo: esses procedimentos já estão no tópico.",
+    comProblema: "Com problema (não serão importados)",
+    ignoradas: "Repetidos (ignorados)",
+    nenhuma: "Nenhum procedimento novo para importar.",
+  },
+} satisfies Record<Tipo, unknown>;
+
+type Textos = (typeof TIPOS)[Tipo];
+
 export function ImportarNotebookLM(props: Props) {
+  const t = TIPOS[props.tipo];
   return (
     <EditorResponsivo
       titulo="Gerar com NotebookLM"
-      descricao="O NotebookLM cria as questões a partir dos seus arquivos; o Giro só lê a resposta."
+      descricao={t.descricao}
       larguraDialog="sm:max-w-2xl"
+      ariaLabel={t.rotuloBotao}
       conteudo={() => <Painel {...props} />}
     >
       <Upload aria-hidden />
@@ -55,15 +126,16 @@ function Passo({ n, titulo, children }: { n: number; titulo: string; children: R
   );
 }
 
-function Painel({ topicoId, topico, disciplina, notebooklmUrl, enunciados }: Props) {
+function Painel({ tipo, topicoId, topico, disciplina, notebooklmUrl, enunciados }: Props) {
+  const t: Textos = TIPOS[tipo];
   const id = useId();
-  const [quantidade, setQuantidade] = useState(10);
+  const [quantidade, setQuantidade] = useState(t.quantidade.padrao);
   const [copia, setCopia] = useState<"ok" | "falhou" | null>(null);
   const [texto, setTexto] = useState("");
-  const [leitura, setLeitura] = useState<Leitura | null>(null);
-  const [resultado, setResultado] = useState<Awaited<ReturnType<typeof importarQuestoes>> | null>(null);
+  const [leitura, setLeitura] = useState<Leitura<ItemPrevia> | null>(null);
+  const [resultado, setResultado] = useState<EstadoImportacao | null>(null);
   const [importando, iniciar] = useTransition();
-  const prompt = montarPrompt({ quantidade, topico, disciplina });
+  const prompt = t.prompt({ quantidade, topico, disciplina });
 
   async function copiar() {
     try {
@@ -76,7 +148,7 @@ function Painel({ topicoId, topico, disciplina, notebooklmUrl, enunciados }: Pro
 
   function importar() {
     iniciar(async () => {
-      const r = await importarQuestoes(topicoId, texto);
+      const r = await t.importar(topicoId, texto);
       setResultado(r);
       if ("importadas" in r) {
         setTexto("");
@@ -91,17 +163,17 @@ function Painel({ topicoId, topico, disciplina, notebooklmUrl, enunciados }: Pro
         <Passo n={1} titulo="Copie o prompt">
           <div className="flex flex-wrap items-center gap-2">
             <label htmlFor={`${id}-qtd`} className="text-ink2">
-              Quantas questões
+              {t.quantidade.rotulo}
             </label>
             <input
               id={`${id}-qtd`}
               type="number"
               inputMode="numeric"
               min={1}
-              max={30}
+              max={t.quantidade.max}
               value={quantidade}
               onChange={(e) => {
-                setQuantidade(Math.min(30, Math.max(1, Number(e.target.value) || 1)));
+                setQuantidade(Math.min(t.quantidade.max, Math.max(1, Number(e.target.value) || 1)));
                 setCopia(null);
               }}
               className={cn(CAMPO, "w-24 text-center tabular-nums")}
@@ -162,7 +234,7 @@ function Painel({ topicoId, topico, disciplina, notebooklmUrl, enunciados }: Pro
             aria-label="Resposta do NotebookLM"
             className={cn(CAMPO, "h-auto py-3 text-sm")}
           />
-          <Button variant="secondary" onClick={() => setLeitura(lerResposta(texto, enunciados))}>
+          <Button variant="secondary" onClick={() => setLeitura(t.ler(texto, enunciados))}>
             Ler resposta
           </Button>
         </Passo>
@@ -172,11 +244,7 @@ function Painel({ topicoId, topico, disciplina, notebooklmUrl, enunciados }: Pro
         {resultado && "importadas" in resultado && (
           <p className="flex items-center gap-2 rounded-2xl border border-ok p-4 font-bold text-ok">
             <Check aria-hidden />
-            {resultado.importadas === 0
-              ? "Nada novo: essas questões já estão no tópico."
-              : resultado.importadas === 1
-                ? "1 questão importada."
-                : `${resultado.importadas} questões importadas.`}
+            {resultado.importadas === 0 ? t.nadaNovo : t.importadas(resultado.importadas)}
           </p>
         )}
         {resultado && "erro" in resultado && <p className="text-warn">{resultado.erro}</p>}
@@ -190,18 +258,20 @@ function Painel({ topicoId, topico, disciplina, notebooklmUrl, enunciados }: Pro
             <p className="mt-1 text-ink2">{leitura.erro.oQueFazer}</p>
           </div>
         )}
-        {leitura?.ok && <Previa leitura={leitura} importando={importando} aoImportar={importar} />}
+        {leitura?.ok && <Previa t={t} leitura={leitura} importando={importando} aoImportar={importar} />}
       </div>
     </div>
   );
 }
 
 function Previa({
+  t,
   leitura,
   importando,
   aoImportar,
 }: {
-  leitura: Extract<Leitura, { ok: true }>;
+  t: Textos;
+  leitura: Extract<Leitura<ItemPrevia>, { ok: true }>;
   importando: boolean;
   aoImportar: () => void;
 }) {
@@ -210,24 +280,25 @@ function Previa({
   return (
     <section aria-label="Pré-visualização" className="space-y-4 border-t border-line pt-5">
       <h3 className="font-display text-xl font-extrabold">
-        {n} {n === 1 ? "válida" : "válidas"}
+        {n} {t.validas(n)}
         {invalidas.length > 0 && ` · ${invalidas.length} com problema`}
-        {duplicadas.length > 0 && ` · ${duplicadas.length} ${duplicadas.length === 1 ? "repetida" : "repetidas"}`}
+        {duplicadas.length > 0 && ` · ${duplicadas.length} ${t.repetidas(duplicadas.length)}`}
       </h3>
 
       {n > 0 && (
         <ul className="space-y-2">
-          {validas.map((q, i) => (
+          {validas.map((item, i) => (
             <li key={i} className="flex gap-3 rounded-2xl border border-line p-3">
-              <Check className="mt-0.5 size-5 shrink-0 text-ok" aria-label="Válida" />
+              <Check className="mt-0.5 size-5 shrink-0 text-ok" aria-label="Válido" />
               <div className="min-w-0">
-                <p className="line-clamp-2">{q.enunciado}</p>
+                <p className="line-clamp-2">{item.titulo}</p>
                 <p className="mt-1 flex flex-wrap items-center gap-1.5 text-[13px] text-ink3">
-                  <Badge variant="chip" className="h-6 px-2 text-[12px]">
-                    {ROTULO_TIPO[q.tipo]}
-                  </Badge>
-                  <span>resposta {q.gabarito}</span>
-                  {q.fonte && <span>· {q.fonte}</span>}
+                  {item.chips.map((c) => (
+                    <Badge key={c} variant="chip" className="h-6 px-2 text-[12px]">
+                      {c}
+                    </Badge>
+                  ))}
+                  <span>{item.detalhe}</span>
                 </p>
               </div>
             </li>
@@ -237,13 +308,13 @@ function Previa({
 
       {invalidas.length > 0 && (
         <div className="space-y-2">
-          <h4 className="font-bold">Com problema (não serão importadas)</h4>
+          <h4 className="font-bold">{t.comProblema}</h4>
           <ul className="space-y-2">
             {invalidas.map((p) => (
               <li key={p.indice} className="flex gap-3 rounded-2xl border border-warn/60 p-3">
                 <AlertTriangle className="mt-0.5 size-5 shrink-0 text-warn" aria-hidden />
                 <p>
-                  <span className="font-bold">{p.indice + 1}ª questão:</span> {p.motivo}
+                  <span className="font-bold">{t.ordinal(p.indice + 1)}:</span> {p.motivo}
                 </p>
               </li>
             ))}
@@ -253,11 +324,11 @@ function Previa({
 
       {duplicadas.length > 0 && (
         <div className="space-y-2">
-          <h4 className="font-bold">Repetidas (ignoradas)</h4>
+          <h4 className="font-bold">{t.ignoradas}</h4>
           <ul className="space-y-2">
             {duplicadas.map((d) => (
               <li key={d.indice} className="rounded-2xl border border-dashed border-line p-3 text-ink3">
-                <span className="font-bold text-ink2">{d.indice + 1}ª questão:</span> {d.motivo}{" "}
+                <span className="font-bold text-ink2">{t.ordinal(d.indice + 1)}:</span> {d.motivo}{" "}
                 <span className="line-clamp-1">{d.enunciado}</span>
               </li>
             ))}
@@ -267,10 +338,10 @@ function Previa({
 
       {n > 0 ? (
         <Button onClick={aoImportar} disabled={importando} className="w-full sm:w-auto">
-          {importando ? "Importando…" : n === 1 ? "Importar 1 questão" : `Importar ${n} questões`}
+          {importando ? "Importando…" : `Importar ${t.itens(n)}`}
         </Button>
       ) : (
-        <p className="text-ink2">Nenhuma questão nova para importar.</p>
+        <p className="text-ink2">{t.nenhuma}</p>
       )}
     </section>
   );

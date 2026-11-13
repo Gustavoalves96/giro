@@ -31,6 +31,7 @@ export async function responder(entrada: z.input<typeof ResponderSchema>): Promi
   const r = ResponderSchema.parse(entrada);
   const [q, aberta] = await Promise.all([getGabarito(r.questaoId), r.sessaoId ? sessaoAberta(r.sessaoId) : true]);
   if (!q) throw new Error("Questão não encontrada.");
+  if (q.tipo === "procedimento") throw new Error("Use a conferência de passos.");
   // sessão finalizada não recebe mais respostas: o resumo gravado tem que bater com elas
   if (!aberta) throw new Error("Sessão já finalizada.");
   const validas = q.alternativas?.length ? q.alternativas.map((a) => a.letra) : ["V", "F"];

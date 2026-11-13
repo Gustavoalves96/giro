@@ -31,6 +31,14 @@ function LinhaTopico({ t, cor, disciplinaId }: { t: Topico; cor: string; discipl
           <span>
             {t.questoesAtivas} {t.questoesAtivas === 1 ? "questão ativa" : "questões ativas"}
           </span>
+          {t.procedimentosAtivos > 0 && (
+            <>
+              <span aria-hidden>·</span>
+              <span>
+                {t.procedimentosAtivos} {t.procedimentosAtivos === 1 ? "procedimento" : "procedimentos"}
+              </span>
+            </>
+          )}
           <span aria-hidden>·</span>
           {t.respondido ? (
             <span>

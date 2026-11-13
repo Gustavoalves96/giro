@@ -12,6 +12,7 @@ import { IdSchema } from "@/lib/disciplinas/schema";
 import { ROTULO_ORIGEM, ROTULO_TIPO } from "@/lib/questoes/rotulos";
 import { cn } from "@/lib/utils";
 import { marcar } from "./actions";
+import { EditorProcedimento } from "./editor-procedimento";
 import { EditorQuestao } from "./editor-questao";
 import { ImportarNotebookLM } from "./importar-notebooklm";
 
@@ -22,9 +23,25 @@ const SELO = "h-7 px-2.5 text-[13px]";
 
 type Questao = Awaited<ReturnType<typeof listarQuestoes>>[number];
 
-function LinhaQuestao({ q, topicoId, n }: { q: Questao; topicoId: string; n: number }) {
-  const taxa = q.respostas ? Math.round((q.acertos / q.respostas) * 100) : null;
-  const rotulo = `questão ${n}`;
+const contagem = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
+
+// Linha de questão ou de procedimento: selos, texto e as mesmas ações (editar, sinalizar, ativar).
+function LinhaItem({
+  q,
+  topicoId,
+  n,
+  editor,
+  children,
+}: {
+  q: Questao;
+  topicoId: string;
+  n: number;
+  editor: (rotulo: string) => React.ReactNode;
+  children: React.ReactNode;
+}) {
+  const proc = q.tipo === "procedimento";
+  const rotulo = `${proc ? "procedimento" : "questão"} ${n}`;
+  const g = proc ? "o" : "a"; // do/da, no/na
   return (
     <li
       className={cn(
@@ -34,47 +51,37 @@ function LinhaQuestao({ q, topicoId, n }: { q: Questao; topicoId: string; n: num
     >
       <div className="min-w-0 flex-1">
         <div className="mb-2 flex flex-wrap items-center gap-1.5">
-          <Badge variant="chip" className={SELO}>
-            {ROTULO_TIPO[q.tipo]}
-          </Badge>
+          {!proc && (
+            <Badge variant="chip" className={SELO}>
+              {ROTULO_TIPO[q.tipo]}
+            </Badge>
+          )}
           <Badge variant="chip" className={cn(SELO, "font-normal text-ink2")}>
             {ROTULO_ORIGEM[q.origem]}
           </Badge>
           {q.sinalizadaComErro && (
             <Badge variant="chip" className={cn(SELO, "border-warn text-warn")}>
               <Flag aria-hidden />
-              Sinalizada com erro
+              {proc ? "Sinalizado com erro" : "Sinalizada com erro"}
             </Badge>
           )}
           {!q.ativa && (
             <Badge variant="chip" className={cn(SELO, "border-dashed text-ink3")}>
               <EyeOff aria-hidden />
-              Inativa
+              {proc ? "Inativo" : "Inativa"}
             </Badge>
           )}
         </div>
-        <p className={cn("line-clamp-3 text-ink", !q.ativa && "text-ink3")}>{q.enunciado}</p>
-        <p className="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-[13px] text-ink3">
-          <span>{q.fonte ?? "Sem fonte"}</span>
-          <span aria-hidden>·</span>
-          <span>
-            acerto{" "}
-            <span className="font-bold text-ink2 tabular-nums">
-              {taxa === null ? "—" : `${taxa}% (${q.acertos}/${q.respostas})`}
-            </span>
-          </span>
-        </p>
+        {children}
       </div>
       <div className="flex items-center gap-1 self-end md:self-start">
-        <EditorQuestao topicoId={topicoId} questao={q} variant="ghost" className={ICONE} ariaLabel={`Editar ${rotulo}`}>
-          <Pencil aria-hidden />
-        </EditorQuestao>
+        {editor(rotulo)}
         <form action={marcar.bind(null, q.id, topicoId, "sinalizadaComErro", !q.sinalizadaComErro)}>
           <Button
             type="submit"
             variant="ghost"
             className={ICONE}
-            aria-label={q.sinalizadaComErro ? `Desmarcar erro da ${rotulo}` : `Sinalizar erro na ${rotulo}`}
+            aria-label={q.sinalizadaComErro ? `Desmarcar erro d${g} ${rotulo}` : `Sinalizar erro n${g} ${rotulo}`}
             title={q.sinalizadaComErro ? "Desmarcar erro" : "Sinalizar erro"}
           >
             {q.sinalizadaComErro ? <FlagOff aria-hidden /> : <Flag aria-hidden />}
@@ -96,14 +103,121 @@ function LinhaQuestao({ q, topicoId, n }: { q: Questao; topicoId: string; n: num
   );
 }
 
+function LinhaQuestao({ q, topicoId, n }: { q: Questao; topicoId: string; n: number }) {
+  const taxa = q.respostas ? Math.round((q.acertos / q.respostas) * 100) : null;
+  return (
+    <LinhaItem
+      q={q}
+      topicoId={topicoId}
+      n={n}
+      editor={(rotulo) => (
+        <EditorQuestao topicoId={topicoId} questao={q} variant="ghost" className={ICONE} ariaLabel={`Editar ${rotulo}`}>
+          <Pencil aria-hidden />
+        </EditorQuestao>
+      )}
+    >
+      <p className={cn("line-clamp-3 text-ink", !q.ativa && "text-ink3")}>{q.enunciado}</p>
+      <p className="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-[13px] text-ink3">
+        <span>{q.fonte ?? "Sem fonte"}</span>
+        <span aria-hidden>·</span>
+        <span>
+          acerto{" "}
+          <span className="font-bold text-ink2 tabular-nums">
+            {taxa === null ? "—" : `${taxa}% (${q.acertos}/${q.respostas})`}
+          </span>
+        </span>
+      </p>
+    </LinhaItem>
+  );
+}
+
+function LinhaProcedimento({ q, topicoId, n }: { q: Questao; topicoId: string; n: number }) {
+  const passos = q.checklist?.passos ?? [];
+  const criticos = passos.filter((p) => p.critico).length;
+  return (
+    <LinhaItem
+      q={q}
+      topicoId={topicoId}
+      n={n}
+      editor={(rotulo) => (
+        <EditorProcedimento
+          topicoId={topicoId}
+          procedimento={q}
+          variant="ghost"
+          className={ICONE}
+          ariaLabel={`Editar ${rotulo}`}
+        >
+          <Pencil aria-hidden />
+        </EditorProcedimento>
+      )}
+    >
+      <p className={cn("font-bold text-ink", !q.ativa && "text-ink3")}>{q.enunciado}</p>
+      <p className="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-[13px] text-ink3">
+        <span className="font-bold text-ink2 tabular-nums">
+          {contagem(passos.length, "passo", "passos")} · {contagem(criticos, "crítico", "críticos")}
+        </span>
+        <span aria-hidden>·</span>
+        <span>{q.fonte ?? "Sem fonte"}</span>
+      </p>
+    </LinhaItem>
+  );
+}
+
+function Secao({
+  id,
+  titulo,
+  resumo,
+  acoes,
+  vazio,
+  children,
+}: {
+  id: string;
+  titulo: string;
+  resumo: string;
+  acoes: React.ReactNode;
+  vazio: React.ReactNode; // false = mostra a lista
+  children: React.ReactNode;
+}) {
+  const idTitulo = `secao-${id}`;
+  return (
+    <section aria-labelledby={idTitulo} className="not-first-of-type:mt-12">
+      <div className="mb-4 flex flex-col gap-3">
+        <h2 id={idTitulo} className="font-display text-2xl font-extrabold">
+          {titulo} <span className="font-sans text-base font-normal text-ink3">· {resumo}</span>
+        </h2>
+        <div className="flex flex-wrap gap-2">{acoes}</div>
+      </div>
+      {vazio || children}
+    </section>
+  );
+}
+
+function Vazio({ titulo, texto }: { titulo: string; texto: string }) {
+  return (
+    <div className="rounded-3xl border border-dashed border-line p-8 text-center">
+      <p className="font-bold">{titulo}</p>
+      <p className="mt-1 text-ink3">{texto}</p>
+    </div>
+  );
+}
+
 // params e banco são dados da requisição: ficam dentro de <Suspense> (Cache Components).
 async function Conteudo({ id }: { id: string }) {
   if (!IdSchema.safeParse(id).success) notFound();
   const topico = await getTopico(id);
   if (!topico) notFound();
-  const questoes = await listarQuestoes(id);
+  const itens = await listarQuestoes(id);
+  const questoes = itens.filter((q) => q.tipo !== "procedimento");
+  const procedimentos = itens.filter((q) => q.tipo === "procedimento");
   const ativas = questoes.filter((q) => q.ativa).length;
+  const procAtivos = procedimentos.filter((q) => q.ativa).length;
   const dominio = Math.round(topico.dominio);
+  const importar = {
+    topicoId: id,
+    topico: topico.nome,
+    disciplina: topico.disciplinaNome,
+    notebooklmUrl: topico.notebooklmUrl,
+  };
 
   return (
     <>
@@ -131,52 +245,81 @@ async function Conteudo({ id }: { id: string }) {
         </ol>
       </nav>
 
-      <div className="mb-6 flex flex-col gap-4">
-        <div className="min-w-0">
-          <h1 className="font-display text-[32px] font-extrabold wrap-break-word md:text-[34px]">{topico.nome}</h1>
-          <p className="mt-1 text-ink3">
-            {ativas} {ativas === 1 ? "questão ativa" : "questões ativas"} · domínio{" "}
-            <span className="font-bold text-ink2 tabular-nums">{topico.respondido ? `${dominio}%` : "—"}</span>
-            {!topico.respondido && (
-              <Badge variant="chip" className={cn(SELO, "ml-2")}>
-                novo
-              </Badge>
-            )}
-          </p>
-          {topico.respondido && <BarraDominio valor={dominio} cor={topico.cor} className="mt-2 max-w-60" />}
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <EditorQuestao topicoId={id} variant="default">
-            <Plus aria-hidden />
-            Nova questão
-          </EditorQuestao>
-          <ImportarNotebookLM
-            topicoId={id}
-            topico={topico.nome}
-            disciplina={topico.disciplinaNome}
-            notebooklmUrl={topico.notebooklmUrl}
-            enunciados={questoes.map((q) => q.enunciado)}
-          />
-          {/* espaço reservado: IA (sessão 18) */}
-          <Button variant="secondary" disabled title="Em breve">
-            <Sparkles aria-hidden />
-            Gerar com IA <span className="font-normal text-ink3">· em breve</span>
-          </Button>
-        </div>
+      <div className="mb-8 min-w-0">
+        <h1 className="font-display text-[32px] font-extrabold wrap-break-word md:text-[34px]">{topico.nome}</h1>
+        <p className="mt-1 text-ink3">
+          domínio <span className="font-bold text-ink2 tabular-nums">{topico.respondido ? `${dominio}%` : "—"}</span>
+          {!topico.respondido && (
+            <Badge variant="chip" className={cn(SELO, "ml-2")}>
+              novo
+            </Badge>
+          )}
+        </p>
+        {topico.respondido && <BarraDominio valor={dominio} cor={topico.cor} className="mt-2 max-w-60" />}
       </div>
 
-      {questoes.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-line p-8 text-center">
-          <p className="font-bold">Nenhuma questão ainda.</p>
-          <p className="mt-1 text-ink3">Crie a primeira em “Nova questão” ou “Gerar com NotebookLM”. O tópico só entra na roleta com questões ativas.</p>
-        </div>
-      ) : (
+      <Secao
+        id="questoes"
+        titulo="Questões"
+        resumo={contagem(ativas, "ativa", "ativas")}
+        acoes={
+          <>
+            <EditorQuestao topicoId={id} variant="default">
+              <Plus aria-hidden />
+              Nova questão
+            </EditorQuestao>
+            <ImportarNotebookLM tipo="questoes" {...importar} enunciados={questoes.map((q) => q.enunciado)} />
+            {/* espaço reservado: IA (sessão 18) */}
+            <Button variant="secondary" disabled title="Em breve">
+              <Sparkles aria-hidden />
+              Gerar com IA <span className="font-normal text-ink3">· em breve</span>
+            </Button>
+          </>
+        }
+        vazio={
+          questoes.length === 0 && (
+            <Vazio
+              titulo="Nenhuma questão ainda."
+              texto="Crie a primeira em “Nova questão” ou “Gerar com NotebookLM”. O tópico só entra na roleta com questões ativas."
+            />
+          )
+        }
+      >
         <ul className="space-y-3">
           {questoes.map((q, i) => (
             <LinhaQuestao key={q.id} q={q} topicoId={id} n={i + 1} />
           ))}
         </ul>
-      )}
+      </Secao>
+
+      <Secao
+        id="procedimentos"
+        titulo="Procedimentos"
+        resumo={contagem(procAtivos, "ativo", "ativos")}
+        acoes={
+          <>
+            <EditorProcedimento topicoId={id} variant="default">
+              <Plus aria-hidden />
+              Novo procedimento
+            </EditorProcedimento>
+            <ImportarNotebookLM tipo="procedimentos" {...importar} enunciados={procedimentos.map((q) => q.enunciado)} />
+          </>
+        }
+        vazio={
+          procedimentos.length === 0 && (
+            <Vazio
+              titulo="Nenhum procedimento ainda."
+              texto="Manobras e exames com o passo a passo, para treinar de cabeça. Crie em “Novo procedimento” ou “Gerar com NotebookLM”."
+            />
+          )
+        }
+      >
+        <ul className="space-y-3">
+          {procedimentos.map((q, i) => (
+            <LinhaProcedimento key={q.id} q={q} topicoId={id} n={i + 1} />
+          ))}
+        </ul>
+      </Secao>
     </>
   );
 }

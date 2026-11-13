@@ -47,7 +47,7 @@ export function EditorQuestao({
   );
 }
 
-function Opcoes<T extends string>({
+export function Opcoes<T extends string>({
   legenda,
   nome,
   opcoes,
@@ -104,7 +104,7 @@ function FormQuestao({
     return r;
   }, {});
   // controlados: o React limpa campos não controlados depois da action, inclusive quando dá erro
-  const [tipo, setTipo] = useState<(typeof TIPOS)[number]>(questao?.tipo ?? "multipla_escolha");
+  const [tipo, setTipo] = useState<Questao["tipo"]>(questao?.tipo ?? "multipla_escolha");
   const [enunciado, setEnunciado] = useState(questao?.enunciado ?? "");
   // texto das alternativas fica guardado mesmo se trocar para V/F e voltar
   const [alternativas, setAlternativas] = useState<Record<Letra, string>>(() => {

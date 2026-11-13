@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import { db } from "./index";
 import { disciplinas, type NovaResposta, questoes, respostas, topicos } from "./schema";
 
@@ -19,7 +19,7 @@ export async function listarQuestoesExibicao() {
     .from(questoes)
     .innerJoin(topicos, eq(topicos.id, questoes.topicoId))
     .innerJoin(disciplinas, eq(disciplinas.id, topicos.disciplinaId))
-    .where(eq(questoes.ativa, true));
+    .where(and(eq(questoes.ativa, true), ne(questoes.tipo, "procedimento"))); // procedimento: sessão 11
 }
 
 // Para conferir a resposta no servidor.
@@ -27,6 +27,7 @@ export async function getGabarito(id: string) {
   const [q] = await db
     .select({
       alternativas: questoes.alternativas,
+      tipo: questoes.tipo,
       gabarito: questoes.gabarito,
       explicacao: questoes.explicacao,
       fonte: questoes.fonte,

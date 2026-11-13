@@ -12,7 +12,8 @@ export async function getDisciplina(id: string) {
 // Nas subqueries, "topicos"."id" vai escrito à mão: em select de uma tabela só o Drizzle gera ${topicos.id}
 // sem qualificar, e lá dentro "id" passaria a ser o da tabela interna. (Idem em questoes.ts.)
 
-// Tópicos da disciplina com nº de questões (ativas e todas) e se já houve alguma resposta (sem = "novo").
+// Tópicos da disciplina com nº de questões e de procedimentos ativos, total de itens (questões + procedimentos)
+// e se já houve alguma resposta (sem = "novo").
 export async function listarTopicos(disciplinaId: string) {
   return db
     .select({
@@ -20,7 +21,10 @@ export async function listarTopicos(disciplinaId: string) {
       nome: topicos.nome,
       descricao: topicos.descricao,
       dominio: topicos.dominio,
-      questoesAtivas: sql<number>`(select count(*) from questoes q where q.topico_id = "topicos"."id" and q.ativa)`.mapWith(
+      questoesAtivas: sql<number>`(select count(*) from questoes q where q.topico_id = "topicos"."id" and q.ativa and q.tipo <> 'procedimento')`.mapWith(
+        Number,
+      ),
+      procedimentosAtivos: sql<number>`(select count(*) from questoes q where q.topico_id = "topicos"."id" and q.ativa and q.tipo = 'procedimento')`.mapWith(
         Number,
       ),
       totalQuestoes: sql<number>`(select count(*) from questoes q where q.topico_id = "topicos"."id")`.mapWith(Number),
@@ -69,7 +73,8 @@ export async function listarTopicosRoleta() {
     .where(
       and(
         eq(disciplinas.arquivada, false),
-        sql`exists (select 1 from questoes q where q.topico_id = "topicos"."id" and q.ativa)`,
+        // procedimento só entra na rodada na sessão 11: tópico só com procedimentos fica fora
+        sql`exists (select 1 from questoes q where q.topico_id = "topicos"."id" and q.ativa and q.tipo <> 'procedimento')`,
       ),
     )
     .orderBy(asc(disciplinas.ordem), asc(disciplinas.criadoEm), asc(topicos.criadoEm), asc(topicos.nome));
