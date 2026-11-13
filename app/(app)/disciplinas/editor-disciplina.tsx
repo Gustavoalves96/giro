@@ -1,34 +1,20 @@
 "use client";
 
 import { Check } from "lucide-react";
-import { useActionState, useId, useState, useSyncExternalStore } from "react";
+import { useActionState, useId, useState } from "react";
+import { CAMPO, EditorResponsivo } from "@/components/editor-responsivo";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { CORES_DISCIPLINA, TEXTO_SOBRE_TINTA, tintaClara } from "@/lib/cores";
 import { cn } from "@/lib/utils";
 import { type EstadoDisciplina, salvarDisciplina } from "./actions";
 
 type Disciplina = { id: string; nome: string; cor: string; notebooklmUrl: string | null };
 
-const CAMPO =
-  "h-12 w-full rounded-[14px] border border-line bg-sf px-4 text-base text-ink outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-warn";
 const HEX = /^#[0-9a-fA-F]{6}$/;
-
-// md do Tailwind (48rem): iPad e notebook usam Dialog; celular usa Sheet.
-const MD = "(min-width: 48rem)";
-function assinarMd(aviso: () => void) {
-  const mq = window.matchMedia(MD);
-  mq.addEventListener("change", aviso);
-  return () => mq.removeEventListener("change", aviso);
-}
 
 export function EditorDisciplina({
   disciplina,
-  children,
-  className,
-  variant = "secondary",
-  ariaLabel,
+  ...botao
 }: {
   disciplina?: Disciplina;
   children: React.ReactNode;
@@ -36,42 +22,13 @@ export function EditorDisciplina({
   variant?: "destaque" | "default" | "secondary" | "ghost";
   ariaLabel?: string;
 }) {
-  const [aberto, setAberto] = useState(false);
-  const telaLarga = useSyncExternalStore(assinarMd, () => window.matchMedia(MD).matches, () => true);
-  const titulo = disciplina ? "Editar disciplina" : "Nova disciplina";
-  const descricao = "Nome, cor e link do caderno no NotebookLM.";
-  const form = <FormDisciplina disciplina={disciplina} aoSalvar={() => setAberto(false)} />;
-
   return (
-    <>
-      <Button variant={variant} className={className} aria-label={ariaLabel} onClick={() => setAberto(true)}>
-        {children}
-      </Button>
-      {telaLarga ? (
-        <Dialog open={aberto} onOpenChange={setAberto}>
-          <DialogContent className="max-h-[90dvh] overflow-y-auto rounded-3xl border-line bg-sf p-6 sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle className="font-display text-2xl font-extrabold">{titulo}</DialogTitle>
-              <DialogDescription className="text-base text-ink3">{descricao}</DialogDescription>
-            </DialogHeader>
-            {form}
-          </DialogContent>
-        </Dialog>
-      ) : (
-        <Sheet open={aberto} onOpenChange={setAberto}>
-          <SheetContent
-            side="bottom"
-            className="max-h-[92dvh] overflow-y-auto rounded-t-3xl border-line bg-sf px-4 pt-2 pb-[calc(1.5rem+env(safe-area-inset-bottom))]"
-          >
-            <SheetHeader className="px-0">
-              <SheetTitle className="font-display text-2xl font-extrabold">{titulo}</SheetTitle>
-              <SheetDescription className="text-base text-ink3">{descricao}</SheetDescription>
-            </SheetHeader>
-            {form}
-          </SheetContent>
-        </Sheet>
-      )}
-    </>
+    <EditorResponsivo
+      {...botao}
+      titulo={disciplina ? "Editar disciplina" : "Nova disciplina"}
+      descricao="Nome, cor e link do caderno no NotebookLM."
+      conteudo={(fechar) => <FormDisciplina disciplina={disciplina} aoSalvar={fechar} />}
+    />
   );
 }
 

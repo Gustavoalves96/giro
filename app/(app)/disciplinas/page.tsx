@@ -1,6 +1,8 @@
 import { Archive, ArchiveRestore, ArrowDown, ArrowUp, ExternalLink, Pencil, Plus } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
+import { BarraDominio } from "@/components/barra-dominio";
 import { Button } from "@/components/ui/button";
 import { listarDisciplinas } from "@/lib/db/disciplinas";
 import { arquivar, mover } from "./actions";
@@ -18,17 +20,18 @@ function Detalhes({ d }: { d: Linha }) {
     <div className="min-w-0 flex-1">
       <h3 className="flex items-center gap-3 font-display text-xl font-bold">
         <span className="size-3 shrink-0 rounded-full" style={{ backgroundColor: d.cor }} aria-hidden />
-        <span className="truncate">{d.nome}</span>
+        <Link
+          href={`/disciplinas/${d.id}`}
+          className="flex min-h-11 min-w-0 items-center underline-offset-4 hover:underline"
+        >
+          <span className="truncate">{d.nome}</span>
+        </Link>
       </h3>
       <p className="mt-1 text-ink3">
         {d.totalTopicos} {d.totalTopicos === 1 ? "tópico" : "tópicos"} · domínio médio{" "}
         <span className="font-bold text-ink2 tabular-nums">{dominio === null ? "—" : `${dominio}%`}</span>
       </p>
-      {dominio !== null && (
-        <div className="mt-2 h-2 max-w-60 overflow-hidden rounded-full bg-sf2" aria-hidden>
-          <div className="h-full rounded-full" style={{ width: `${dominio}%`, backgroundColor: d.cor }} />
-        </div>
-      )}
+      {dominio !== null && <BarraDominio valor={dominio} cor={d.cor} className="mt-2 max-w-60" />}
     </div>
   );
 }
