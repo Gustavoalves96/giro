@@ -8,7 +8,7 @@ A roleta: filtros, sorteio no servidor e animação até parar na fatia sorteada
 
 ## Entregáveis
 - `lib/domain/roleta.ts` (puro):
-  - `pesoTopico({ dominio, nuncaEstudado, estudadoUltimas24h, temProvaEm14Dias })` = `1 + (100 - dominio) / 25`, ×1,5 nunca estudado, ×2 prova em 14 dias, ×0,5 estudado nas últimas 24 h. (`temProvaEm14Dias` chega sempre `false` até a sessão 14.)
+  - `pesoTopico({ dominio, nuncaEstudado, estudadoUltimas24h, temProvaEm14Dias })` = `1 + (100 - dominio) / 25`, ×1,5 nunca estudado, ×2 prova em 14 dias, ×0,5 estudado nas últimas 24 h. (`temProvaEm14Dias` chega sempre `false` até a sessão 16.)
   - `sortear(itens, rng = Math.random)` ponderado.
   - `motivoPeso()` para o "Por que ele?" (ex.: "domínio baixo", "nunca estudado").
   - `fatiaSobPonteiro(angulo, fatias)` (usada no visor e nos tics).
@@ -41,4 +41,4 @@ A roleta: filtros, sorteio no servidor e animação até parar na fatia sorteada
 - Não verificado automaticamente: sensação da animação, fluidez e tics no iPad real.
 
 ## Fora do escopo
-Sessão de estudo (09), peso de provas (14).
+Sessão de estudo (09), peso de provas (16).

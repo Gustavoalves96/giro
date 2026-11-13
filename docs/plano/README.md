@@ -22,16 +22,19 @@ Uma sessão do Claude Code por arquivo. Em cada sessão, anexe **só** o arquivo
 | [x] | 07 | [Roleta](07-roleta.md) | 05 |
 | [x] | 08 | [Componente de questão + pontuação](08-questao-pontuacao.md) | 05 |
 | [x] | 09 | [Sessão da roleta](09-sessao-roleta.md) | 07, 08 |
-| [ ] | 10 | [FSRS + Revisão do dia](10-fsrs-revisao.md) | 09 |
-| [ ] | 11 | [Caderno de erros](11-caderno-erros.md) | 09 |
-| [ ] | 12 | [Início (painel)](12-inicio.md) | 10 |
-| [ ] | 13 | [Estatísticas](13-estatisticas.md) | 09 |
-| [ ] | 14 | [Provas](14-provas.md) | 07 |
-| [ ] | 15 | [Simulado](15-simulado.md) | 08, 10 |
-| [ ] | 16 | [IA opcional](16-ia-opcional.md) | 06, 08 |
-| [ ] | 17 | [Polimento](17-polimento.md) | todas |
+| [ ] | 10 | [Procedimentos: cadastro e importação](10-procedimentos-cadastro.md) | 05, 06, 09 |
+| [ ] | 11 | [Procedimentos na rodada](11-procedimentos-rodada.md) | 09, 10 |
+| [ ] | 12 | [FSRS + Revisão do dia](12-fsrs-revisao.md) | 09, 11 |
+| [ ] | 13 | [Caderno de erros](13-caderno-erros.md) | 09, 11 |
+| [ ] | 14 | [Início (painel)](14-inicio.md) | 12 |
+| [ ] | 15 | [Estatísticas](15-estatisticas.md) | 09 |
+| [ ] | 16 | [Provas](16-provas.md) | 07 |
+| [ ] | 17 | [Simulado](17-simulado.md) | 08, 12 |
+| [ ] | 18 | [IA opcional](18-ia-opcional.md) | 06, 08 |
+| [ ] | 19 | [Polimento](19-polimento.md) | todas |
 
-06, 07 e 08 podem ser feitas em qualquer ordem depois da 05. 13 e 14 também são independentes entre si.
+06, 07 e 08 podem ser feitas em qualquer ordem depois da 05. 15 e 16 também são independentes entre si.
+As sessões 10 e 11 (procedimentos) entraram em 13/11/2026, antes do FSRS: assim FSRS, revisão, caderno de erros e estatísticas já nascem tratando os dois tipos de item. As antigas 10–17 viraram 12–19.
 
 ## Decisões que valem para todas as sessões
 - **Nome do app: Giro.** "RoletaMed" é só o nome da pasta.
@@ -44,6 +47,7 @@ Uma sessão do Claude Code por arquivo. Em cada sessão, anexe **só** o arquivo
 - **Lacunas do design resolvidas sem coluna nova:** "Foque em" = linhas de `topicos.descricao` (some se vazio); "Rodada de hoje · x de 2" = meta fixa de 2 sessões por dia (constante); "+2 min" só no cliente.
 - **Tempo de estudo:** padrão editável em Meu perfil (`perfil.estudo_segundos`, padrão 600 s) e ajustável na roleta só para a rodada (sessão 09). Textos não citam "10 minutos" fixo; slogan: "Gire. Estude. Domine o tópico."
 - **Sair no meio da rodada** (sessão 09): pede confirmação e deixa a sessão **aberta** (`finalizada_em` null). Ela não conta pontos, XP, recorde nem domínio; as respostas já dadas ficam gravadas (com `sessao_id`) e entram no domínio na próxima rodada finalizada do tópico. Estatísticas e painel contam só sessões finalizadas. A URL da sessão continua de onde parou.
+- **Procedimentos (manobras e exames):** segundo tipo de item do tópico (`questoes.tipo = 'procedimento'` + `checklist`), praticado na mesma rodada: ela vê o nome, tenta lembrar os passos sem pressão de tempo, confere o checklist e marca lembrei / com erro / esqueci. Conteúdo só das fontes dela (NotebookLM ou manual), nunca gerado por IA na hora. No máximo 1 procedimento por rodada; fora do simulado.
 - **Deploy cedo** (sessão 02), para OAuth e Neon serem testados em produção desde o começo.
 
 ## Definição de pronto (toda sessão)
@@ -55,3 +59,4 @@ Uma sessão do Claude Code por arquivo. Em cada sessão, anexe **só** o arquivo
 
 ## Em aberto
 - Validar com ela o conteúdo médico do seed antes de usar as questões como dados de teste.
+- Validar com ela os primeiros checklists de procedimento importados (ordem dos passos e o que é "crítico") antes de confiar na pontuação.

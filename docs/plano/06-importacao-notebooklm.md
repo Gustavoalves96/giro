@@ -33,4 +33,4 @@ Fluxo principal de criação de questões: copiar prompt → gerar no NotebookLM
 - Não verificado automaticamente: cópia para a área de transferência no Safari do iPad.
 
 ## Fora do escopo
-Geração por IA (16).
+Geração por IA (18).

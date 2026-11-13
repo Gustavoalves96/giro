@@ -4,5 +4,5 @@ import { EmBreve } from "@/components/em-breve";
 export const metadata: Metadata = { title: "Estatísticas · Giro" };
 
 export default function Page() {
-  return <EmBreve titulo="Estatísticas" sessao="13" />;
+  return <EmBreve titulo="Estatísticas" sessao="15" />;
 }

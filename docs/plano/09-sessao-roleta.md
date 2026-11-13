@@ -19,7 +19,7 @@ Ligar roleta, timer, quiz e resultado numa rodada completa que mede e atualiza o
 - **Questões**: 5 questões do tópico via `selecao-questoes`, usando `Questao` com feedback imediato e `BarraProgresso`.
 - **Finalizar** (Server Action): grava `finalizada_em, total_questoes, acertos, pontuacao, maior_sequencia`; recalcula `topicos.dominio` com `lib/domain/dominio.ts`; atualiza `ultima_vez_estudado`.
 - `lib/domain/dominio.ts`: últimas 20 respostas; a mais recente pesa 1,0 e cada anterior ×0,9; sem respostas = 0.
-- **Resultado**: pontuação, acertos (4/5), maior sequência, tempo; domínio antes → depois em barra (cresce em 1,2 s com atraso de 0,4 s); resposta por questão; selo "Novo recorde!" se for a maior pontuação; ações "Girar de novo", "Revisar N erros" (link para `/erros`, ligado na 11), "Voltar ao início".
+- **Resultado**: pontuação, acertos (4/5), maior sequência, tempo; domínio antes → depois em barra (cresce em 1,2 s com atraso de 0,4 s); resposta por questão; selo "Novo recorde!" se for a maior pontuação; ações "Girar de novo", "Revisar N erros" (link para `/erros`, ligado na 13), "Voltar ao início".
 - "Sair" no layout de foco pede confirmação. Escolher a opção mais simples para a sessão não finalizada (descartar ou finalizar com o que tiver) e documentar.
 
 ## Regras e detalhes
@@ -35,4 +35,4 @@ Ligar roleta, timer, quiz e resultado numa rodada completa que mede e atualiza o
 - Não verificado automaticamente: timer com a tela do iPad bloqueada / app em segundo plano.
 
 ## Fora do escopo
-FSRS (10), caderno de erros (11).
+FSRS (12), caderno de erros (13).

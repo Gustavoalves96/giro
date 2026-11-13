@@ -17,8 +17,8 @@ Um componente de questão reutilizado por roleta, revisão, erros e simulado, co
   - Feedback imediato em `role="status"`: acerto em Menta, "Isso!", "+N XP" e selo de sequência; erro em âmbar, "Quase! A correta é a X." — **nunca vermelho, sem tremida**. Explicação + fonte. "Sinalizar erro" (marca `sinalizada_com_erro`).
   - Animações do design (acerto 900 ms; erro 200 + 150 ms); em movimento reduzido, só cor e opacidade, números trocam direto.
 - `components/quiz/BarraProgresso.tsx`: "Questão 3 de 5", 5 segmentos coloridos pelo resultado, sequência e pontos.
-- Server Action `responder({ questaoId, sessaoId, respostaDada, tempoMs })`: `requireUser()`, confere o gabarito **no servidor**, limita `tempoMs` (0–30 min), grava em `respostas`, devolve `{ acertou, gabarito, explicacao, fonte }`. (FSRS entra na sessão 10.)
-- Página de teste `/dev/questao` com uma questão do seed (apagar na 17).
+- Server Action `responder({ questaoId, sessaoId, respostaDada, tempoMs })`: `requireUser()`, confere o gabarito **no servidor**, limita `tempoMs` (0–30 min), grava em `respostas`, devolve `{ acertou, gabarito, explicacao, fonte }`. (FSRS entra na sessão 12.)
+- Página de teste `/dev/questao` com uma questão do seed (apagar na 19).
 
 ## Regras e detalhes
 - O gabarito não vai para o cliente antes da resposta.
@@ -35,4 +35,4 @@ Um componente de questão reutilizado por roleta, revisão, erros e simulado, co
 - Não verificado automaticamente: toque real no iPad.
 
 ## Fora do escopo
-Fluxo da sessão (09), FSRS (10).
+Fluxo da sessão (09), FSRS (12).

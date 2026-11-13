@@ -6,7 +6,7 @@ export type FatoresPeso = {
   dominio: number; // 0..100
   nuncaEstudado: boolean;
   estudadoUltimas24h: boolean;
-  temProvaEm14Dias: boolean; // sempre false até a sessão 14 (provas)
+  temProvaEm14Dias: boolean; // sempre false até a sessão 16 (provas)
 };
 
 export type Candidato = FatoresPeso & {

@@ -13,7 +13,7 @@ Projeto Next.js de pé com o visual do Giro (tokens, fontes, tema claro/escuro, 
 - `app/globals.css`: tokens do design em `:root` e `.dark` — `bg, sf, sf2, ink, ink2, ink3, line, ac, acink, ok, warn, gold` — expostos no `@theme` (ex.: `bg-sf`, `text-ink2`, `bg-ac`). Mapear as variáveis do shadcn (`--background`, `--primary`…) para esses tokens.
 - Fontes via `next/font/google`: Bricolage Grotesque (400–800, títulos/números, `tracking-[-0.02em]`) e Atkinson Hyperlegible (400/700, corpo). Classes `font-display` e `font-sans`.
 - Variantes do Button: `destaque` (Brasa, h-[60px], rounded-[18px], texto 20 px negrito), `default` (tinta), `secondary` (superfície com borda), `ghost`. Chip (pílula 36 px) como variante do Badge.
-- Página temporária `app/dev/tokens/page.tsx`: todas as cores, as duas fontes, botões e chips, com botão de alternar tema. (Apagar na sessão 17.)
+- Página temporária `app/dev/tokens/page.tsx`: todas as cores, as duas fontes, botões e chips, com botão de alternar tema. (Apagar na sessão 19.)
 - Vitest: `vitest.config.ts`, script `"test": "vitest run"`, um teste trivial.
 - Atualizar o CLAUDE.md: nome do produto = **Giro**; anotar que o Tailwind é v4 (tokens via `@theme`).
 

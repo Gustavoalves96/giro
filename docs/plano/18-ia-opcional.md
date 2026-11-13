@@ -1,4 +1,4 @@
-# Sessão 16 — IA opcional
+# Sessão 18 — IA opcional
 
 **Depende de:** 06, 08
 **Ler antes:** CLAUDE.md §2 (Restrições), §5 ("IA (opcional)"), §6
@@ -28,4 +28,4 @@ Dois usos de IA, opcionais, com custo zero e cache.
 - lint, test e build limpos.
 
 ## Fora do escopo
-Outros provedores.
+Outros provedores. Gerar ou explicar procedimentos com IA (decisão da sessão 10: checklist vem só das fontes dela).

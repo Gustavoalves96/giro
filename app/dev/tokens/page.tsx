@@ -1,4 +1,4 @@
-// Página temporária de referência visual. Apagar na sessão 17.
+// Página temporária de referência visual. Apagar na sessão 19.
 import { Flame, Play, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

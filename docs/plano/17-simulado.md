@@ -1,6 +1,6 @@
-# Sessão 15 — Simulado
+# Sessão 17 — Simulado
 
-**Depende de:** 08, 10
+**Depende de:** 08, 12
 **Ler antes:** CLAUDE.md §4.6
 
 ## Objetivo
@@ -15,6 +15,7 @@ Prova simulada com tempo total e feedback só no fim.
 
 ## Regras e detalhes
 - Simulado não conta para o recorde de pontuação.
+- Só questões: procedimentos (sessões 10–11) ficam fora, porque são sem pressão de tempo.
 - Trocar de resposta antes de entregar é permitido: grava só a resposta final de cada questão (na entrega).
 
 ## Testes

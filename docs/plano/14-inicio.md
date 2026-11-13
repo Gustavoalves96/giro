@@ -1,6 +1,6 @@
-# Sessão 12 — Início (painel)
+# Sessão 14 — Início (painel)
 
-**Depende de:** 10
+**Depende de:** 12
 **Ler antes:** CLAUDE.md §4.7 · design: "Início"
 
 ## Objetivo
@@ -11,7 +11,7 @@ Tela inicial que diz o que fazer agora e mostra o progresso.
 - Chips: sequência de dias (ouro) e XP total.
 - Card escuro com mini-roleta: "Rodada de hoje · x de 2" (meta fixa 2; conta sessões `roleta` finalizadas hoje no fuso SP) e CTA "Girar a roleta".
 - Revisão do dia: total vencido, divisão por disciplina, "Revisar agora · ~N min".
-- Próxima prova: deixar o espaço; escondido até a sessão 14.
+- Próxima prova: deixar o espaço; escondido até a sessão 16.
 - Pontos fracos: 3 tópicos de menor domínio (só os que já têm respostas).
 - Mapa de calor das últimas 14 semanas (questões respondidas por dia), com descrição em texto.
 - `lib/domain/stats.ts`: `diaSP(date)`, `streak(diasComSessao, hoje)`, `xpTotal`, `agregarPorDia`.
@@ -28,4 +28,4 @@ Tela inicial que diz o que fazer agora e mostra o progresso.
 - lint, test e build limpos.
 
 ## Fora do escopo
-Página de estatísticas completa (13).
+Página de estatísticas completa (15).

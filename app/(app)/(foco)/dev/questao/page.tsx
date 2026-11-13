@@ -1,4 +1,4 @@
-// Página temporária para conferir o componente de questão. Apagar na sessão 17.
+// Página temporária para conferir o componente de questão. Apagar na sessão 19.
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import type { QuestaoExibida } from "@/components/quiz/Questao";

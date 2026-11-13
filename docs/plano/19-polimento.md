@@ -1,4 +1,4 @@
-# Sessão 17 — Polimento e estados vazios
+# Sessão 19 — Polimento e estados vazios
 
 **Depende de:** todas
 **Ler antes:** design: "Lacunas e próximos passos", "Acessibilidade"
@@ -7,7 +7,7 @@
 Fechar as lacunas do design e revisar acessibilidade antes do uso real.
 
 ## Entregáveis
-- Primeiro uso guiado: sem disciplinas → "Crie sua primeira disciplina"; sem questões → "Gere questões com o NotebookLM"; refletir no Início e na Roleta.
+- Primeiro uso guiado: sem disciplinas → "Crie sua primeira disciplina"; sem questões → "Gere questões com o NotebookLM" (e a opção de procedimentos); refletir no Início e na Roleta.
 - `loading.tsx` nas rotas com dados; estados "Importando…" e "Gerando…" com botão desativado.
 - Estados vazios revisados em todas as telas; mensagem de limite de IA.
 - Apagar `/dev/tokens` e `/dev/questao`.

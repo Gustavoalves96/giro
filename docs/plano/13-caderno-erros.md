@@ -1,6 +1,6 @@
-# Sessão 11 — Caderno de erros
+# Sessão 13 — Caderno de erros
 
-**Depende de:** 09
+**Depende de:** 09, 11
 **Ler antes:** CLAUDE.md §4.6
 
 ## Objetivo
@@ -8,8 +8,8 @@ Lista das questões cuja **última** resposta foi errada, com filtro e opção d
 
 ## Entregáveis
 - Query: última resposta por questão (`DISTINCT ON (questao_id) … ORDER BY questao_id, respondida_em DESC`) com `acertou = false`, só questões ativas.
-- `/erros`: filtro por disciplina e tópico (search params); lista com enunciado, tópico, data do erro, resposta dada × gabarito.
-- "Refazer" (todas as filtradas ou uma) → sessão `modo='erros'` com `Questao` e feedback imediato. Acertou → sai da lista naturalmente.
+- `/erros`: filtro por disciplina e tópico (search params); lista com enunciado, tópico, data do erro, resposta dada × gabarito. Procedimentos (sessão 11) entram quando a última tentativa não passou: mostram o nome, "% lembrado" e os passos esquecidos daquela tentativa (`respostas_passos`).
+- "Refazer" (todas as filtradas ou uma) → sessão `modo='erros'` com `Questao` ou `Procedimento` e feedback imediato. Acertou → sai da lista naturalmente.
 - Ligar o botão "Revisar N erros" do resultado (09) para `/erros` filtrado pelo tópico da sessão.
 - Acesso pela tela Revisão ("Caderno de erros").
 
@@ -21,4 +21,4 @@ Lista das questões cuja **última** resposta foi errada, com filtro e opção d
 - lint, test e build limpos.
 
 ## Fora do escopo
-Simulado (15).
+Simulado (17).

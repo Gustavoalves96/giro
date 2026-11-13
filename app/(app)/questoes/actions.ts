@@ -25,7 +25,7 @@ const ResponderSchema = z.object({
 
 export type Conferencia = { acertou: boolean; gabarito: string; explicacao: string; fonte: string | null };
 
-// O gabarito só sai do servidor aqui, depois da resposta. FSRS entra na sessão 10.
+// O gabarito só sai do servidor aqui, depois da resposta. FSRS entra na sessão 12.
 export async function responder(entrada: z.input<typeof ResponderSchema>): Promise<Conferencia> {
   await requireUser();
   const r = ResponderSchema.parse(entrada);

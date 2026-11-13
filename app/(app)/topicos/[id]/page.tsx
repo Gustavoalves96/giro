@@ -157,7 +157,7 @@ async function Conteudo({ id }: { id: string }) {
             notebooklmUrl={topico.notebooklmUrl}
             enunciados={questoes.map((q) => q.enunciado)}
           />
-          {/* espaço reservado: IA (sessão 16) */}
+          {/* espaço reservado: IA (sessão 18) */}
           <Button variant="secondary" disabled title="Em breve">
             <Sparkles aria-hidden />
             Gerar com IA <span className="font-normal text-ink3">· em breve</span>

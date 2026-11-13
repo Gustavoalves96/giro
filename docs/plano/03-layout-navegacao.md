@@ -17,7 +17,7 @@ Casca do app com navegação responsiva, layout de foco para as sessões de estu
 - Páginas placeholder para cada destino.
 - Botão de tema (claro / escuro / sistema).
 - **Meu perfil** `app/(app)/perfil/`: acesso pelo rodapé do trilho / barra lateral e por ícone no topo no celular. Campo "Como você quer ser chamada?" (Zod: 1–40 caracteres, trim). Server Action com `requireUser()` fazendo upsert em `perfil` (id = 1). Mostra o e-mail logado e o botão "Sair".
-- `lib/db/perfil.ts`: `getPerfil()` (usado na saudação do Início, sessão 12).
+- `lib/db/perfil.ts`: `getPerfil()` (usado na saudação do Início, sessão 14).
 
 ## Regras e detalhes
 - Alvos de toque ≥ 44 px.
