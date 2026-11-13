@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 0 108 108">
+  <!-- Mesmo desenho de components/marca.tsx; centro vazado de verdade e tinta clara em aba escura. -->
+  <style>
+    .ac { fill: #E8492A; }
+    .ink { fill: #15141F; }
+    .gold { fill: #E9A800; }
+    @media (prefers-color-scheme: dark) {
+      .ac { fill: #FF6A45; }
+      .ink { fill: #F2F1F6; }
+      .gold { fill: #FFC83D; }
+    }
+  </style>
+  <mask id="furo">
+    <rect x="-4" width="108" height="108" fill="#fff" />
+    <circle cx="50" cy="64" r="13" fill="#000" />
+  </mask>
+  <g mask="url(#furo)">
+    <path class="ac" d="M50 64 L50 24 A40 40 0 0 1 90 64 Z" />
+    <path class="ink" d="M50 64 L90 64 A40 40 0 0 1 50 104 Z" />
+    <path class="ac" d="M50 64 L50 104 A40 40 0 0 1 10 64 Z" />
+    <path class="ink" d="M50 64 L10 64 A40 40 0 0 1 50 24 Z" />
+  </g>
+  <path class="gold" d="M40 4 H60 L50 30 Z" />
+</svg>
