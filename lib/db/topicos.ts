@@ -1,4 +1,4 @@
-import { asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import { db } from "./index";
 import { disciplinas, topicos } from "./schema";
 
@@ -48,6 +48,31 @@ export async function getTopico(id: string) {
     .innerJoin(disciplinas, eq(disciplinas.id, topicos.disciplinaId))
     .where(eq(topicos.id, id));
   return t ?? null;
+}
+
+// Fatias da roleta: tópicos com ≥ 1 questão ativa, de disciplina não arquivada, agrupados por disciplina.
+export async function listarTopicosRoleta() {
+  return db
+    .select({
+      topicoId: topicos.id,
+      nome: topicos.nome,
+      dominio: topicos.dominio,
+      ultimaVezEstudado: topicos.ultimaVezEstudado,
+      disciplinaId: disciplinas.id,
+      disciplina: disciplinas.nome,
+      cor: disciplinas.cor,
+      notebooklmUrl: disciplinas.notebooklmUrl,
+      novo: sql<boolean>`not exists (select 1 from respostas r join questoes q on q.id = r.questao_id where q.topico_id = "topicos"."id")`,
+    })
+    .from(topicos)
+    .innerJoin(disciplinas, eq(disciplinas.id, topicos.disciplinaId))
+    .where(
+      and(
+        eq(disciplinas.arquivada, false),
+        sql`exists (select 1 from questoes q where q.topico_id = "topicos"."id" and q.ativa)`,
+      ),
+    )
+    .orderBy(asc(disciplinas.ordem), asc(disciplinas.criadoEm), asc(topicos.criadoEm), asc(topicos.nome));
 }
 
 export async function criarTopico(disciplinaId: string, dados: Dados) {
