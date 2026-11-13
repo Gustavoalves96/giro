@@ -32,6 +32,20 @@ export async function criarQuestao(topicoId: string, dados: DadosQuestao) {
   await db.insert(questoes).values({ ...dados, topicoId });
 }
 
+// Para a detecção de duplicatas da importação.
+export async function listarEnunciados(topicoId: string) {
+  const linhas = await db.select({ enunciado: questoes.enunciado }).from(questoes).where(eq(questoes.topicoId, topicoId));
+  return linhas.map((l) => l.enunciado);
+}
+
+// Um INSERT só com todas as linhas; +1 ms por linha para a lista (ordenada por criado_em) manter a ordem da resposta.
+export async function inserirQuestoes(topicoId: string, lista: DadosQuestao[]) {
+  const agora = Date.now();
+  if (lista.length) {
+    await db.insert(questoes).values(lista.map((dados, i) => ({ ...dados, topicoId, criadoEm: new Date(agora + i) })));
+  }
+}
+
 export async function editarQuestao(id: string, dados: Partial<DadosQuestao>) {
   await db.update(questoes).set(dados).where(eq(questoes.id, id));
 }

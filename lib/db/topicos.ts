@@ -41,6 +41,7 @@ export async function getTopico(id: string) {
       disciplinaId: disciplinas.id,
       disciplinaNome: disciplinas.nome,
       cor: disciplinas.cor,
+      notebooklmUrl: disciplinas.notebooklmUrl,
       respondido: sql<boolean>`exists (select 1 from respostas r join questoes q on q.id = r.questao_id where q.topico_id = "topicos"."id")`,
     })
     .from(topicos)

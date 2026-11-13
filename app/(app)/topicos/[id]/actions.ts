@@ -3,8 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth/require-user";
-import { criarQuestao, definirMarcacao, editarQuestao } from "@/lib/db/questoes";
+import { criarQuestao, definirMarcacao, editarQuestao, inserirQuestoes, listarEnunciados } from "@/lib/db/questoes";
 import { IdSchema } from "@/lib/disciplinas/schema";
+import { lerResposta } from "@/lib/import/parse-json";
 import { LETRAS, OrigemManualSchema, QuestaoImportSchema } from "@/lib/import/schemas";
 
 type Campo = "tipo" | "enunciado" | "alternativas" | "gabarito" | "explicacao" | "fonte" | "dificuldade" | "origem";
@@ -57,6 +58,31 @@ export async function salvarQuestao(_anterior: EstadoQuestao, form: FormData): P
   else await criarQuestao(topicoId, { ...dados, origem: origem!.data });
   revalidatePath(`/topicos/${topicoId}`);
   return { salvo: true };
+}
+
+export type EstadoImportacao = { importadas: number } | { erro: string };
+
+// Recebe o texto colado e lê de novo aqui: a prévia do cliente não é confiável.
+export async function importarQuestoes(topicoId: string, texto: string): Promise<EstadoImportacao> {
+  await requireUser();
+  const id = IdSchema.parse(topicoId);
+  const leitura = lerResposta(z.string().max(500_000).parse(texto), await listarEnunciados(id));
+  if (!leitura.ok) return { erro: leitura.erro.causa };
+  await inserirQuestoes(
+    id,
+    leitura.validas.map((q) => ({
+      tipo: q.tipo,
+      enunciado: q.enunciado,
+      alternativas: q.alternativas ?? null,
+      gabarito: q.gabarito,
+      explicacao: q.explicacao,
+      fonte: q.fonte ?? null,
+      dificuldade: q.dificuldade,
+      origem: "notebooklm" as const,
+    })),
+  );
+  revalidatePath(`/topicos/${id}`);
+  return { importadas: leitura.validas.length };
 }
 
 export async function marcar(id: string, topicoId: string, campo: "ativa" | "sinalizadaComErro", valor: boolean) {

@@ -1,4 +1,4 @@
-import { ChevronRight, Eye, EyeOff, Flag, FlagOff, Pencil, Plus, Sparkles, Upload } from "lucide-react";
+import { ChevronRight, Eye, EyeOff, Flag, FlagOff, Pencil, Plus, Sparkles } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -13,6 +13,7 @@ import { ROTULO_ORIGEM, ROTULO_TIPO } from "@/lib/questoes/rotulos";
 import { cn } from "@/lib/utils";
 import { marcar } from "./actions";
 import { EditorQuestao } from "./editor-questao";
+import { ImportarNotebookLM } from "./importar-notebooklm";
 
 export const metadata: Metadata = { title: "Tópico · Giro" };
 
@@ -149,11 +150,14 @@ async function Conteudo({ id }: { id: string }) {
             <Plus aria-hidden />
             Nova questão
           </EditorQuestao>
-          {/* espaços reservados: importação (sessão 06) e IA (sessão 16) */}
-          <Button variant="secondary" disabled title="Em breve">
-            <Upload aria-hidden />
-            Gerar com NotebookLM <span className="font-normal text-ink3">· em breve</span>
-          </Button>
+          <ImportarNotebookLM
+            topicoId={id}
+            topico={topico.nome}
+            disciplina={topico.disciplinaNome}
+            notebooklmUrl={topico.notebooklmUrl}
+            enunciados={questoes.map((q) => q.enunciado)}
+          />
+          {/* espaço reservado: IA (sessão 16) */}
           <Button variant="secondary" disabled title="Em breve">
             <Sparkles aria-hidden />
             Gerar com IA <span className="font-normal text-ink3">· em breve</span>
@@ -164,7 +168,7 @@ async function Conteudo({ id }: { id: string }) {
       {questoes.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-line p-8 text-center">
           <p className="font-bold">Nenhuma questão ainda.</p>
-          <p className="mt-1 text-ink3">Crie a primeira em “Nova questão”. O tópico só entra na roleta com questões ativas.</p>
+          <p className="mt-1 text-ink3">Crie a primeira em “Nova questão” ou “Gerar com NotebookLM”. O tópico só entra na roleta com questões ativas.</p>
         </div>
       ) : (
         <ul className="space-y-3">
