@@ -30,7 +30,7 @@ Além das questões, o tópico tem **procedimentos** (manobras e exames, ex.: "C
 | Animação | Motion (`motion/react`, ex-Framer Motion): roleta, transições, feedback de acerto/erro |
 | Auth | Auth.js (NextAuth v5) com login Google, restrito a uma allowlist de e-mails via env |
 | Repetição espaçada | `ts-fsrs` (algoritmo FSRS, roda local, sem IA) |
-| IA (opcional, plano B) | `@google/genai` com `gemini-3.5-flash-lite` (`MODELO_GEMINI` em `lib/ai/gemini.ts`) no **plano gratuito** da API; só o "Explique melhor" (§6) |
+| IA (opcional, plano B) | `@google/genai` com `gemini-3.5-flash-lite` (`MODELO_GEMINI` em `lib/ai/gemini.ts`) no **plano gratuito** da API (15 RPM, 500 por dia em 14/11/2026); só o "Explique melhor" (§6) |
 | Deploy | Vercel (plano Hobby) |
 
 ### Restrições importantes
