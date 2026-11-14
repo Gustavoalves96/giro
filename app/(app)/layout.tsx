@@ -6,7 +6,8 @@ import { LinkPerfil, LinkPerfilAtivo, ListaDestinos, ListaDestinosAtiva } from "
 
 // Uma navegação só; o CSS decide: < md barra inferior · md trilho de 96 px · xl barra lateral de 240 px.
 // Telas de foco (app/(app)/(foco)) marcam [data-foco] e a navegação some só com CSS, sem piscar.
-const SOME_NO_FOCO = "group-has-[[data-foco]]/app:hidden";
+// Ao sair pelo cliente o Next guarda a tela anterior no DOM com display: none (Activity): essa não conta.
+const SOME_NO_FOCO = "group-has-[[data-foco]:not([style*='display:_none'])]/app:hidden";
 
 export default function AppLayout({ children }: LayoutProps<"/">) {
   return (
