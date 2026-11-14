@@ -237,6 +237,21 @@ async function Conteudo() {
               </Button>
             </section>
           )}
+          {/* sem prova: no celular a barra não tem Provas, este é o caminho até lá */}
+          {!prova && (
+            <section aria-labelledby="prova-titulo" className={CARD}>
+              <h2 id="prova-titulo" className={ROTULO}>
+                Próxima prova
+              </h2>
+              <p className="mt-2 text-ink2">Nenhuma prova marcada. Os tópicos da prova ganham fatia maior na roleta nos 14 dias antes.</p>
+              <Button asChild variant="ghost" className="mt-3 -ml-3">
+                <Link href="/provas">
+                  Marcar prova
+                  <ArrowRight aria-hidden />
+                </Link>
+              </Button>
+            </section>
+          )}
 
           <section aria-labelledby="fracos-titulo" className={CARD}>
             <h2 id="fracos-titulo" className={ROTULO}>

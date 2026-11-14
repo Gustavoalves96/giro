@@ -23,7 +23,7 @@ export function FormMeta({ atual }: { atual: number }) {
           value={valor}
           onChange={(e) => setValor(e.target.value)}
           aria-describedby="meta-status"
-          className="h-12 rounded-[14px] border border-line bg-sf px-4 text-base font-bold text-ink outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:w-40"
+          className="h-12 rounded-[14px] border border-line bg-sf px-4 text-base font-bold text-ink outline-none focus-visible:ring-[3px] focus-visible:ring-ring sm:w-40"
         >
           {OPCOES.map((n) => (
             <option key={n} value={n}>

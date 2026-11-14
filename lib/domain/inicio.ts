@@ -60,7 +60,7 @@ export const TEXTO_PRIMEIRO_PASSO = {
   },
   questoes: {
     titulo: "Gere questões com o NotebookLM",
-    texto: "Abra um tópico e use “Gerar questões com NotebookLM”. A roleta só sorteia tópicos com questões.",
+    texto: "Na disciplina, crie ou abra um tópico e use “Gerar questões com NotebookLM”. A roleta só sorteia tópicos com questões.",
     acao: "Escolher um tópico",
   },
 } as const;

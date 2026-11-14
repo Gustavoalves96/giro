@@ -82,7 +82,7 @@ function FormDisciplina({ disciplina, aoSalvar }: { disciplina?: Disciplina; aoS
                 aria-label={c.nome}
                 aria-pressed={escolhida}
                 onClick={() => setCor(c.hex)}
-                className="flex size-11 items-center justify-center rounded-full outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-pressed:ring-2 aria-pressed:ring-ink aria-pressed:ring-offset-2 aria-pressed:ring-offset-sf"
+                className="flex size-11 items-center justify-center rounded-full outline-none focus-visible:ring-[3px] focus-visible:ring-ring aria-pressed:ring-2 aria-pressed:ring-ink aria-pressed:ring-offset-2 aria-pressed:ring-offset-sf"
                 style={{ backgroundColor: c.hex }}
               >
                 {escolhida && <Check className="size-5 text-white" aria-hidden />}

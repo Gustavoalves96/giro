@@ -29,7 +29,7 @@ Uma sessão do Claude Code por arquivo. Em cada sessão, anexe **só** o arquivo
 | [x] | 13 | [Caderno de erros](13-caderno-erros.md) | 12 |
 | [x] | 14 | [Início (painel)](14-inicio.md) | 12, 13, 16 |
 | [x] | 15 | [Estatísticas](15-estatisticas.md) | 14 |
-| [ ] | 19 | [Polimento](19-polimento.md) | 12–16 |
+| [x] | 19 | [Polimento](19-polimento.md) | 12–16 |
 | [ ] | 17 | [Simulado](17-simulado.md) | 08, 12 |
 | [ ] | 18 | [IA opcional](18-ia-opcional.md) | 08, 12 |
 
@@ -56,6 +56,8 @@ As sessões 10 e 11 (procedimentos) entraram em 13/11/2026, antes do FSRS: assim
 - **Caderno de erros é uma tela separada** da Revisão do dia (escolha dela em 13/11/2026), mesmo com a sobreposição com o FSRS.
 - **IA:** só "Explique melhor". Gerar questões pelo nome do tópico foi cortado (contraria "conteúdo só das fontes dela").
 - **Procedimentos (manobras e exames):** segundo tipo de item do tópico (`questoes.tipo = 'procedimento'` + `checklist`), praticado na mesma rodada: ela vê o nome, tenta lembrar os passos sem pressão de tempo, confere o checklist e marca lembrei / com erro / esqueci. Conteúdo só das fontes dela (NotebookLM ou manual), nunca gerado por IA na hora. No máximo 1 procedimento por rodada; fora do simulado.
+- **Banco zerado na sessão 19** (14/11/2026): tudo o que havia era teste (o seed e rodadas de teste), nada dela. Com OK explícito, a 19 tirou foto (contagem + md5) e backup JSON, apagou só dados (schema e migrations intactos), testou o primeiro uso no banco de verdade e deixou o banco **pronto para o uso real**: só a linha de `perfil` (nome "Ana Laura", 600 s, meta 4). Daqui em diante o banco tem dados dela: teste em disciplina própria ("Teste NN"), com ids guardados e apagados por id no fim; nunca zerar de novo.
+- **Primeiro uso no celular** (sessão 19): a barra inferior não tem Provas, então o Início sempre mostra o card "Próxima prova" (sem prova: "Marcar prova").
 - **Deploy cedo** (sessão 02), para OAuth e Neon serem testados em produção desde o começo.
 
 ## Definição de pronto (toda sessão)
@@ -66,6 +68,6 @@ As sessões 10 e 11 (procedimentos) entraram em 13/11/2026, antes do FSRS: assim
 - Relatório separa **provado** de **não verificado** (ex.: toque real no iPad, Safari, sensação da animação).
 
 ## Em aberto
-- Validar com ela o conteúdo médico do seed antes de usar as questões como dados de teste.
+- O seed (`npm run db:seed`) não está no banco desde a sessão 19. Se for rodado de novo, validar com ela o conteúdo médico antes de usar as questões como material de estudo.
 - Validar com ela os primeiros checklists de procedimento importados (ordem dos passos e o que é "crítico") antes de confiar na pontuação. **Em 13/11/2026 ainda não validado** (0 procedimentos no banco). Confirmado na sessão 12: a resposta dela foi "ainda não testei", então o `PROMPT_PROCEDIMENTOS` segue como está; validar quando ela importar os primeiros.
 - Conferir com respostas reais se "Hard acima de 45 s" pune caso clínico de vinheta longa (sessão 12: só havia 15 respostas de teste e nenhuma linha em `revisoes`; ficou para quando houver uso real).

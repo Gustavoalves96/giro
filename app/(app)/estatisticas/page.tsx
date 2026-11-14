@@ -19,11 +19,18 @@ const dataSessao = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Pau
 const ddmm = (dia: string) => `${dia.slice(8, 10)}/${dia.slice(5, 7)}`;
 const plural = (n: number, um: string, varios: string) => `${numero.format(n)} ${n === 1 ? um : varios}`;
 
-function Numero({ rotulo, valor, detalhe, dado }: { rotulo: string; valor: string; detalhe?: string; dado: string }) {
+function Numero({ rotulo, valor, detalhe, dado, largo }: { rotulo: string; valor: string; detalhe?: string; dado: string; largo?: boolean }) {
+  // largo: ocupa a linha inteira no celular. "33% → 53%" não quebra: encolhe se o card for estreito
+  // (14cqi cabe até "100% → 100%")
+  const seta = valor.includes("→");
   return (
-    <div className={CARD} data-numero={dado}>
+    <div className={largo ? `${CARD} @container max-sm:col-span-2` : CARD} data-numero={dado}>
       <h2 className={ROTULO}>{rotulo}</h2>
-      <p className="mt-2 font-display text-[30px] leading-tight font-extrabold tabular-nums md:text-[36px]">{valor}</p>
+      <p
+        className={`mt-2 font-display leading-tight font-extrabold tabular-nums ${seta ? "text-[length:min(30px,14cqi)] whitespace-nowrap md:text-[length:min(36px,14cqi)]" : "text-[30px] md:text-[36px]"}`}
+      >
+        {valor}
+      </p>
       {detalhe && <p className="mt-1 text-ink2">{detalhe}</p>}
     </div>
   );
@@ -66,70 +73,77 @@ async function Conteudo() {
         <p className="mt-1 text-ink2">Você contra você mesma. Período: últimas {SEMANAS} semanas.</p>
       </header>
 
-      <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4">
         <Numero rotulo="XP total" valor={numero.format(xpTotal(sessoes))} detalhe="de todas as sessões finalizadas" dado={String(xpTotal(sessoes))} />
         <Numero rotulo="Maior sequência" valor={plural(maior, "dia", "dias")} detalhe={`atual: ${plural(atual, "dia", "dias")}`} dado={`${maior}/${atual}`} />
         <Numero
           rotulo="Acertos"
+          largo
           valor={acertos ? (acertos.fim === null ? `${acertos.inicio}%` : `${acertos.inicio}% → ${acertos.fim}%`) : "–"}
           detalhe={acertos ? (acertos.fim === null ? "numa semana com respostas" : "1ª × última semana com respostas") : "sem respostas no período"}
           dado={acertos ? `${acertos.inicio}/${acertos.fim ?? ""}` : ""}
         />
-        <Numero rotulo="Questões respondidas" valor={numero.format(respondidas)} detalhe={`nas ${SEMANAS} semanas`} dado={String(respondidas)} />
+        <Numero largo rotulo="Questões respondidas" valor={numero.format(respondidas)} detalhe={`nas ${SEMANAS} semanas`} dado={String(respondidas)} />
       </div>
 
       <section aria-labelledby="evolucao-titulo" className={`${CARD} mt-4 md:mt-6`}>
         <h2 id="evolucao-titulo" className={`${ROTULO} mb-4`}>
           Evolução semanal
         </h2>
-        <div className="flex flex-col gap-6">
-          <SerieSemanal
-            id="g-questoes"
-            titulo="Questões respondidas"
-            descricao={
-              respondidas
-                ? `${plural(respondidas, "questão", "questões")} em ${plural(comResposta.length, "semana", "semanas")} com atividade.`
-                : "Nenhuma questão respondida no período."
-            }
-            semanas={rotulos}
-            valores={semanas.map((s) => s.respostas)}
-            texto={(v) => numero.format(v ?? 0)}
-            tipo="barras"
-          />
-          <SerieSemanal
-            id="g-acertos"
-            titulo="% de acertos"
-            descricao={
-              acertos
-                ? `De ${acertos.inicio}% na primeira semana com respostas` + (acertos.fim === null ? "." : ` a ${acertos.fim}% na última.`)
-                : "Sem respostas no período."
-            }
-            semanas={rotulos}
-            valores={pct}
-            texto={(v) => (v === null ? "–" : `${v}%`)}
-            tipo="linha"
-            max={100}
-          />
-          <SerieSemanal
-            id="g-minutos"
-            titulo="Minutos estudados"
-            descricao={totalMin ? `${plural(totalMin, "minuto", "minutos")} de estudo no período.` : "Nenhum tempo de estudo gravado no período."}
-            semanas={rotulos}
-            valores={minutos}
-            texto={(v) => numero.format(v ?? 0)}
-            tipo="barras"
-          />
-          <ol
-            aria-hidden
-            className="-mt-3 grid border-t border-line pt-2 text-center text-[12px] text-ink3 tabular-nums"
-            style={{ gridTemplateColumns: `repeat(${SEMANAS}, minmax(0, 1fr))` }}
-          >
-            {semanas.map((s) => (
-              <li key={s.inicio}>{ddmm(s.inicio)}</li>
-            ))}
-          </ol>
-        </div>
-        <p className="mt-3 text-[13px] text-ink3">Cada coluna é uma semana, de segunda a domingo; a data é a segunda-feira.</p>
+        {respondidas || totalMin ? (
+          <>
+            <div className="flex flex-col gap-6">
+              <SerieSemanal
+                id="g-questoes"
+                titulo="Questões respondidas"
+                descricao={
+                  respondidas
+                    ? `${plural(respondidas, "questão", "questões")} em ${plural(comResposta.length, "semana", "semanas")} com atividade.`
+                    : "Nenhuma questão respondida no período."
+                }
+                semanas={rotulos}
+                valores={semanas.map((s) => s.respostas)}
+                texto={(v) => numero.format(v ?? 0)}
+                tipo="barras"
+              />
+              <SerieSemanal
+                id="g-acertos"
+                titulo="% de acertos"
+                descricao={
+                  acertos
+                    ? `De ${acertos.inicio}% na primeira semana com respostas` + (acertos.fim === null ? "." : ` a ${acertos.fim}% na última.`)
+                    : "Sem respostas no período."
+                }
+                semanas={rotulos}
+                valores={pct}
+                texto={(v) => (v === null ? "–" : `${v}%`)}
+                tipo="linha"
+                max={100}
+              />
+              <SerieSemanal
+                id="g-minutos"
+                titulo="Minutos estudados"
+                descricao={totalMin ? `${plural(totalMin, "minuto", "minutos")} de estudo no período.` : "Nenhum tempo de estudo gravado no período."}
+                semanas={rotulos}
+                valores={minutos}
+                texto={(v) => numero.format(v ?? 0)}
+                tipo="barras"
+              />
+              <ol
+                aria-hidden
+                className="-mt-3 grid border-t border-line pt-2 text-center text-[12px] text-ink3 tabular-nums"
+                style={{ gridTemplateColumns: `repeat(${SEMANAS}, minmax(0, 1fr))` }}
+              >
+                {semanas.map((s) => (
+                  <li key={s.inicio}>{ddmm(s.inicio)}</li>
+                ))}
+              </ol>
+            </div>
+            <p className="mt-3 text-[13px] text-ink3">Cada coluna é uma semana, de segunda a domingo; a data é a segunda-feira.</p>
+          </>
+        ) : (
+          <p className="text-ink2">Os gráficos aparecem depois das primeiras respostas ou do primeiro tempo de estudo.</p>
+        )}
       </section>
 
       <div className="mt-4 grid gap-4 md:mt-6 md:gap-6 lg:grid-cols-2">

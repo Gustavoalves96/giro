@@ -115,9 +115,25 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-ring;
   }
   body {
     @apply bg-background font-sans text-foreground;
+  }
+}
+
+/* Movimento reduzido: diálogos só com fade (sem zoom/deslize) e esqueletos de carregamento parados.
+   Fora de @layer para vencer os utilitários. A roleta e o quiz tratam o próprio movimento (motion). */
+@media (prefers-reduced-motion: reduce) {
+  [data-slot] {
+    --tw-enter-scale: 1;
+    --tw-exit-scale: 1;
+    --tw-enter-translate-x: 0;
+    --tw-enter-translate-y: 0;
+    --tw-exit-translate-x: 0;
+    --tw-exit-translate-y: 0;
+  }
+  .animate-pulse {
+    animation: none;
   }
 }

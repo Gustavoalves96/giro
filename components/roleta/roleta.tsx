@@ -207,7 +207,7 @@ export function Roleta({
                 onClick={girarRoleta}
                 disabled={girando}
                 aria-label="Girar a roleta"
-                className="absolute top-1/2 left-1/2 -mt-8 -ml-8 flex size-16 items-center justify-center rounded-full border-4 border-sf bg-ac text-on-ac shadow-md outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-90 md:-mt-11 md:-ml-11 md:size-22"
+                className="absolute top-1/2 left-1/2 -mt-8 -ml-8 flex size-16 items-center justify-center rounded-full border-4 border-sf bg-ac text-on-ac shadow-md outline-none focus-visible:ring-[3px] focus-visible:ring-ring disabled:opacity-90 md:-mt-11 md:-ml-11 md:size-22"
                 animate={sorteado && !reduzir ? { scale: [1, 1.08, 1] } : { scale: 1 }}
                 transition={{ duration: 0.45 }}
               >
@@ -322,7 +322,7 @@ export function Roleta({
                     disabled={girando}
                     onClick={() => setModo(m)}
                     className={cn(
-                      "h-11 rounded-[10px] font-bold text-ink2 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
+                      "h-11 rounded-[10px] font-bold text-ink2 outline-none focus-visible:ring-[3px] focus-visible:ring-ring",
                       modo === m && "bg-sf text-ink shadow-sm",
                     )}
                   >
@@ -355,7 +355,7 @@ export function Roleta({
                           disabled={girando}
                           onClick={() => setDesligadas((ds) => (ligada ? [...ds, d.id] : ds.filter((x) => x !== d.id)))}
                           className={cn(
-                            "flex min-h-11 w-full items-center gap-3 rounded-[14px] border px-3 text-left outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
+                            "flex min-h-11 w-full items-center gap-3 rounded-[14px] border px-3 text-left outline-none focus-visible:ring-[3px] focus-visible:ring-ring",
                             ligada ? "border-line bg-sf" : "border-dashed border-ink3/60 text-ink3",
                           )}
                         >
@@ -381,7 +381,7 @@ export function Roleta({
               role="switch"
               aria-checked={reduzirPainel}
               onClick={trocarReduzir}
-              className="flex min-h-11 items-center justify-between gap-4 rounded-[14px] text-left outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+              className="flex min-h-11 items-center justify-between gap-4 rounded-[14px] text-left outline-none focus-visible:ring-[3px] focus-visible:ring-ring"
             >
               <span>
                 <span className="block font-bold">Movimento reduzido</span>

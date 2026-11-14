@@ -195,10 +195,10 @@ export function Questao({ questao, feedback, sessaoId, sequenciaAntes, onRespond
                 style={{ transitionDelay: `${atraso}s` }}
                 className={cn(
                   "flex min-h-[50px] w-full items-center gap-3 rounded-2xl border-2 bg-sf px-2.5 py-2 text-left outline-none md:min-h-14 md:px-3",
-                  "transition-[background-color,border-color,opacity] duration-200 focus-visible:ring-[3px] focus-visible:ring-ring/50",
+                  "transition-[background-color,border-color,opacity] duration-200 focus-visible:ring-[3px] focus-visible:ring-ring",
                   e === "normal" && "border-line hover:bg-sf2",
                   e === "selecionada" && "border-ink",
-                  e === "correta" && "border-ok bg-ok/10",
+                  e === "correta" && "border-ok bg-ok/6",
                   e === "sua" && "border-warn bg-warn/10",
                   e === "esmaecida" && "border-line opacity-55",
                 )}

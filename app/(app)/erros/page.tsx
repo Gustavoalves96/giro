@@ -65,7 +65,7 @@ function Item({ i }: { i: ItemErro }) {
       </p>
       <p className="line-clamp-4 text-[17px] leading-snug break-words">{i.enunciado}</p>
       {i.fracao != null ? (
-        <div className="rounded-2xl bg-sf2 p-3 text-[15px]">
+        <div className="rounded-2xl bg-bg p-3 text-[15px]">
           <p data-fracao={i.fracao}>
             <span className="font-bold tabular-nums">{Math.round(i.fracao * 100)}% lembrado</span> na última tentativa
           </p>
@@ -80,7 +80,7 @@ function Item({ i }: { i: ItemErro }) {
           )}
         </div>
       ) : (
-        <dl className="grid gap-2 rounded-2xl bg-sf2 p-3 text-[15px] sm:grid-cols-2">
+        <dl className="grid gap-2 rounded-2xl bg-bg p-3 text-[15px] sm:grid-cols-2">
           <div className="min-w-0">
             <dt className="font-bold text-warn">Sua resposta</dt>
             <dd className="break-words" data-resposta>{textoDe(i.respostaDada, i)}</dd>

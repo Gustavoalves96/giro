@@ -30,7 +30,7 @@ export function SeletorTema() {
             aria-checked={marcado}
             onClick={() => setTheme(valor)}
             className={cn(
-              "flex h-14 flex-col items-center justify-center gap-0.5 rounded-[10px] px-2 text-[13px] font-bold sm:h-11 sm:flex-row sm:gap-2 sm:px-4 sm:text-base text-ink3 transition-colors hover:text-ink focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none",
+              "flex h-14 flex-col items-center justify-center gap-0.5 rounded-[10px] px-2 text-[13px] font-bold sm:h-11 sm:flex-row sm:gap-2 sm:px-4 sm:text-base text-ink3 transition-colors hover:text-ink focus-visible:ring-[3px] focus-visible:ring-ring focus-visible:outline-none",
               marcado && "bg-sf text-ink shadow-sm",
             )}
           >

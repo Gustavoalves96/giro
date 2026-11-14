@@ -7,7 +7,7 @@
 Aplicação web pessoal de **prática ativa** para uma estudante de medicina (uma única usuária).
 O diferencial é **gamificar a prática**: uma roleta animada sorteia um tópico, ela estuda por 10 minutos e depois responde questões, ganha pontos e acompanha a evolução.
 
-Além das questões, o tópico tem **procedimentos** (manobras e exames, ex.: "Coleta de citopatológico"): o nome e um **checklist de passos** que ela tenta lembrar de cabeça e depois confere. Conteúdo só das fontes dela (NotebookLM ou cadastro manual), nunca gerado por IA na hora. Cadastro e importação desde a sessão 10; na rodada desde a 11 (no máximo 1 por rodada, `components/quiz/Procedimento.tsx`, Server Action `conferirProcedimento`, notas em `respostas_passos`). Desde a sessão 12 toda resposta é de uma sessão (`/dev/questao` foi apagada).
+Além das questões, o tópico tem **procedimentos** (manobras e exames, ex.: "Coleta de citopatológico"): o nome e um **checklist de passos** que ela tenta lembrar de cabeça e depois confere. Conteúdo só das fontes dela (NotebookLM ou cadastro manual), nunca gerado por IA na hora. Cadastro e importação desde a sessão 10; na rodada desde a 11 (no máximo 1 por rodada, `components/quiz/Procedimento.tsx`, Server Action `conferirProcedimento`, notas em `respostas_passos`). Desde a sessão 12 toda resposta é de uma sessão (`/dev/questao` foi apagada); `/dev/tokens` saiu na 19, não há mais rotas `/dev`.
 
 **Princípio central:** o sistema é para *praticar, medir e repetir*. Ler e entender o material fica no **NotebookLM**, que já faz isso bem (upload de PDFs, resumos, mapas mentais, áudio, chat com fontes). O sistema **não** reimplementa nada disso. Ele se integra por links.
 
@@ -21,13 +21,13 @@ Além das questões, o tópico tem **procedimentos** (manobras e exames, ex.: "C
 
 | Camada | Escolha |
 |---|---|
-| Framework | **Next.js (App Router) + TypeScript**, front e back no mesmo projeto. Não há back-end separado |
+| Framework | **Next.js 16 (App Router) + TypeScript**, front e back no mesmo projeto. Não há back-end separado. `cacheComponents` + `partialPrefetching`: toda página monta a casca e põe o que é da requisição (auth, banco, "agora") dentro de `<Suspense>` com esqueleto próprio; por isso não há `loading.tsx` (sessão 19: nunca chegava a aparecer). `middleware.ts` virou `proxy.ts` |
 | Back-end | Server Actions e Route Handlers (`app/api/*`) |
 | Banco | **Neon** (Postgres serverless) via `@neondatabase/serverless` |
 | ORM | **Drizzle ORM** + drizzle-kit (migrations) |
 | Validação | **Zod** (formulários, Server Actions e importação de JSON) |
 | UI | **Tailwind CSS v4** (tokens em CSS: variáveis em `:root`/`.dark` expostas via `@theme` em `app/globals.css`; não há `tailwind.config` nem `theme.extend`) + shadcn/ui + `next-themes` (classe `.dark`) |
-| Animação | Framer Motion (roleta, transições, feedback de acerto/erro) |
+| Animação | Motion (`motion/react`, ex-Framer Motion): roleta, transições, feedback de acerto/erro |
 | Auth | Auth.js (NextAuth v5) com login Google, restrito a uma allowlist de e-mails via env |
 | Repetição espaçada | `ts-fsrs` (algoritmo FSRS, roda local, sem IA) |
 | IA (opcional, plano B) | `@google/genai` com Gemini Flash no **plano gratuito** da API |
@@ -218,7 +218,7 @@ Para verdadeiro/falso use "tipo":"verdadeiro_falso", omita "alternativas" e use 
 
 Outras formas de criar questões:
 - **Manual:** formulário completo (inclusive para questões de **provas antigas**, `origem = 'prova_antiga'`)
-- **IA (opcional):** "Gerar 5 questões com IA" usando só o nome do tópico e a descrição. Gemini Flash, mesma saída JSON, mesma validação, `origem = 'ia'`, com selo "gerada por IA, revise". Pré-visualização antes de salvar.
+- ~~IA: gerar questões pelo nome do tópico~~: **cortado** (contraria "conteúdo só das fontes dela"; ver `docs/plano/README.md` › Decisões). O botão "Gerar com IA · em breve" do tópico é só marcador até a sessão 18 decidir.
 
 ### Procedimentos (mesmo fluxo, painel parametrizado)
 Na seção "Procedimentos" do tópico, o mesmo painel de 3 passos (`importar-notebooklm.tsx` com `tipo="procedimentos"`) copia `PROMPT_PROCEDIMENTOS` (`montarPromptProcedimentos` em `lib/prompts/notebooklm.ts`: só das fontes; passos na ordem de execução, um verbo por passo; `critico: true` só no que, se esquecido, compromete o exame ou a segurança; material e pontos de atenção). `lerProcedimentos()` (`lib/import/parse-json.ts`) reaproveita a extração e valida **por procedimento**; duplicata = nome normalizado (`normalizarEnunciado`) já existente **entre os procedimentos** do tópico ou repetido no lote. A importação preserva a ordem do JSON, gera os `id` dos passos e grava com `origem = 'notebooklm'`. Cadastro manual: "Novo procedimento" (passos com adicionar/remover/subir/descer, Alt+↑/↓ no texto, caixa "crítico"; origem `manual` ou `prova_antiga`).
@@ -238,34 +238,33 @@ Formato pedido no prompt: `{"procedimentos":[{"nome":"...","material":["..."],"p
 
 ## 6. Uso de IA permitido (opcional)
 1. **"Explique melhor"** numa questão errada: envia enunciado + alternativas + gabarito + explicação e pede uma explicação didática curta. Resultado salvo em `explicacoes_ia`. Se já existir, mostrar sem chamar a API.
-2. **Gerar questões pelo nome do tópico** (seção 5).
 
 Encapsular tudo em `lib/ai/` atrás de uma interface (`AIProvider`) para trocar de provedor sem mexer no resto. Se `GEMINI_API_KEY` não estiver definida, esconder os botões de IA.
 
-## 7. Estrutura sugerida
+## 7. Estrutura
 
 ```
 app/
   (auth)/login/
   (app)/
-    page.tsx                 -> painel (início)
-    roleta/                  -> roleta + sessão (estudo → questões → resultado)
-    revisao/                 -> revisão do dia (FSRS)
-    erros/                   -> caderno de erros (sessões em (foco)/erros/sessao/[id])
-    simulado/
+    page.tsx                 -> Início (painel)
+    (foco)/                  -> telas sem navegação: roleta|revisao|erros/sessao/[id]/{estudo,questoes,resultado}
+    roleta/ revisao/ erros/  -> telas de entrada de cada modo (+ actions.ts)
     disciplinas/[id]/        -> tópicos, link NotebookLM
-    topicos/[id]/            -> questões, importar, gerar
-    provas/                  -> calendário
-    estatisticas/
+    topicos/[id]/            -> questões, procedimentos, importar do NotebookLM
+    provas/ estatisticas/ perfil/
+    questoes/actions.ts      -> responder/conferir (todas as sessões)
   api/auth/[...nextauth]/
+  manifest.ts apple-icon.tsx icon.svg
 lib/
-  db/ (schema.ts, index.ts)
-  domain/ (dominio.ts, roleta.ts, pontuacao.ts, fsrs.ts, selecao-questoes.ts)
-  import/ (parse-json.ts, schemas.ts)
-  prompts/ (notebooklm.ts)
-  ai/ (provider.ts, gemini.ts)
+  db/        schema.ts, index.ts e uma consulta por área (inicio, estatisticas, erros, revisao, sessoes, quiz…)
+  domain/    funções puras: dominio, roleta, pontuacao, procedimento, fsrs, selecao-questoes, erros, provas, stats, inicio
+  import/    parse-json.ts, schemas.ts
+  prompts/   notebooklm.ts
+  auth/ disciplinas/ topicos/ provas/ perfil/ erros/ questoes/   -> schemas Zod e rótulos por área
 components/
-  roleta/ quiz/ timer/ ui/ (shadcn)
+  roleta/ quiz/ foco/ navegacao/ ui/ (shadcn) + mapa-calor, barra-dominio, seletores, movimento-reduzido
+tests/       Vitest (rodar pelo PowerShell; no Git Bash falha)
 ```
 
 A lógica de negócio fica em `lib/domain/` como **funções puras**, testáveis sem banco.
@@ -276,7 +275,8 @@ A lógica de negócio fica em `lib/domain/` como **funções puras**, testáveis
 - Server Actions validam a entrada com Zod e checam a sessão (auth) em todas as mutações.
 - Datas no banco em UTC. Exibição no fuso `America/Sao_Paulo`.
 - **Dispositivos:** ela estuda principalmente no **iPad** (toque, retrato e paisagem) e no **notebook**. O celular é secundário, mas deve funcionar. Layout responsivo que aproveita telas maiores (duas colunas a partir de `md`/`lg`), alvos de toque ≥ 44 px e atalhos de teclado nas questões (A–E para escolher, Enter para confirmar/avançar). Testar no Safari do iPadOS.
-- Respeitar `prefers-reduced-motion`: a roleta tem versão de animação curta/simples.
+- Respeitar `prefers-reduced-motion`: `useMovimentoReduzido()` (`components/movimento-reduzido.ts`) soma o sistema e o interruptor "Movimento reduzido" da roleta (`localStorage` "giro:movimento-reduzido"); com ele a roleta sorteia sem giro, sem confete, e o feedback usa só cor e opacidade. Uma regra em `app/globals.css` tira zoom/deslize de Dialog/Sheet e para o `animate-pulse` dos esqueletos.
+- **Acessibilidade** (revisada na sessão 19): botão só de ícone sempre com `aria-label` (ou "Fechar" em `sr-only`); foco visível com o anel **Brasa cheio** (`ring-ring` / `outline-ring`, nunca `/50`: a 50% dava 1,9–2,5:1); gráficos e mapa de calor com descrição em texto. Contraste AA calculado nos 2 temas: no claro, texto pequeno em Menta não vai sobre `sf2` nem sobre tinta acima de `ok/6` (4,33 e 4,38:1); caixas internas com texto colorido usam `bg-bg`. Texto pequeno nunca sobre Brasa.
 - Testes com **Vitest** para `lib/domain/*` e para o parser de importação.
 
 ## 9. Variáveis de ambiente
@@ -292,6 +292,7 @@ GEMINI_API_KEY=          # opcional
 ## 10. Comandos
 ```
 npm run dev
+npm run db:seed          # conteúdo fictício de exemplo (idempotente); o banco de uso real não tem seed
 npm run build
 npm run lint
 npm run test             # vitest

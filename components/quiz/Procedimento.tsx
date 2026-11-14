@@ -30,9 +30,9 @@ type Resultado = Extract<ConferenciaProcedimento, { ok: true }> & { pontos: numb
 
 const ROTULO = "text-[13px] font-bold tracking-[0.06em] uppercase";
 const OPCAO: Record<Nota, { rotulo: string; curto: string; icone: typeof Check; marcada: string }> = {
-  lembrei: { rotulo: "Lembrei", curto: "Lembrei", icone: Check, marcada: "border-ok bg-ok/15 text-ok" },
+  lembrei: { rotulo: "Lembrei", curto: "Lembrei", icone: Check, marcada: "border-ok bg-ok/6 text-ok" },
   com_erro: { rotulo: "Lembrei com erro", curto: "Com erro", icone: Minus, marcada: "border-warn/50 bg-warn/10 text-warn" },
-  esqueci: { rotulo: "Esqueci", curto: "Esqueci", icone: X, marcada: "border-warn bg-warn/25 text-warn" },
+  esqueci: { rotulo: "Esqueci", curto: "Esqueci", icone: X, marcada: "border-warn bg-warn text-sf" },
 };
 
 const pct = (f: number) => `${Math.round(f * 100)}%`;
@@ -291,7 +291,7 @@ export function Procedimento({ questao, feedback, sessaoId, sequenciaAntes, onRe
                             onFocus={() => fase === "conferindo" && setFoco(i)}
                             className={cn(
                               "flex min-h-11 items-center justify-center gap-1 rounded-xl border-2 px-2.5 text-[14px] font-bold whitespace-nowrap outline-none",
-                              "transition-[background-color,border-color,color,opacity] duration-200 focus-visible:ring-[3px] focus-visible:ring-ring/50",
+                              "transition-[background-color,border-color,color,opacity] duration-200 focus-visible:ring-[3px] focus-visible:ring-ring",
                               marcada ? o.marcada : "border-line bg-sf text-ink2",
                               !marcada && !travado && "hover:bg-sf2",
                               !marcada && fase === "conferido" && "opacity-45",

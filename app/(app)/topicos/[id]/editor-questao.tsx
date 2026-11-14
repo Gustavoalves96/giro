@@ -22,7 +22,7 @@ const ORIGENS = ["manual", "prova_antiga"] as const;
 // Pílula de rádio (input escondido dentro do label): marcada = tinta cheia.
 const PILULA =
   "flex min-h-11 cursor-pointer items-center justify-center rounded-[14px] border border-line bg-sf px-4 text-center font-bold text-ink2 " +
-  "has-checked:border-ink has-checked:bg-ink has-checked:text-bg has-focus-visible:ring-[3px] has-focus-visible:ring-ring/50";
+  "has-checked:border-ink has-checked:bg-ink has-checked:text-bg has-focus-visible:ring-[3px] has-focus-visible:ring-ring";
 
 export function EditorQuestao({
   topicoId,
@@ -179,7 +179,7 @@ function FormQuestao({
               <label
                 className={
                   "flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-line bg-sf font-display text-lg font-bold text-ink2 " +
-                  "has-checked:border-ok has-checked:bg-ok has-checked:text-bg has-focus-visible:ring-[3px] has-focus-visible:ring-ring/50"
+                  "has-checked:border-ok has-checked:bg-ok has-checked:text-bg has-focus-visible:ring-[3px] has-focus-visible:ring-ring"
                 }
               >
                 <input

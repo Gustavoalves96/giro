@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 // Campo de texto dos formulários dos editores.
 export const CAMPO =
-  "h-12 w-full rounded-[14px] border border-line bg-sf px-4 text-base text-ink outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-warn";
+  "h-12 w-full rounded-[14px] border border-line bg-sf px-4 text-base text-ink outline-none focus-visible:ring-[3px] focus-visible:ring-ring aria-invalid:border-warn";
 
 // md do Tailwind (48rem): iPad e notebook usam Dialog; celular usa Sheet.
 const MD = "(min-width: 48rem)";

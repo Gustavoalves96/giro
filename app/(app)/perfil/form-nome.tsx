@@ -23,7 +23,7 @@ export function FormNome({ nomeAtual }: { nomeAtual: string }) {
           autoComplete="given-name"
           aria-invalid={estado.erro ? true : undefined}
           aria-describedby="nome-status"
-          className="h-12 w-full rounded-[14px] border border-line bg-sf px-4 text-base text-ink outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-warn sm:max-w-sm"
+          className="h-12 w-full rounded-[14px] border border-line bg-sf px-4 text-base text-ink outline-none focus-visible:ring-[3px] focus-visible:ring-ring aria-invalid:border-warn sm:max-w-sm"
         />
         <Button type="submit" disabled={salvando}>
           {salvando ? "Salvando…" : "Salvar"}

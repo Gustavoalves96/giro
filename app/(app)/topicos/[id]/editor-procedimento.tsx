@@ -188,7 +188,7 @@ function FormProcedimento({
                     className={CAMPO}
                   />
                   <div className="flex items-center gap-1">
-                    <label className="flex min-h-11 cursor-pointer items-center gap-2 rounded-[14px] px-2 font-bold text-ink2 has-checked:text-warn has-focus-visible:ring-[3px] has-focus-visible:ring-ring/50">
+                    <label className="flex min-h-11 cursor-pointer items-center gap-2 rounded-[14px] px-2 font-bold text-ink2 has-checked:text-warn has-focus-visible:ring-[3px] has-focus-visible:ring-ring">
                       <input
                         type="checkbox"
                         checked={p.critico}
