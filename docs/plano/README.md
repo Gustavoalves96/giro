@@ -27,7 +27,7 @@ Uma sessão do Claude Code por arquivo. Em cada sessão, anexe **só** o arquivo
 | [x] | 12 | [Acertos da rodada + FSRS + Revisão do dia](12-fsrs-revisao.md) | 09, 11 |
 | [x] | 16 | [Provas](16-provas.md) | 07 |
 | [x] | 13 | [Caderno de erros](13-caderno-erros.md) | 12 |
-| [ ] | 14 | [Início (painel)](14-inicio.md) | 12, 13, 16 |
+| [x] | 14 | [Início (painel)](14-inicio.md) | 12, 13, 16 |
 | [ ] | 15 | [Estatísticas](15-estatisticas.md) | 14 |
 | [ ] | 19 | [Polimento](19-polimento.md) | 12–16 |
 | [ ] | 17 | [Simulado](17-simulado.md) | 08, 12 |
@@ -45,7 +45,8 @@ As sessões 10 e 11 (procedimentos) entraram em 13/11/2026, antes do FSRS: assim
 - **Tema** claro/escuro com `next-themes`. Componentes shadcn: Button, Badge, ToggleGroup, Switch, Progress, RadioGroup, Textarea, Sheet/Dialog.
 - **Cor da disciplina:** guarda só a cor cheia; a tinta clara é calculada com `color-mix(in srgb, <cor> 20%, white)`.
 - **Lógica de negócio** em `lib/domain/` como funções puras com teste Vitest, escrita na sessão que precisa dela.
-- **Lacunas do design resolvidas sem coluna nova:** "Foque em" = linhas de `topicos.descricao` (some se vazio); "Rodada de hoje · x de 2" = meta fixa de 2 sessões por dia (constante); "+2 min" só no cliente.
+- **Lacunas do design resolvidas sem coluna nova:** "Foque em" = linhas de `topicos.descricao` (some se vazio); "+2 min" só no cliente.
+- **Meta de rodadas** (decisão de 14/11/2026, sessão 14): "Rodada de hoje · x de N" no Início é editável em Meu perfil (`perfil.meta_rodadas`, 1 a 20, padrão 4); conta sessões da roleta finalizadas hoje em America/Sao_Paulo.
 - **Tempo de estudo:** padrão editável em Meu perfil (`perfil.estudo_segundos`, padrão 600 s) e ajustável na roleta só para a rodada (sessão 09). Textos não citam "10 minutos" fixo; slogan: "Gire. Estude. Domine o tópico."
 - **Sair no meio da rodada** (sessão 09): pede confirmação e deixa a sessão **aberta** (`finalizada_em` null). Ela não conta pontos, XP, recorde nem domínio; as respostas já dadas ficam gravadas (com `sessao_id`) e entram no domínio na próxima rodada finalizada do tópico. A URL da sessão continua de onde parou. **Confirmado por ela em 13/11/2026: a rodada fica aberta** (não fecha sozinha); por isso o Início e a Roleta mostram "Continuar rodada" (sessão 14).
 - **O que conta onde** (checkup de 13/11/2026): XP, recorde e "rodadas de hoje" contam só sessões **finalizadas**; atividade (sequência de dias, mapa de calor, questões respondidas, % de acertos, minutos) conta por **respostas e tempo de estudo gravados**, mesmo de rodada aberta. Recorde é só do modo roleta.
@@ -67,4 +68,3 @@ As sessões 10 e 11 (procedimentos) entraram em 13/11/2026, antes do FSRS: assim
 - Validar com ela o conteúdo médico do seed antes de usar as questões como dados de teste.
 - Validar com ela os primeiros checklists de procedimento importados (ordem dos passos e o que é "crítico") antes de confiar na pontuação. **Em 13/11/2026 ainda não validado** (0 procedimentos no banco). Confirmado na sessão 12: a resposta dela foi "ainda não testei", então o `PROMPT_PROCEDIMENTOS` segue como está; validar quando ela importar os primeiros.
 - Conferir com respostas reais se "Hard acima de 45 s" pune caso clínico de vinheta longa (sessão 12: só havia 15 respostas de teste e nenhuma linha em `revisoes`; ficou para quando houver uso real).
-- Ela estuda várias horas por dia: a meta fixa "Rodada de hoje · x de 2" (sessão 14) pode ficar pequena. Perguntar qual meta faz sentido antes da 14.

@@ -21,6 +21,7 @@ async function Conteudo({ params, searchParams }: Props) {
     <Estudo
       sessaoId={s.id}
       segundos={segundos}
+      gravado={s.estudoSegundos}
       topico={s.topico ?? "Tópico excluído"}
       disciplina={s.disciplina}
       cor={s.cor}

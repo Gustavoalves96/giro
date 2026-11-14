@@ -77,3 +77,9 @@ export async function revisaoAberta() {
     .limit(1);
   return s?.id ?? null;
 }
+
+// Estimativa do "Revisar agora · ~N min" (Revisão do dia e Início).
+const SEG_QUESTAO = 40;
+const SEG_PROCEDIMENTO = 120;
+export const minutosRevisao = (questoes: number, procedimentos: number) =>
+  Math.max(1, Math.ceil((questoes * SEG_QUESTAO + procedimentos * SEG_PROCEDIMENTO) / 60));

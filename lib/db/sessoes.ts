@@ -1,6 +1,7 @@
-import { and, asc, desc, eq, isNotNull, isNull, lt, lte, max, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, isNotNull, isNull, lt, lte, max, ne, sql } from "drizzle-orm";
 import { db } from "./index";
 import { fracaoLembrada, type Nota } from "@/lib/domain/procedimento";
+import { diaSP } from "@/lib/domain/stats";
 import { disciplinas, questoes, respostas, revisoes, type Sessao, sessoes, topicos } from "./schema";
 
 // Sessões de todos os modos: roleta (estudo → questões → resultado), revisão, erros e simulado.
@@ -160,4 +161,22 @@ export async function recordeAnterior(id: string, finalizadaEm: Date) {
       ),
     );
   return r?.max ?? 0;
+}
+
+/** "Continuar rodada": a rodada da roleta aberta mais recente iniciada hoje (dia de SP), com o nº de respostas. */
+export async function rodadaAbertaHoje(agora: Date) {
+  const desde = new Date(agora.getTime() - 24 * 60 * 60 * 1000); // folga; o dia de SP decide abaixo
+  const [s] = await db
+    .select({
+      id: sessoes.id,
+      iniciadaEm: sessoes.iniciadaEm,
+      topico: topicos.nome,
+      respostas: sql<number>`(select count(*) from respostas r where r.sessao_id = "sessoes"."id")`.mapWith(Number),
+    })
+    .from(sessoes)
+    .leftJoin(topicos, eq(topicos.id, sessoes.topicoId))
+    .where(and(eq(sessoes.modo, "roleta"), isNull(sessoes.finalizadaEm), gte(sessoes.iniciadaEm, desde)))
+    .orderBy(desc(sessoes.iniciadaEm))
+    .limit(1);
+  return s && diaSP(s.iniciadaEm) === diaSP(agora) ? s : null;
 }

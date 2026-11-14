@@ -12,6 +12,7 @@ import { SeletorEstudo } from "@/components/seletor-estudo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TEXTO_SOBRE_TINTA, tintaClara } from "@/lib/cores";
+import { primeiroPasso, TEXTO_PRIMEIRO_PASSO } from "@/lib/domain/inicio";
 import { anguloFinal, fatiaSobPonteiro, montarFatias, motivoVazio, type Candidato, type Fatia, type Modo } from "@/lib/domain/roleta";
 import { cn } from "@/lib/utils";
 import { Roda } from "./roda";
@@ -21,8 +22,17 @@ type Estado = "antes" | "girando" | "sorteado";
 const ROTULO = "text-[13px] font-bold tracking-[0.06em] text-ink3 uppercase";
 const esperar = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-export function Roleta({ candidatos, estudoPadrao }: { candidatos: Candidato[]; estudoPadrao: number }) {
+export function Roleta({
+  candidatos,
+  estudoPadrao,
+  disciplinasAtivas,
+}: {
+  candidatos: Candidato[];
+  estudoPadrao: number;
+  disciplinasAtivas: number;
+}) {
   const router = useRouter();
+  const passo = primeiroPasso(disciplinasAtivas, candidatos.length);
   // tempo só desta rodada; começa no padrão do perfil e não o altera
   const [estudo, setEstudo] = useState(estudoPadrao);
   const [comecando, iniciarEstudo] = useTransition();
@@ -165,11 +175,16 @@ export function Roleta({ candidatos, estudoPadrao }: { candidatos: Candidato[]; 
         <div className="relative size-[300px] md:size-[540px] lg:size-[500px] xl:size-[580px]" data-sorteado={sorteado?.topicoId}>
           {vazia ? (
             <div className="flex size-full flex-col items-center justify-center gap-4 rounded-full border-2 border-dashed border-line p-10 text-center">
-              <p className="max-w-xs text-ink2">{motivoVazio(candidatos.length)}</p>
-              {candidatos.length === 0 && (
-                <Button asChild>
-                  <Link href="/disciplinas">Criar questões</Link>
-                </Button>
+              {passo ? (
+                <>
+                  <p className="max-w-xs font-display text-[20px] leading-tight font-extrabold">{TEXTO_PRIMEIRO_PASSO[passo].titulo}</p>
+                  <p className="max-w-xs text-ink2 max-md:hidden">{TEXTO_PRIMEIRO_PASSO[passo].texto}</p>
+                  <Button asChild>
+                    <Link href="/disciplinas">{TEXTO_PRIMEIRO_PASSO[passo].acao}</Link>
+                  </Button>
+                </>
+              ) : (
+                <p className="max-w-xs text-ink2">{motivoVazio(candidatos.length)}</p>
               )}
             </div>
           ) : (

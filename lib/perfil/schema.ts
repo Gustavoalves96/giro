@@ -16,3 +16,11 @@ export const EstudoSegundosSchema = z.coerce
   .min(300, "Escolha um tempo de 5 a 60 minutos.")
   .max(3600, "Escolha um tempo de 5 a 60 minutos.")
   .multipleOf(300, "Escolha um tempo de 5 em 5 minutos.");
+
+// Meta do Início ("Rodada de hoje · x de N"): 1 a 20 rodadas por dia.
+export const META_PADRAO = 4;
+export const MetaRodadasSchema = z.coerce
+  .number({ error: "Escolha uma meta de 1 a 20 rodadas." })
+  .int("Escolha uma meta de 1 a 20 rodadas.")
+  .min(1, "Escolha uma meta de 1 a 20 rodadas.")
+  .max(20, "Escolha uma meta de 1 a 20 rodadas.");

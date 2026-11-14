@@ -21,3 +21,10 @@ export async function salvarEstudoPerfil(estudoSegundos: number) {
     .values({ id: 1, estudoSegundos })
     .onConflictDoUpdate({ target: perfil.id, set: { estudoSegundos, atualizadoEm: new Date() } });
 }
+
+export async function salvarMetaPerfil(metaRodadas: number) {
+  await db
+    .insert(perfil)
+    .values({ id: 1, metaRodadas })
+    .onConflictDoUpdate({ target: perfil.id, set: { metaRodadas, atualizadoEm: new Date() } });
+}

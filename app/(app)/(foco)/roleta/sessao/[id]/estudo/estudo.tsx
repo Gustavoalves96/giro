@@ -8,11 +8,13 @@ import { useMovimentoReduzido } from "@/components/movimento-reduzido";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TEXTO_SOBRE_TINTA, tintaClara } from "@/lib/cores";
+import { type EstudoLocal, tempoRetomado } from "@/lib/domain/inicio";
 import { cn } from "@/lib/utils";
 
 type Props = {
   sessaoId: string;
   segundos: number;
+  gravado: number; // estudo_segundos já gravado (voltou pelo "Continuar rodada" ou recarregou)
   topico: string;
   disciplina: string | null;
   cor: string | null;
@@ -29,12 +31,21 @@ const CIRC = 2 * Math.PI * R;
 // com a aba em segundo plano o setInterval atrasa, mas o tempo mostrado continua certo.
 const relogio = () => Date.now();
 
+const CHAVE_LOCAL = "giro:estudo"; // uma rodada por vez: a de outra sessão é ignorada por tempoRetomado
+function lerLocal(): EstudoLocal | null {
+  try {
+    return JSON.parse(localStorage.getItem(CHAVE_LOCAL) ?? "null");
+  } catch {
+    return null;
+  }
+}
+
 function mmss(ms: number) {
   const s = Math.ceil(ms / 1000);
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 
-export function Estudo({ sessaoId, segundos, topico, disciplina, cor, notebooklmUrl, focos }: Props) {
+export function Estudo({ sessaoId, segundos, gravado, topico, disciplina, cor, notebooklmUrl, focos }: Props) {
   const router = useRouter();
   const reduzir = useMovimentoReduzido();
   const [duracao, setDuracao] = useState(segundos * 1000);
@@ -44,13 +55,37 @@ export function Estudo({ sessaoId, segundos, topico, disciplina, cor, notebooklm
   const [indo, iniciarIda] = useTransition();
   const [erro, setErro] = useState<string | null>(null);
 
-  // começa sozinho ao abrir a tela (só no cliente: Date.now não pode rodar na renderização)
+  // Começa sozinho ao abrir a tela, retomando o que já foi estudado: o maior entre o gravado no banco e o
+  // guardado neste navegador ao esconder a aba (só no cliente: Date.now não pode rodar na renderização).
   useEffect(() => {
     const t = relogio();
+    const r = tempoRetomado(sessaoId, gravado * 1000, lerLocal(), t, segundos * 1000);
     // eslint-disable-next-line react-hooks/set-state-in-effect -- relógio só existe no cliente
-    setDesde(t);
+    setAcumulado(r.acumuladoMs);
+    setDesde(r.rodando ? t : null);
     setAgora(t);
-  }, []);
+  }, [sessaoId, gravado, segundos]);
+
+  // Ao esconder a aba (NotebookLM, trocar de app, recarregar): guarda aqui e grava estudo_segundos no banco.
+  // O Safari do iPad pode recarregar a página na volta; o efeito acima retoma do que ficou guardado.
+  useEffect(() => {
+    function guardar() {
+      const t = relogio();
+      const total = Math.min(duracao, acumulado + (desde !== null ? t - desde : 0));
+      const local: EstudoLocal = { sessaoId, acumuladoMs: total, salvoEm: t, rodando: desde !== null };
+      try {
+        localStorage.setItem(CHAVE_LOCAL, JSON.stringify(local));
+      } catch {}
+      registrarEstudo(sessaoId, Math.round(total / 1000)).catch(() => {}); // melhor esforço: a aba pode estar fechando
+    }
+    const aoMudar = () => document.visibilityState === "hidden" && guardar();
+    document.addEventListener("visibilitychange", aoMudar);
+    window.addEventListener("pagehide", guardar);
+    return () => {
+      document.removeEventListener("visibilitychange", aoMudar);
+      window.removeEventListener("pagehide", guardar);
+    };
+  }, [sessaoId, duracao, acumulado, desde]);
 
   useEffect(() => {
     if (desde === null) return;

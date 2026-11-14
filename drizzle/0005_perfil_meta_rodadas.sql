@@ -1,0 +1,1 @@
+ALTER TABLE "perfil" ADD COLUMN "meta_rodadas" integer DEFAULT 4 NOT NULL;

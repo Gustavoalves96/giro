@@ -100,6 +100,8 @@ explicacoes_ia                          -- cache das chamadas de IA
 
 perfil                                  -- linha única (id = 1), editável em /perfil
   id int pk default 1, nome text null,  -- nome usado na saudação; null = saudação sem nome
+  estudo_segundos int default 600,      -- tempo de estudo padrão da roleta (5 a 60 min)
+  meta_rodadas int default 4,           -- "Rodada de hoje · x de N" do Início (1 a 20; sessão 14)
   atualizado_em timestamptz
 ```
 
@@ -127,7 +129,8 @@ Só entram tópicos com pelo menos 1 questão ativa. Se a lista ficar vazia, mos
 
 ### 4.3 Sessão da roleta
 1. Roleta para → mostra o tópico sorteado.
-2. **Fase de estudo:** timer de 10 min (configurável, padrão 600 s), com pausar/retomar, "pular para questões" e o botão **"Abrir no NotebookLM"** (`disciplina.notebooklm_url`, nova aba). O timer roda no cliente e o tempo efetivo é salvo em `estudo_segundos`.
+2. **Fase de estudo:** timer de 10 min (configurável, padrão 600 s), com pausar/retomar, "pular para questões" e o botão **"Abrir no NotebookLM"** (`disciplina.notebooklm_url`, nova aba). O timer roda no cliente e o tempo efetivo é salvo em `estudo_segundos`: ao ir para as questões e também ao esconder a aba (`visibilitychange`/`pagehide`). Recarregar retoma do maior entre o gravado no banco e o guardado no navegador (`localStorage` "giro:estudo", somando o tempo fora se estava rodando, até 1 h; `tempoRetomado` em `lib/domain/inicio.ts`): o Safari do iPad recarrega ao voltar do NotebookLM.
+   - **Continuar rodada** (sessão 14): sessão `roleta` aberta iniciada hoje (SP) aparece no Início e na Roleta; com resposta gravada volta às questões, sem nenhuma volta ao estudo (`etapaParaContinuar`). A rodada não fecha sozinha.
 3. **Fase de questões:** 5 questões (configurável) do tópico, nesta prioridade:
    1. questões com revisão vencida (`revisoes.due <= now`),
    2. questões nunca respondidas,
@@ -161,6 +164,8 @@ Como a usuária é uma só, o ranking é **contra ela mesma**:
 - Evolução semanal: acertos %, questões respondidas, minutos estudados
 - Sequência de dias estudando (streak) e total de XP (soma das pontuações)
 - Mapa de calor de atividade (estilo contribuições do GitHub)
+
+**Início** (`/`, sessão 14): saudação pelo horário de SP (Bom dia < 12 h, Boa tarde < 18 h, Boa noite depois) com o nome do perfil; chips de sequência e XP; card da rodada ("Rodada de hoje · x de N", N = `perfil.meta_rodadas`, conta roleta **finalizada** hoje em SP) com "Continuar rodada" ou "Girar a roleta"; Revisão do dia e atalho do Caderno de erros; próxima prova; 3 pontos fracos (menor domínio entre tópicos com resposta, disciplinas não arquivadas); mapa de calor de 14 semanas por respostas, com descrição em texto. Primeiro uso (sem disciplina ativa / sem tópico com item ativo) guia para `/disciplinas` no Início e na roleta vazia. Funções puras em `lib/domain/stats.ts` (`diaSP`, `streak`, `xpTotal`, `agregarPorDia`, `rodadasHoje`, `mapaDeCalor`) e `lib/domain/inicio.ts`. Streak e mapa contam **respostas** (mesmo de rodada aberta), até hoje ou ontem; XP só sessões finalizadas (qualquer modo). Todo dia passa por `diaSP` (o Vercel roda em UTC). `app/manifest.ts` + `app/apple-icon.tsx` (PNG 180 px) para "Adicionar à tela de início"; o proxy deixa os dois passarem sem login.
 
 ## 5. Importação de questões (fluxo NotebookLM, custo zero de IA)
 

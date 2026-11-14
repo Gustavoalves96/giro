@@ -10,6 +10,9 @@ export const proxy = auth((req) => {
 });
 
 export const config = {
-  // tudo, exceto /api/auth/*, arquivos do Next e assets estáticos
-  matcher: ["/((?!api/auth|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml)$).*)"],
+  // tudo, exceto /api/auth/*, arquivos do Next, assets estáticos, o manifest e o ícone da tela de início
+  // (o iPad busca os dois sem passar pelo login)
+  matcher: [
+    "/((?!api/auth|_next/static|_next/image|favicon.ico|manifest.webmanifest|apple-icon|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml)$).*)",
+  ],
 };

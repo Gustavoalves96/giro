@@ -18,6 +18,7 @@ const atkinson = Atkinson_Hyperlegible({
 export const metadata: Metadata = {
   title: "Giro",
   description: "Gire. Estude. Domine o tópico.",
+  appleWebApp: { title: "Giro", capable: true }, // aberto pela tela de início do iPad, sem a barra do Safari
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

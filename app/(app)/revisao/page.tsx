@@ -6,13 +6,11 @@ import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TEXTO_SOBRE_TINTA, tintaClara } from "@/lib/cores";
-import { proximaRevisao, resumoRevisao } from "@/lib/db/revisao";
+import { minutosRevisao, proximaRevisao, resumoRevisao } from "@/lib/db/revisao";
 import { RevisarAgora } from "./revisar-agora";
 
 export const metadata: Metadata = { title: "Revisão do dia · Giro" };
 
-const SEG_QUESTAO = 40;
-const SEG_PROCEDIMENTO = 120;
 const CARD = "rounded-3xl border border-line bg-sf p-5 md:p-6";
 const quando = new Intl.DateTimeFormat("pt-BR", {
   timeZone: "America/Sao_Paulo",
@@ -51,7 +49,7 @@ async function Conteudo() {
     );
   }
 
-  const minutos = Math.max(1, Math.ceil((questoes * SEG_QUESTAO + procedimentos * SEG_PROCEDIMENTO) / 60));
+  const minutos = minutosRevisao(questoes, procedimentos);
   return (
     <section className={CARD} data-revisao-total={total}>
       <p className="font-display text-[56px] leading-none font-extrabold tabular-nums">{total}</p>
