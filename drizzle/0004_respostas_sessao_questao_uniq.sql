@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "respostas_sessao_questao_uniq" ON "respostas" USING btree ("sessao_id","questao_id") WHERE "respostas"."sessao_id" is not null;

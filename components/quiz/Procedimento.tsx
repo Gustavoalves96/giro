@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 type Props = {
   questao: QuestaoExibida;
   feedback: "imediato" | "final";
-  sessaoId: string | null;
+  sessaoId: string;
   sequenciaAntes: number;
   onRespondida: (r: RespostaPontuada) => void;
   onProxima: () => void;
@@ -79,7 +79,13 @@ export function Procedimento({ questao, feedback, sessaoId, sequenciaAntes, onRe
     setErro(null);
     setFase("abrindo");
     try {
-      setChecklist(await abrirChecklist(questao.id));
+      const c = await abrirChecklist(questao.id);
+      if (!c.ok) {
+        setErro(c.mensagem);
+        setFase("lembrando");
+        return;
+      }
+      setChecklist(c.checklist);
       setFase("conferindo");
     } catch {
       setErro("Não foi possível abrir o checklist. Confira a conexão e tente de novo.");
@@ -106,18 +112,22 @@ export function Procedimento({ questao, feedback, sessaoId, sequenciaAntes, onRe
     try {
       const c = await conferirProcedimento({ questaoId: questao.id, sessaoId, notas, tempoMs });
       if (!c.ok) {
-        // editado no meio: passos atuais, mantendo as notas dos passos que continuam
-        setChecklist(c.checklist);
-        setNotas((n) => Object.fromEntries(c.checklist.passos.flatMap((p) => (n[p.id] ? [[p.id, n[p.id]]] : []))));
-        setFoco(0);
-        setAviso(c.mensagem);
+        const atual = c.checklist;
+        if (!atual) setErro(c.mensagem); // regra (rodada finalizada, procedimento desativado)
+        else {
+          // editado no meio: passos atuais, mantendo as notas dos passos que continuam
+          setChecklist(atual);
+          setNotas((n) => Object.fromEntries(atual.passos.flatMap((p) => (n[p.id] ? [[p.id, n[p.id]]] : []))));
+          setFoco(0);
+          setAviso(c.mensagem);
+        }
         setFase("conferindo");
         return;
       }
       const sequencia = c.acertou ? sequenciaAntes + 1 : 0;
-      setRes({ ...c, sequencia, pontos: pontosQuestao({ acertou: c.acertou, tempoMs, fracao: c.fracao, sequenciaAtual: sequencia }) });
+      setRes({ ...c, sequencia, pontos: pontosQuestao({ acertou: c.acertou, tempoMs: c.tempoMs, fracao: c.fracao, sequenciaAtual: sequencia }) });
       setFase("conferido");
-      onRespondida({ acertou: c.acertou, tempoMs, fracao: c.fracao });
+      onRespondida({ acertou: c.acertou, tempoMs: c.tempoMs, fracao: c.fracao });
     } catch {
       setErro("Não foi possível enviar a conferência. Confira a conexão e tente de novo.");
       setFase("conferindo");

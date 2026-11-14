@@ -17,3 +17,11 @@ export function calcularDominio(acertos: boolean[]) {
   });
   return pesos ? (soma / pesos) * 100 : 0;
 }
+
+/**
+ * Tópicos cujo domínio é recalculado ao finalizar: o da sessão (roleta, mesmo sem resposta) e todo tópico
+ * com resposta nela (revisão, erros e simulado têm topico_id null e misturam tópicos). Sem repetição.
+ */
+export function topicosARecalcular(topicoDaSessao: string | null, respostas: { topicoId: string }[]) {
+  return [...new Set([...(topicoDaSessao ? [topicoDaSessao] : []), ...respostas.map((r) => r.topicoId)])];
+}

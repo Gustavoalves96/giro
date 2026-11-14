@@ -10,12 +10,13 @@ export const ETAPAS = [
 ] as const;
 export type Etapa = (typeof ETAPAS)[number]["id"];
 
-/** Estudo · Questões · Resultado, com a etapa atual em destaque. */
-export function IndicadorEtapas({ atual }: { atual: Etapa | null }) {
-  const iAtual = ETAPAS.findIndex((e) => e.id === atual);
+/** Estudo · Questões · Resultado, com a etapa atual em destaque. Revisão não tem estudo (`semEstudo`). */
+export function IndicadorEtapas({ atual, semEstudo = false }: { atual: Etapa | null; semEstudo?: boolean }) {
+  const etapas = semEstudo ? ETAPAS.slice(1) : ETAPAS;
+  const iAtual = etapas.findIndex((e) => e.id === atual);
   return (
     <ol aria-label="Etapas da sessão" className="flex items-center gap-2 text-[13px] font-bold tracking-[0.06em] uppercase">
-      {ETAPAS.map((e, i) => (
+      {etapas.map((e, i) => (
         <li key={e.id} className="flex items-center gap-2">
           {i > 0 && <span aria-hidden className="text-ink3">·</span>}
           <span
@@ -32,6 +33,7 @@ export function IndicadorEtapas({ atual }: { atual: Etapa | null }) {
 
 // Convenção: a rota de foco termina em /estudo, /questoes ou /resultado.
 export function IndicadorEtapasAtual() {
-  const atual = useSelectedLayoutSegments().findLast((s): s is Etapa => ETAPAS.some((e) => e.id === s));
-  return <IndicadorEtapas atual={atual ?? null} />;
+  const segmentos = useSelectedLayoutSegments();
+  const atual = segmentos.findLast((s): s is Etapa => ETAPAS.some((e) => e.id === s));
+  return <IndicadorEtapas atual={atual ?? null} semEstudo={segmentos[0] === "revisao"} />;
 }

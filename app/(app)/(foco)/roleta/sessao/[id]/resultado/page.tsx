@@ -43,7 +43,7 @@ type Props = PageProps<"/roleta/sessao/[id]/resultado">;
 // Tudo vem do banco: o resultado é o mesmo se recarregar ou abrir depois.
 async function Conteudo({ params }: Props) {
   const { id } = await params;
-  const s = await carregarSessao(id);
+  const s = await carregarSessao(id, "roleta");
   if (!s.finalizadaEm) redirect(rota(id, "questoes"));
   const [rs, recorde, antes, depois] = await Promise.all([
     respostasDaSessao(s.id),
@@ -52,7 +52,6 @@ async function Conteudo({ params }: Props) {
     s.topicoId ? acertosRecentesTopico(s.topicoId, s.finalizadaEm, true) : null,
   ]);
   const novoRecorde = s.pontuacao > 0 && s.pontuacao > recorde;
-  const erros = s.totalQuestoes - s.acertos;
   const questoesSeg = rs.reduce((t, r) => t + r.tempoMs, 0) / 1000;
 
   const linhas = comPontos(rs);
@@ -113,11 +112,6 @@ async function Conteudo({ params }: Props) {
               Girar de novo
             </Link>
           </Button>
-          {erros > 0 && (
-            <Button asChild variant="secondary">
-              <Link href="/erros">Revisar {erros === 1 ? "1 erro" : `${erros} erros`}</Link>
-            </Button>
-          )}
           <Button asChild variant="ghost">
             <Link href="/">
               <Home aria-hidden />

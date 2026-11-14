@@ -10,9 +10,10 @@ import { Questao, type QuestaoExibida } from "@/components/quiz/Questao";
 import { Button } from "@/components/ui/button";
 import { resumoSessao, type RespostaPontuada } from "@/lib/domain/pontuacao";
 
-type Props = { sessaoId: string; feitas: RespostaPontuada[]; questoes: QuestaoExibida[] };
+// Roleta e revisão: `resultado` é para onde ir depois de finalizar; `vazio`, o texto quando não há o que responder.
+type Props = { sessaoId: string; feitas: RespostaPontuada[]; questoes: QuestaoExibida[]; resultado: string; vazio: string };
 
-export function QuestoesSessao({ sessaoId, feitas, questoes }: Props) {
+export function QuestoesSessao({ sessaoId, feitas, questoes, resultado, vazio }: Props) {
   const router = useRouter();
   const [i, setI] = useState(0);
   const [respostas, setRespostas] = useState(feitas);
@@ -30,7 +31,7 @@ export function QuestoesSessao({ sessaoId, feitas, questoes }: Props) {
     iniciar(async () => {
       try {
         await finalizar(sessaoId);
-        router.push(`/roleta/sessao/${sessaoId}/resultado`);
+        router.push(resultado);
       } catch {
         setErro("Não foi possível fechar a rodada. Confira a conexão e tente de novo.");
       }
@@ -62,9 +63,9 @@ export function QuestoesSessao({ sessaoId, feitas, questoes }: Props) {
       ) : (
         <section className="max-w-xl rounded-3xl border border-line bg-sf p-6">
           <h1 className="font-display text-[28px] font-extrabold">
-            {finalizando ? "Fechando a rodada…" : total ? "Questões respondidas" : "Sem questões ativas"}
+            {finalizando ? "Fechando a rodada…" : total ? "Questões respondidas" : "Nada para responder"}
           </h1>
-          {!total && <p className="mt-2 text-ink2">Este tópico ficou sem questões ativas. A rodada fecha só com o estudo.</p>}
+          {!total && <p className="mt-2 text-ink2">{vazio}</p>}
           <Button className="mt-4" onClick={verResultado} disabled={finalizando}>
             Ver resultado
             <ArrowRight aria-hidden />

@@ -12,7 +12,7 @@ type Props = PageProps<"/roleta/sessao/[id]/estudo">;
 
 async function Conteudo({ params, searchParams }: Props) {
   const [{ id }, sp] = await Promise.all([params, searchParams]);
-  const s = await carregarSessao(id);
+  const s = await carregarSessao(id, "roleta");
   if (s.finalizadaEm) redirect(rota(id, "resultado"));
   // ?s= é o tempo escolhido na roleta só para esta rodada; sem ele (ou inválido), o padrão do perfil
   const daRodada = EstudoSegundosSchema.safeParse(sp.s);

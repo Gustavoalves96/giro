@@ -1,16 +1,16 @@
 # Sessão 13 — Caderno de erros
 
-**Depende de:** 09, 11
+**Depende de:** 12 (sessão genérica, `finalizar()` para vários tópicos, resposta idempotente)
 **Ler antes:** CLAUDE.md §4.6
 
 ## Objetivo
-Lista das questões cuja **última** resposta foi errada, com filtro e opção de refazer.
+Lista das questões cuja **última** resposta foi errada, com filtro e opção de refazer. Tela separada da Revisão do dia (escolha dela em 13/11/2026): a questão errada aparece nas duas, e refazer aqui também atualiza o FSRS.
 
 ## Entregáveis
 - Query: última resposta por questão (`DISTINCT ON (questao_id) … ORDER BY questao_id, respondida_em DESC`) com `acertou = false`, só questões ativas.
 - `/erros`: filtro por disciplina e tópico (search params); lista com enunciado, tópico, data do erro, resposta dada × gabarito. Procedimentos (sessão 11) entram quando a última tentativa não passou: mostram o nome, "% lembrado" e os passos esquecidos daquela tentativa (`respostas_passos`).
 - "Refazer" (todas as filtradas ou uma) → sessão `modo='erros'` com `Questao` ou `Procedimento` e feedback imediato. Acertou → sai da lista naturalmente.
-- Ligar o botão "Revisar N erros" do resultado (09) para `/erros` filtrado pelo tópico da sessão.
+- Voltar a mostrar o botão "Revisar N erros" do resultado (escondido na 12) e ligar para `/erros` filtrado pelo tópico da sessão.
 - Acesso pela tela Revisão ("Caderno de erros").
 
 ## Testes

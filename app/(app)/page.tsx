@@ -1,6 +1,6 @@
-import { EmBreve } from "@/components/em-breve";
+import { redirect } from "next/navigation";
 
-// Placeholder até a sessão 14 (Início).
+// Provisório até a sessão 14 (Início): a roleta é a porta de entrada.
 export default function Home() {
-  return <EmBreve titulo="Início" sessao="14" />;
+  redirect("/roleta");
 }

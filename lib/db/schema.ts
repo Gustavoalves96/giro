@@ -10,8 +10,10 @@ import {
   real,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 // Todas as datas em UTC (timestamptz); exibição em America/Sao_Paulo fica na UI.
 const tz = { withTimezone: true } as const;
@@ -106,7 +108,11 @@ export const respostas = pgTable(
     tempoMs: integer("tempo_ms").notNull(),
     respondidaEm: timestamp("respondida_em", tz).notNull().defaultNow(),
   },
-  (t) => [index("respostas_questao_id_respondida_em_idx").on(t.questaoId, t.respondidaEm)],
+  (t) => [
+    index("respostas_questao_id_respondida_em_idx").on(t.questaoId, t.respondidaEm),
+    // uma resposta por questão em cada sessão: reenviar (wifi caiu) não grava de novo nem avança o FSRS duas vezes
+    uniqueIndex("respostas_sessao_questao_uniq").on(t.sessaoId, t.questaoId).where(sql`${t.sessaoId} is not null`),
+  ],
 );
 
 // Nota de cada passo na conferência de um procedimento (resposta_dada = 'checklist').

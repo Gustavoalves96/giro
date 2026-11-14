@@ -5,7 +5,7 @@ import { z } from "zod";
 import { requireUser } from "@/lib/auth/require-user";
 import { criarTopico, editarTopico, excluirTopico } from "@/lib/db/topicos";
 import { IdSchema } from "@/lib/disciplinas/schema";
-import { TopicoSchema } from "@/lib/topicos/schema";
+import { TOPICO_COM_HISTORICO, TopicoSchema } from "@/lib/topicos/schema";
 
 export type EstadoTopico = {
   erros?: Partial<Record<"nome" | "descricao", string[]>>;
@@ -25,8 +25,9 @@ export async function salvarTopico(_anterior: EstadoTopico, form: FormData): Pro
   return { salvo: true };
 }
 
-export async function excluir(id: string, disciplinaId: string) {
+export async function excluir(id: string, disciplinaId: string): Promise<{ ok: true } | { ok: false; mensagem: string }> {
   await requireUser();
-  await excluirTopico(IdSchema.parse(id));
+  const excluido = await excluirTopico(IdSchema.parse(id));
   revalidatePath(`/disciplinas/${IdSchema.parse(disciplinaId)}`);
+  return excluido ? { ok: true } : { ok: false, mensagem: TOPICO_COM_HISTORICO };
 }

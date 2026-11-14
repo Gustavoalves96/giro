@@ -29,7 +29,7 @@ type Props = {
   questao: QuestaoExibida;
   /** imediato: certo/errado + explicação a cada questão · final (simulado): só registra. */
   feedback: "imediato" | "final";
-  sessaoId: string | null;
+  sessaoId: string;
   /** Acertos seguidos antes desta questão (para "+N XP" e o selo). */
   sequenciaAntes: number;
   onRespondida: (r: RespostaPontuada) => void;
@@ -47,7 +47,7 @@ export function Questao({ questao, feedback, sessaoId, sequenciaAntes, onRespond
   const reduzir = useMovimentoReduzido();
   const [selecionada, setSelecionada] = useState<string | null>(null);
   const [fase, setFase] = useState<Fase>("respondendo");
-  const [conf, setConf] = useState<(Conferencia & { pontos: number; sequencia: number; naoSei: boolean }) | null>(null);
+  const [conf, setConf] = useState<(Extract<Conferencia, { ok: true }> & { pontos: number; sequencia: number; naoSei: boolean }) | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [sinalizada, setSinalizada] = useState(questao.sinalizadaComErro);
   const [sinalizando, setSinalizando] = useState(false);
@@ -71,6 +71,11 @@ export function Questao({ questao, feedback, sessaoId, sequenciaAntes, onRespond
     setFase("enviando");
     try {
       const c = await responder({ questaoId: questao.id, sessaoId, respostaDada: valor, tempoMs });
+      if (!c.ok) {
+        setErro(c.mensagem);
+        setFase("respondendo");
+        return;
+      }
       const sequencia = c.acertou ? sequenciaAntes + 1 : 0;
       if (naoSei) setSelecionada(null);
       setConf({ ...c, naoSei, sequencia, pontos: pontosQuestao({ acertou: c.acertou, tempoMs, sequenciaAtual: sequencia }) });

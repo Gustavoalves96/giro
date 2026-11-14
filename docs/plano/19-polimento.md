@@ -1,18 +1,17 @@
 # Sessão 19 — Polimento e estados vazios
 
-**Depende de:** todas
+**Depende de:** 12–16 (vem antes de 17 e 18, que fazem o próprio polimento)
 **Ler antes:** design: "Lacunas e próximos passos", "Acessibilidade"
 
 ## Objetivo
 Fechar as lacunas do design e revisar acessibilidade antes do uso real.
 
 ## Entregáveis
-- Primeiro uso guiado: sem disciplinas → "Crie sua primeira disciplina"; sem questões → "Gere questões com o NotebookLM" (e a opção de procedimentos); refletir no Início e na Roleta.
-- `loading.tsx` nas rotas com dados; estados "Importando…" e "Gerando…" com botão desativado.
-- Estados vazios revisados em todas as telas; mensagem de limite de IA.
-- Apagar `/dev/tokens` e `/dev/questao`.
+- Conferir o primeiro uso guiado e o manifest (feitos na 14) com banco vazio.
+- `loading.tsx` nas rotas com dados; estado "Importando…" com botão desativado.
+- Estados vazios revisados em todas as telas.
+- Apagar `/dev/tokens` (`/dev/questao` saiu na 12).
 - Revisão de acessibilidade: `aria-label` em botões só de ícone, foco visível, contraste AA nos 2 temas, descrição em texto de gráficos e mapas de calor, `prefers-reduced-motion` em todas as animações.
-- `app/manifest.ts` + ícone (a marca da roleta) para "Adicionar à tela de início" no iPad.
 - Atualizar o CLAUDE.md com o que mudou ao longo das sessões.
 
 ## Testes

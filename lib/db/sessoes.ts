@@ -1,12 +1,17 @@
 import { and, asc, desc, eq, isNotNull, isNull, lt, lte, max, ne, sql } from "drizzle-orm";
 import { db } from "./index";
 import { fracaoLembrada, type Nota } from "@/lib/domain/procedimento";
-import { disciplinas, questoes, respostas, revisoes, sessoes, topicos } from "./schema";
+import { disciplinas, questoes, respostas, revisoes, type Sessao, sessoes, topicos } from "./schema";
 
-// Sessão da roleta (estudo → questões → resultado).
+// Sessões de todos os modos: roleta (estudo → questões → resultado), revisão, erros e simulado.
 
 export async function criarSessaoRoleta(topicoId: string) {
   const [s] = await db.insert(sessoes).values({ modo: "roleta", topicoId }).returning({ id: sessoes.id });
+  return s.id;
+}
+
+export async function criarSessao(modo: Exclude<Sessao["modo"], "roleta">) {
+  const [s] = await db.insert(sessoes).values({ modo }).returning({ id: sessoes.id });
   return s.id;
 }
 
@@ -93,6 +98,7 @@ export async function respostasDaSessao(sessaoId: string) {
   const linhas = await db
     .select({
       questaoId: respostas.questaoId,
+      topicoId: questoes.topicoId,
       tipo: questoes.tipo,
       enunciado: questoes.enunciado,
       checklist: questoes.checklist,
@@ -140,7 +146,7 @@ export async function atualizarDominioTopico(topicoId: string, dominio: number, 
   await db.update(topicos).set({ dominio, ultimaVezEstudado: estudadoEm }).where(eq(topicos.id, topicoId));
 }
 
-/** Maior pontuação entre as sessões finalizadas antes desta (qualquer modo, exceto simulado). */
+/** Maior pontuação entre as sessões da roleta finalizadas antes desta (revisão de 30 questões não vira recorde). */
 export async function recordeAnterior(id: string, finalizadaEm: Date) {
   const [r] = await db
     .select({ max: max(sessoes.pontuacao) })
@@ -148,7 +154,7 @@ export async function recordeAnterior(id: string, finalizadaEm: Date) {
     .where(
       and(
         ne(sessoes.id, id),
-        ne(sessoes.modo, "simulado"),
+        eq(sessoes.modo, "roleta"),
         isNotNull(sessoes.finalizadaEm),
         lt(sessoes.finalizadaEm, finalizadaEm),
       ),

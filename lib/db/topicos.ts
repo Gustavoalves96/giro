@@ -88,7 +88,16 @@ export async function editarTopico(id: string, dados: Dados) {
   await db.update(topicos).set(dados).where(eq(topicos.id, id));
 }
 
-// Cascade apaga questões, respostas e revisões do tópico.
+// Só tópico sem respostas (o histórico não se apaga); o cascade leva questões e revisões. false = recusado.
 export async function excluirTopico(id: string) {
-  await db.delete(topicos).where(eq(topicos.id, id));
+  const r = await db
+    .delete(topicos)
+    .where(
+      and(
+        eq(topicos.id, id),
+        sql`not exists (select 1 from respostas r join questoes q on q.id = r.questao_id where q.topico_id = ${id})`,
+      ),
+    )
+    .returning({ id: topicos.id });
+  return r.length > 0;
 }

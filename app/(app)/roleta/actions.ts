@@ -12,7 +12,7 @@ import {
 } from "@/lib/db/sessoes";
 import { listarTopicosRoleta } from "@/lib/db/topicos";
 import { IdSchema } from "@/lib/disciplinas/schema";
-import { calcularDominio } from "@/lib/domain/dominio";
+import { calcularDominio, topicosARecalcular } from "@/lib/domain/dominio";
 import { resumoSessao } from "@/lib/domain/pontuacao";
 import { EstudoSegundosSchema } from "@/lib/perfil/schema";
 import { candidatoDe, MOTIVO_SORTE, montarFatias, motivoPeso, motivoVazio, sortear, type Fatia } from "@/lib/domain/roleta";
@@ -56,7 +56,8 @@ export async function registrarEstudo(sessaoId: string, segundos: number) {
   await salvarEstudoSessao(IdSchema.parse(sessaoId), s);
 }
 
-// Resumo calculado aqui a partir das respostas gravadas da sessão (não do cliente). Só a 1ª chamada grava.
+// Qualquer modo. Resumo calculado aqui a partir das respostas gravadas da sessão (não do cliente); só a 1ª
+// chamada grava e recalcula o domínio de todo tópico com resposta na sessão.
 export async function finalizar(sessaoId: string) {
   await requireUser();
   const id = IdSchema.parse(sessaoId);
@@ -68,8 +69,11 @@ export async function finalizar(sessaoId: string) {
     pontuacao: r.total,
     maiorSequencia: r.maiorSequencia,
   });
-  if (fechada?.topicoId && fechada.finalizadaEm) {
-    const acertos = await acertosRecentesTopico(fechada.topicoId, fechada.finalizadaEm, true);
-    await atualizarDominioTopico(fechada.topicoId, calcularDominio(acertos), fechada.finalizadaEm);
-  }
+  const fim = fechada?.finalizadaEm;
+  if (!fechada || !fim) return;
+  await Promise.all(
+    topicosARecalcular(fechada.topicoId, rs).map(async (t) =>
+      atualizarDominioTopico(t, calcularDominio(await acertosRecentesTopico(t, fim, true)), fim),
+    ),
+  );
 }

@@ -7,7 +7,7 @@
 Aplicação web pessoal de **prática ativa** para uma estudante de medicina (uma única usuária).
 O diferencial é **gamificar a prática**: uma roleta animada sorteia um tópico, ela estuda por 10 minutos e depois responde questões, ganha pontos e acompanha a evolução.
 
-Além das questões, o tópico tem **procedimentos** (manobras e exames, ex.: "Coleta de citopatológico"): o nome e um **checklist de passos** que ela tenta lembrar de cabeça e depois confere. Conteúdo só das fontes dela (NotebookLM ou cadastro manual), nunca gerado por IA na hora. Cadastro e importação desde a sessão 10; na rodada desde a 11 (no máximo 1 por rodada, `components/quiz/Procedimento.tsx`, Server Action `conferirProcedimento`, notas em `respostas_passos`). `/dev/questao` continua só com questões.
+Além das questões, o tópico tem **procedimentos** (manobras e exames, ex.: "Coleta de citopatológico"): o nome e um **checklist de passos** que ela tenta lembrar de cabeça e depois confere. Conteúdo só das fontes dela (NotebookLM ou cadastro manual), nunca gerado por IA na hora. Cadastro e importação desde a sessão 10; na rodada desde a 11 (no máximo 1 por rodada, `components/quiz/Procedimento.tsx`, Server Action `conferirProcedimento`, notas em `respostas_passos`). Desde a sessão 12 toda resposta é de uma sessão (`/dev/questao` foi apagada).
 
 **Princípio central:** o sistema é para *praticar, medir e repetir*. Ler e entender o material fica no **NotebookLM**, que já faz isso bem (upload de PDFs, resumos, mapas mentais, áudio, chat com fontes). O sistema **não** reimplementa nada disso. Ele se integra por links.
 
@@ -73,6 +73,8 @@ questoes
 respostas
   id uuid pk, questao_id fk, sessao_id fk null,
   resposta_dada text, acertou bool, tempo_ms int, respondida_em timestamptz
+  -- índice único parcial (sessao_id, questao_id) where sessao_id is not null: uma resposta por questão
+  -- em cada sessão; reenviar não grava de novo e devolve a conferência já gravada (sessão 12)
 
 respostas_passos                        -- só procedimento (resposta_dada = 'checklist'): uma nota por passo
   resposta_id fk → respostas on delete cascade, passo_id text (id do passo no checklist),
@@ -104,7 +106,8 @@ perfil                                  -- linha única (id = 1), editável em /
 ### 4.1 Domínio do tópico (0–100)
 - Média ponderada das **últimas 20 respostas** do tópico, com decaimento: a resposta mais recente pesa 1.0 e cada anterior pesa ×0.9.
 - Tópico sem nenhuma resposta tem domínio 0 e status "novo".
-- Recalcular e salvar em `topicos.dominio` ao finalizar cada sessão.
+- Recalcular e salvar em `topicos.dominio` ao finalizar cada sessão, em qualquer modo: `finalizar()` recalcula o tópico da sessão e **todo tópico com resposta nela** (revisão, erros e simulado têm `topico_id` null).
+- **Excluir tópico** só quando ele não tem respostas (o histórico não se apaga); com histórico, o diálogo manda desativar as questões.
 
 ### 4.2 Roleta
 Dois modos:
@@ -128,7 +131,7 @@ Só entram tópicos com pelo menos 1 questão ativa. Se a lista ficar vazia, mos
    3. questões mais erradas.
    Embaralhar a ordem das alternativas na exibição.
 4. Feedback imediato após cada resposta: certo/errado, gabarito, explicação e fonte.
-5. **Tela de resultado:** pontuação, acertos, maior sequência, variação de domínio (antes → depois) e recorde pessoal, se houver.
+5. **Tela de resultado:** pontuação, acertos, maior sequência, variação de domínio (antes → depois) e recorde pessoal, se houver. **Recorde é só do modo roleta** (uma revisão de 30 questões não vira recorde).
 
 ### 4.4 Pontuação
 - Acerto: **10 pts**
@@ -138,9 +141,10 @@ Só entram tópicos com pelo menos 1 questão ativa. Se a lista ficar vazia, mos
 - **Procedimento:** fração = (lembrei + 0,5 × com erro) / passos; acertou = fração ≥ 0,8 e nenhum crítico esquecido (`lib/domain/procedimento.ts`). Vale `round(10 × fração)` mesmo sem acertar (crédito parcial), sem bônus de tempo; entra na sequência como acerto/erro (×1,5 só quando acertou)
 
 ### 4.5 Repetição espaçada (FSRS)
-- Toda resposta atualiza `revisoes` via `ts-fsrs`.
+- Toda resposta, em qualquer modo, atualiza `revisoes` via `ts-fsrs` (`lib/domain/fsrs.ts`), no mesmo `db.batch` da resposta (e das notas dos passos). Agendador sem passos de aprendizado em minutos (`learning_steps: []`): `revisoes` não guarda a posição no passo.
 - Mapeamento de nota: errou → `Again`; acertou com tempo > 45 s → `Hard`; acertou → `Good`; acertou em < 15 s → `Easy`.
-- Modo **"Revisão do dia"**: todas as questões com `due <= now`, de todas as disciplinas.
+- Procedimento (o item inteiro, não o passo): crítico esquecido ou fração < 0,5 → `Again`; < 0,8 → `Hard`; < 1 → `Good`; 1 → `Easy` (tempo não entra).
+- Modo **"Revisão do dia"** (`/revisao`, sessão `modo='revisao'`): questões e procedimentos ativos com `due <= now`, de todas as disciplinas não arquivadas.
 
 ### 4.6 Outros modos
 - **Caderno de erros:** questões cuja última resposta foi errada, com filtro por disciplina/tópico. É possível refazer.

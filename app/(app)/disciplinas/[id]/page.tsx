@@ -64,6 +64,7 @@ function LinhaTopico({ t, cor, disciplinaId }: { t: Topico; cor: string; discipl
           disciplinaId={disciplinaId}
           nome={t.nome}
           totalQuestoes={t.totalQuestoes}
+          respondido={t.respondido}
           className={ICONE}
         />
       </div>

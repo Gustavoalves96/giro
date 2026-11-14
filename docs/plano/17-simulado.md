@@ -17,6 +17,9 @@ Prova simulada com tempo total e feedback só no fim.
 - Simulado não conta para o recorde de pontuação.
 - Só questões: procedimentos (sessões 10–11) ficam fora, porque são sem pressão de tempo.
 - Trocar de resposta antes de entregar é permitido: grava só a resposta final de cada questão (na entrega).
+- As respostas em andamento e o início da prova ficam em `sessionStorage` (com try/catch): recarregar a aba no iPad não perde a prova nem zera o tempo.
+- FSRS no simulado: nota só por acerto/erro (Again ou Good); o tempo por questão não é confiável quando se navega entre elas.
+- Usa `finalizar()` genérico da sessão 12 (domínio de todos os tópicos envolvidos).
 
 ## Testes
 - Função pura de correção do lote (respostas finais → acertos e nota).

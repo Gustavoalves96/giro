@@ -16,7 +16,7 @@ type Props = PageProps<"/roleta/sessao/[id]/questoes">;
 // Recarregar no meio continua de onde parou: as já respondidas nesta sessão vêm do banco e saem das candidatas.
 async function Conteudo({ params }: Props) {
   const { id } = await params;
-  const s = await carregarSessao(id);
+  const s = await carregarSessao(id, "roleta");
   if (s.finalizadaEm) redirect(rota(id, "resultado"));
   const [feitas, candidatas] = await Promise.all([
     respostasDaSessao(s.id),
@@ -43,6 +43,8 @@ async function Conteudo({ params }: Props) {
       sessaoId={s.id}
       feitas={feitas.map(({ acertou, tempoMs, fracao }) => ({ acertou, tempoMs, fracao }))}
       questoes={questoes}
+      resultado={rota(s.id, "resultado")}
+      vazio="Este tópico ficou sem questões ativas. A rodada fecha só com o estudo."
     />
   );
 }
