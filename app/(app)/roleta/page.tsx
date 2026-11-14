@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { Roleta } from "@/components/roleta/roleta";
 import { getPerfil } from "@/lib/db/perfil";
+import { provasDesde } from "@/lib/db/provas";
 import { listarTopicosRoleta } from "@/lib/db/topicos";
+import { hojeEmSP, topicosComProvaEm14Dias } from "@/lib/domain/provas";
 import { candidatoDe } from "@/lib/domain/roleta";
 import { ESTUDO_PADRAO } from "@/lib/perfil/schema";
 
@@ -10,10 +13,16 @@ export const metadata: Metadata = { title: "Roleta · Giro" };
 
 // Banco é dado da requisição: fica dentro de <Suspense> (Cache Components). Só carrega as fatias; não sorteia.
 async function Conteudo() {
-  const [linhas, perfil] = await Promise.all([listarTopicosRoleta(), getPerfil()]);
+  await connection(); // "agora" é da requisição, não do build
   const agora = new Date();
+  const hoje = hojeEmSP(agora);
+  const [linhas, perfil, provas] = await Promise.all([listarTopicosRoleta(), getPerfil(), provasDesde(hoje)]);
+  const comProva = topicosComProvaEm14Dias(provas, hoje);
   return (
-    <Roleta candidatos={linhas.map((l) => candidatoDe(l, agora))} estudoPadrao={perfil?.estudoSegundos ?? ESTUDO_PADRAO} />
+    <Roleta
+      candidatos={linhas.map((l) => candidatoDe(l, agora, comProva))}
+      estudoPadrao={perfil?.estudoSegundos ?? ESTUDO_PADRAO}
+    />
   );
 }
 

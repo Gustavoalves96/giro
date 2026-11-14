@@ -14,7 +14,7 @@ Tela inicial que diz o que fazer agora e mostra o progresso.
 - **Tempo de estudo que não se perde:** o timer do estudo sobrevive a recarregar a aba (Safari do iPad recarrega ao voltar do NotebookLM) e grava `estudo_segundos` quando a aba é escondida, não só em "Já estou pronta".
 - Tirar o redirecionamento provisório de `/` para `/roleta` (sessão 12).
 - Revisão do dia: total vencido, divisão por disciplina, "Revisar agora · ~N min"; atalho para o Caderno de erros com a contagem.
-- Próxima prova (dados da sessão 16): título, dias restantes, tópicos com domínio; some se não houver prova futura.
+- Próxima prova (dados da sessão 16): título, dias restantes, tópicos com domínio; some se não houver prova futura. Query pronta: `proximaProva(hojeEmSP(agora))` em `lib/db/provas.ts` (null = sem prova; tópicos apagados já ficam de fora; dias com `diasAte` e texto com `contagemRegressiva` de `lib/domain/provas.ts`).
 - Primeiro uso guiado (veio da 19): sem disciplinas → "Crie sua primeira disciplina"; sem questões → "Gere questões com o NotebookLM"; refletir na Roleta.
 - `app/manifest.ts` + ícone da marca para "Adicionar à tela de início" no iPad (veio da 19).
 - Pontos fracos: 3 tópicos de menor domínio (só os que já têm respostas).

@@ -10,7 +10,9 @@ import {
   respostasDaSessao,
   salvarEstudoSessao,
 } from "@/lib/db/sessoes";
+import { provasDesde } from "@/lib/db/provas";
 import { listarTopicosRoleta } from "@/lib/db/topicos";
+import { hojeEmSP, topicosComProvaEm14Dias } from "@/lib/domain/provas";
 import { IdSchema } from "@/lib/disciplinas/schema";
 import { calcularDominio, topicosARecalcular } from "@/lib/domain/dominio";
 import { resumoSessao } from "@/lib/domain/pontuacao";
@@ -30,7 +32,10 @@ export async function girar(entrada: z.input<typeof GirarSchema>): Promise<Resul
   await requireUser();
   const filtro = GirarSchema.parse(entrada);
   const agora = new Date();
-  const candidatos = (await listarTopicosRoleta()).map((l) => candidatoDe(l, agora));
+  const hoje = hojeEmSP(agora);
+  const [linhas, provas] = await Promise.all([listarTopicosRoleta(), provasDesde(hoje)]);
+  const comProva = topicosComProvaEm14Dias(provas, hoje);
+  const candidatos = linhas.map((l) => candidatoDe(l, agora, comProva));
   const fatias = montarFatias(candidatos, filtro.modo, filtro);
   if (!fatias.length) return { fatias, sorteadoId: null, motivo: motivoVazio(candidatos.length) };
   const sorteado = sortear(fatias);

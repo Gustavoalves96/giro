@@ -317,7 +317,7 @@ export function Roleta({ candidatos, estudoPadrao }: { candidatos: Candidato[]; 
               </div>
               <p className="mt-2 text-[13px] text-ink3">
                 {modo === "inteligente"
-                  ? "Pontos fracos e tópicos nunca estudados ganham fatias maiores."
+                  ? "Pontos fracos, tópicos nunca estudados e os de prova nos próximos 14 dias ganham fatias maiores."
                   : "Todos os tópicos com a mesma chance."}
               </p>
             </div>

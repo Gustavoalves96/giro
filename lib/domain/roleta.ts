@@ -6,7 +6,7 @@ export type FatoresPeso = {
   dominio: number; // 0..100
   nuncaEstudado: boolean;
   estudadoUltimas24h: boolean;
-  temProvaEm14Dias: boolean; // sempre false até a sessão 16 (provas)
+  temProvaEm14Dias: boolean; // topicosComProvaEm14Dias (lib/domain/provas.ts)
 };
 
 export type Candidato = FatoresPeso & {
@@ -55,13 +55,14 @@ const H24 = 24 * 60 * 60 * 1000;
 export function candidatoDe(
   l: Omit<Candidato, keyof FatoresPeso> & { dominio: number; ultimaVezEstudado: Date | null },
   agora: Date,
+  comProva: ReadonlySet<string> = new Set(),
 ): Candidato {
   const { ultimaVezEstudado, ...resto } = l;
   return {
     ...resto,
     nuncaEstudado: ultimaVezEstudado === null,
     estudadoUltimas24h: ultimaVezEstudado !== null && agora.getTime() - ultimaVezEstudado.getTime() < H24,
-    temProvaEm14Dias: false,
+    temProvaEm14Dias: comProva.has(l.topicoId),
   };
 }
 

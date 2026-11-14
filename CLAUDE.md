@@ -92,6 +92,8 @@ sessoes
 
 provas
   id uuid pk, disciplina_id fk, titulo text, data date, topico_ids uuid[]
+  -- topico_ids sem FK: ids de tópicos apagados são ignorados (na tela, no peso e na próxima prova)
+  -- e caem quando a prova é salva de novo no editor
 
 explicacoes_ia                          -- cache das chamadas de IA
   questao_id pk/fk, texto text, gerado_em
@@ -114,7 +116,8 @@ Dois modos:
 - **Inteligente (padrão):** peso de cada tópico =
   `1 + (100 - dominio) / 25`
   `× 1.5` se o tópico nunca foi estudado
-  `× 2.0` se o tópico pertence a uma prova nos próximos 14 dias
+  `× 2.0` se o tópico pertence a uma prova nos próximos 14 dias (de hoje até o 14º dia, inclusive; dia civil
+  em `America/Sao_Paulo`: `hojeEmSP`, `diasAte` e `topicosComProvaEm14Dias` em `lib/domain/provas.ts`)
   `× 0.5` se foi estudado nas últimas 24 h
 - **Sorte pura:** todos os pesos iguais.
 
@@ -149,7 +152,7 @@ Só entram tópicos com pelo menos 1 questão ativa. Se a lista ficar vazia, mos
 ### 4.6 Outros modos
 - **Caderno de erros:** questões cuja última resposta foi errada, com filtro por disciplina/tópico. É possível refazer.
 - **Simulado:** N questões aleatórias das disciplinas escolhidas, com tempo total de prova, sem feedback até o fim.
-- **Calendário de provas:** cadastro de provas com data e tópicos. Afeta o peso da roleta (4.2).
+- **Calendário de provas** (`/provas`, sessão 16): disciplina, título, data e tópicos da disciplina. Lista com as próximas primeiro (contagem "hoje", "amanhã", "em N dias") e as passadas recolhidas. Afeta o peso da roleta (4.2). A action recusa data inválida, título vazio, disciplina inexistente e tópico de outra disciplina. `proximaProva(hoje)` em `lib/db/provas.ts` alimenta o card do Início (sessão 14).
 
 ### 4.7 Painel / "ranking"
 Como a usuária é uma só, o ranking é **contra ela mesma**:

@@ -126,4 +126,11 @@ describe("montarFatias / candidatoDe", () => {
     expect(montarFatias(cands, "sorte", { disciplinaIds: ["d1", "d2"], topicoIds: ["t3"] }).map((f) => f.topicoId)).toEqual(["t3"]);
     expect(montarFatias(cands, "inteligente", { disciplinaIds: [] })).toEqual([]);
   });
+  it("tópico com prova em 14 dias dobra o peso", () => {
+    const l = { topicoId: "t1", nome: "t1", disciplinaId: "d1", disciplina: "d1", cor: "#000000", notebooklmUrl: null, novo: true, dominio: 0, ultimaVezEstudado: null };
+    const com = candidatoDe(l, agora, new Set(["t1"]));
+    expect(com.temProvaEm14Dias).toBe(true);
+    expect(montarFatias([com], "inteligente", { disciplinaIds: ["d1"] })[0].peso).toBe(15);
+    expect(candidatoDe(l, agora, new Set(["outro"])).temProvaEm14Dias).toBe(false);
+  });
 });
