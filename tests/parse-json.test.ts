@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extrairJson, lerResposta, normalizarEnunciado } from "@/lib/import/parse-json";
+import { extrairJson, lerResposta, normalizarEnunciado, semEscapesDeMarkdown } from "@/lib/import/parse-json";
 import { montarPrompt } from "@/lib/prompts/notebooklm";
 
 const alternativas = ["A", "B", "C", "D", "E"].map((letra) => ({ letra, texto: `Opção ${letra}` }));
@@ -40,7 +40,22 @@ describe("extrairJson", () => {
   });
 });
 
+describe("semEscapesDeMarkdown", () => {
+  it("tira \\_ \\* \\[ e mantém os escapes válidos do JSON", () => {
+    expect(semEscapesDeMarkdown(String.raw`{"t":"verdadeiro\_falso","f":"a\*b\[1\]","q":"diz \"oi\"\n","b":"c:\\_x","u":"\u00e9"}`)).toBe(
+      String.raw`{"t":"verdadeiro_falso","f":"a*b[1]","q":"diz \"oi\"\n","b":"c:\\_x","u":"\u00e9"}`,
+    );
+  });
+});
+
 describe("lerResposta", () => {
+  it("lê a resposta copiada do NotebookLM com _ escapado como markdown", () => {
+    const colado = json([vf, me("Questão com fonte de imagem?", { fonte: "simulado_algoritmo.jpeg, Questão 10" })]).replaceAll("_", "\\_");
+    const r = ok(colado);
+    expect(r.validas.map((q) => q.tipo)).toEqual(["verdadeiro_falso", "multipla_escolha"]);
+    expect(r.validas[1].fonte).toBe("simulado_algoritmo.jpeg, Questão 10");
+  });
+
   it("aceita texto antes/depois e cerca ```json", () => {
     const r = ok(`Aqui estão as questões:\n\`\`\`json\n${json([me("Primeira questão de teste?"), vf])}\n\`\`\`\nEspero ter ajudado!`);
     expect(r.validas).toHaveLength(2);

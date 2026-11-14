@@ -30,6 +30,14 @@ export function extrairJson(texto: string) {
   return fim > inicio ? texto.slice(inicio, fim + 1) : texto.slice(inicio);
 }
 
+/**
+ * O NotebookLM copia a resposta como markdown e escapa `_`, `*`, `[`… (`"verdadeiro\_falso"`), o que não é JSON
+ * válido. Tira a barra de todo escape que o JSON não conhece; os válidos (\" \\ \/ \b \f \n \r \t \u) ficam.
+ */
+export function semEscapesDeMarkdown(json: string) {
+  return json.replace(/\\(["\\/bfnrtu])|\\/g, (_, valido?: string) => (valido ? `\\${valido}` : ""));
+}
+
 // O que muda entre importar questões e procedimentos: chave do envelope, schema, campo comparado e palavras.
 type Tipo<T> = {
   chave: "questoes" | "procedimentos";
@@ -94,7 +102,7 @@ function lerItens<T>(texto: string, existentes: string[], tipo: Tipo<T>): Leitur
   }
   let dados: unknown;
   try {
-    dados = JSON.parse(json);
+    dados = JSON.parse(semEscapesDeMarkdown(json));
   } catch {
     return {
       ok: false,
