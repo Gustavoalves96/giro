@@ -10,7 +10,7 @@ export const ETAPAS = [
 ] as const;
 export type Etapa = (typeof ETAPAS)[number]["id"];
 
-/** Estudo · Questões · Resultado, com a etapa atual em destaque. Revisão não tem estudo (`semEstudo`). */
+/** Estudo · Questões · Resultado, com a etapa atual em destaque. Revisão e erros não têm estudo (`semEstudo`). */
 export function IndicadorEtapas({ atual, semEstudo = false }: { atual: Etapa | null; semEstudo?: boolean }) {
   const etapas = semEstudo ? ETAPAS.slice(1) : ETAPAS;
   const iAtual = etapas.findIndex((e) => e.id === atual);
@@ -35,5 +35,5 @@ export function IndicadorEtapas({ atual, semEstudo = false }: { atual: Etapa | n
 export function IndicadorEtapasAtual() {
   const segmentos = useSelectedLayoutSegments();
   const atual = segmentos.findLast((s): s is Etapa => ETAPAS.some((e) => e.id === s));
-  return <IndicadorEtapas atual={atual ?? null} semEstudo={segmentos[0] === "revisao"} />;
+  return <IndicadorEtapas atual={atual ?? null} semEstudo={segmentos[0] === "revisao" || segmentos[0] === "erros"} />;
 }

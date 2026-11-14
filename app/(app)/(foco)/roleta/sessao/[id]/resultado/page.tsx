@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { TEXTO_SOBRE_TINTA, tintaClara } from "@/lib/cores";
 import { acertosRecentesTopico, recordeAnterior, respostasDaSessao } from "@/lib/db/sessoes";
 import { calcularDominio } from "@/lib/domain/dominio";
+import { passosEsquecidos } from "@/lib/domain/erros";
 import { pontosQuestao } from "@/lib/domain/pontuacao";
 import { cn } from "@/lib/utils";
 import { carregarSessao, rota } from "../carregar";
@@ -32,10 +33,9 @@ function comPontos<T extends { acertou: boolean; tempoMs: number }>(rs: T[]) {
   });
 }
 
-// Passos esquecidos (até 3), na ordem do checklist atual; passo apagado depois da conferência some da lista.
+// Passos esquecidos (até 3), na ordem do checklist atual.
 function esquecidos(r: Awaited<ReturnType<typeof respostasDaSessao>>[number]) {
-  const nota = new Map(r.notas?.map((n) => [n.passoId, n.nota]));
-  return (r.checklist?.passos ?? []).filter((p) => nota.get(p.id) === "esqueci").slice(0, 3).map((p) => p.texto);
+  return passosEsquecidos(r.checklist?.passos ?? [], r.notas ?? []).slice(0, 3);
 }
 
 type Props = PageProps<"/roleta/sessao/[id]/resultado">;
@@ -52,6 +52,7 @@ async function Conteudo({ params }: Props) {
     s.topicoId ? acertosRecentesTopico(s.topicoId, s.finalizadaEm, true) : null,
   ]);
   const novoRecorde = s.pontuacao > 0 && s.pontuacao > recorde;
+  const erros = s.totalQuestoes - s.acertos;
   const questoesSeg = rs.reduce((t, r) => t + r.tempoMs, 0) / 1000;
 
   const linhas = comPontos(rs);
@@ -112,6 +113,11 @@ async function Conteudo({ params }: Props) {
               Girar de novo
             </Link>
           </Button>
+          {erros > 0 && (
+            <Button asChild variant="secondary">
+              <Link href={s.topicoId ? `/erros?topico=${s.topicoId}` : "/erros"}>Revisar {erros === 1 ? "1 erro" : `${erros} erros`}</Link>
+            </Button>
+          )}
           <Button asChild variant="ghost">
             <Link href="/">
               <Home aria-hidden />

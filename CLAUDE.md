@@ -150,7 +150,7 @@ Só entram tópicos com pelo menos 1 questão ativa. Se a lista ficar vazia, mos
 - Modo **"Revisão do dia"** (`/revisao`, sessão `modo='revisao'`): questões e procedimentos ativos com `due <= now`, de todas as disciplinas não arquivadas.
 
 ### 4.6 Outros modos
-- **Caderno de erros:** questões cuja última resposta foi errada, com filtro por disciplina/tópico. É possível refazer.
+- **Caderno de erros** (`/erros`, sessão 13): questões e procedimentos ativos, de disciplinas não arquivadas, cuja **última** resposta foi errada (`DISTINCT ON` em `lib/db/erros.ts`; a mesma regra pura em `cadernoDeErros`, `lib/domain/erros.ts`). Mostra enunciado, tópico, data do erro e resposta dada × gabarito (texto da alternativa, sem a letra, que ela viu embaralhada); procedimento mostra "% lembrado" e os passos esquecidos daquela tentativa. Filtro por disciplina e tópico em search params (id inválido é ignorado). "Refazer" (uma ou todas as filtradas) cria sessão `modo='erros'` e o filtro vai na URL de `/erros/sessao/[id]/questoes`, que lista os erros do filtro ainda não respondidos nela; acertou → sai do caderno. Acesso pela Revisão e por "Revisar N erros" do resultado da roleta (`/erros?topico=`).
 - **Simulado:** N questões aleatórias das disciplinas escolhidas, com tempo total de prova, sem feedback até o fim.
 - **Calendário de provas** (`/provas`, sessão 16): disciplina, título, data e tópicos da disciplina. Lista com as próximas primeiro (contagem "hoje", "amanhã", "em N dias") e as passadas recolhidas. Afeta o peso da roleta (4.2). A action recusa data inválida, título vazio, disciplina inexistente e tópico de outra disciplina. `proximaProva(hoje)` em `lib/db/provas.ts` alimenta o card do Início (sessão 14).
 
@@ -244,7 +244,7 @@ app/
     page.tsx                 -> painel (início)
     roleta/                  -> roleta + sessão (estudo → questões → resultado)
     revisao/                 -> revisão do dia (FSRS)
-    erros/                   -> caderno de erros
+    erros/                   -> caderno de erros (sessões em (foco)/erros/sessao/[id])
     simulado/
     disciplinas/[id]/        -> tópicos, link NotebookLM
     topicos/[id]/            -> questões, importar, gerar

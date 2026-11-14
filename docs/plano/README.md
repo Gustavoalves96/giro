@@ -26,7 +26,7 @@ Uma sessão do Claude Code por arquivo. Em cada sessão, anexe **só** o arquivo
 | [x] | 11 | [Procedimentos na rodada](11-procedimentos-rodada.md) | 09, 10 |
 | [x] | 12 | [Acertos da rodada + FSRS + Revisão do dia](12-fsrs-revisao.md) | 09, 11 |
 | [x] | 16 | [Provas](16-provas.md) | 07 |
-| [ ] | 13 | [Caderno de erros](13-caderno-erros.md) | 12 |
+| [x] | 13 | [Caderno de erros](13-caderno-erros.md) | 12 |
 | [ ] | 14 | [Início (painel)](14-inicio.md) | 12, 13, 16 |
 | [ ] | 15 | [Estatísticas](15-estatisticas.md) | 14 |
 | [ ] | 19 | [Polimento](19-polimento.md) | 12–16 |

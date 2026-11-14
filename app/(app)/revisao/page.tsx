@@ -1,3 +1,4 @@
+import { NotebookPen } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
@@ -83,6 +84,12 @@ export default function Page() {
       <Suspense fallback={<div className="h-56 animate-pulse rounded-3xl border border-line bg-sf" aria-busy="true" />}>
         <Conteudo />
       </Suspense>
+      <Button asChild variant="secondary" className="mt-4 w-full sm:w-auto">
+        <Link href="/erros">
+          <NotebookPen aria-hidden />
+          Caderno de erros
+        </Link>
+      </Button>
     </div>
   );
 }

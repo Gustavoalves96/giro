@@ -21,6 +21,8 @@ function estaAtivo(href: string, pathname: string | null) {
   if (!pathname) return false;
   // tópico é filho de disciplina, embora a rota fique em /topicos
   if (href === "/disciplinas" && pathname.startsWith("/topicos/")) return true;
+  // o caderno de erros abre pela Revisão
+  if (href === "/revisao" && (pathname === "/erros" || pathname.startsWith("/erros/"))) return true;
   return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
 }
 
