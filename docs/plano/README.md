@@ -28,7 +28,7 @@ Uma sessão do Claude Code por arquivo. Em cada sessão, anexe **só** o arquivo
 | [x] | 16 | [Provas](16-provas.md) | 07 |
 | [x] | 13 | [Caderno de erros](13-caderno-erros.md) | 12 |
 | [x] | 14 | [Início (painel)](14-inicio.md) | 12, 13, 16 |
-| [ ] | 15 | [Estatísticas](15-estatisticas.md) | 14 |
+| [x] | 15 | [Estatísticas](15-estatisticas.md) | 14 |
 | [ ] | 19 | [Polimento](19-polimento.md) | 12–16 |
 | [ ] | 17 | [Simulado](17-simulado.md) | 08, 12 |
 | [ ] | 18 | [IA opcional](18-ia-opcional.md) | 08, 12 |
@@ -46,6 +46,7 @@ As sessões 10 e 11 (procedimentos) entraram em 13/11/2026, antes do FSRS: assim
 - **Cor da disciplina:** guarda só a cor cheia; a tinta clara é calculada com `color-mix(in srgb, <cor> 20%, white)`.
 - **Lógica de negócio** em `lib/domain/` como funções puras com teste Vitest, escrita na sessão que precisa dela.
 - **Lacunas do design resolvidas sem coluna nova:** "Foque em" = linhas de `topicos.descricao` (some se vazio); "+2 min" só no cliente.
+- **Estatísticas** (decisões de 14/11/2026, sessão 15): procedimento conta em "questões respondidas" e em "% de acertos" (usa o `acertou` gravado); "% de acertos (início → fim)" = primeira × última semana **com resposta** das 8; "questões respondidas" é das 8 semanas, XP e maior sequência são de sempre; o ranking mostra todos os tópicos (mesma regra dos pontos fracos). A evolução semanal são três gráficos de uma série alinhados (questões, % de acertos, minutos), sem eixo duplo.
 - **Meta de rodadas** (decisão de 14/11/2026, sessão 14): "Rodada de hoje · x de N" no Início é editável em Meu perfil (`perfil.meta_rodadas`, 1 a 20, padrão 4); conta sessões da roleta finalizadas hoje em America/Sao_Paulo.
 - **Tempo de estudo:** padrão editável em Meu perfil (`perfil.estudo_segundos`, padrão 600 s) e ajustável na roleta só para a rodada (sessão 09). Textos não citam "10 minutos" fixo; slogan: "Gire. Estude. Domine o tópico."
 - **Sair no meio da rodada** (sessão 09): pede confirmação e deixa a sessão **aberta** (`finalizada_em` null). Ela não conta pontos, XP, recorde nem domínio; as respostas já dadas ficam gravadas (com `sessao_id`) e entram no domínio na próxima rodada finalizada do tópico. A URL da sessão continua de onde parou. **Confirmado por ela em 13/11/2026: a rodada fica aberta** (não fecha sozinha); por isso o Início e a Roleta mostram "Continuar rodada" (sessão 14).

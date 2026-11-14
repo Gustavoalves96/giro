@@ -64,3 +64,48 @@ export function mapaDeCalor(porDia: ReadonlyMap<string, number>, hoje: string, s
     }),
   );
 }
+
+/** Maior sequência de dias seguidos com atividade, em todo o histórico. */
+export function maiorSequencia(diasComAtividade: Iterable<string>) {
+  const dias = [...new Set(diasComAtividade)].sort();
+  let maior = 0;
+  let atual = 0;
+  dias.forEach((d, i) => {
+    atual = i > 0 && somarDias(dias[i - 1], 1) === d ? atual + 1 : 1;
+    maior = Math.max(maior, atual);
+  });
+  return maior;
+}
+
+export type Semana = { inicio: string; respostas: number; acertos: number; segundos: number };
+
+/**
+ * As últimas `semanas` semanas (segunda a domingo, dia de SP), a última com hoje. Semana sem dados vem
+ * zerada; evento fora do período é ignorado.
+ */
+export function agregarPorSemana(
+  eventos: { em: Date; respostas?: number; acertos?: number; segundos?: number }[],
+  hoje: string,
+  semanas = 8,
+): Semana[] {
+  const segunda = somarDias(hoje, -((new Date(Date.parse(hoje)).getUTCDay() + 6) % 7));
+  const inicio = somarDias(segunda, -7 * (semanas - 1));
+  const lista = Array.from({ length: semanas }, (_, i) => ({ inicio: somarDias(inicio, 7 * i), respostas: 0, acertos: 0, segundos: 0 }));
+  for (const e of eventos) {
+    const i = Math.floor((Date.parse(diaSP(e.em)) - Date.parse(inicio)) / (7 * DIA));
+    const s = lista[i];
+    if (!s) continue;
+    s.respostas += e.respostas ?? 0;
+    s.acertos += e.acertos ?? 0;
+    s.segundos += e.segundos ?? 0;
+  }
+  return lista;
+}
+
+/** % de acertos da primeira e da última semana com resposta (`fim` null com uma semana só; null sem nenhuma). */
+export function acertosInicioFim(semanas: Semana[]) {
+  const com = semanas.filter((s) => s.respostas > 0);
+  if (!com.length) return null;
+  const pct = (s: Semana) => Math.round((100 * s.acertos) / s.respostas);
+  return { inicio: pct(com[0]), fim: com.length > 1 ? pct(com[com.length - 1]) : null };
+}

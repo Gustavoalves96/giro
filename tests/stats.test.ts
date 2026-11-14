@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { agregarPorDia, diaSP, mapaDeCalor, rodadasHoje, streak, xpTotal } from "@/lib/domain/stats";
+import { acertosInicioFim, agregarPorDia, agregarPorSemana, diaSP, maiorSequencia, mapaDeCalor, rodadasHoje, streak, xpTotal } from "@/lib/domain/stats";
 import { etapaParaContinuar, primeiroPasso, saudacao, tempoRetomado } from "@/lib/domain/inicio";
 
 describe("diaSP", () => {
@@ -137,5 +137,55 @@ describe("tempoRetomado", () => {
   it("tempo fora conta no máximo 1 h", () => {
     const local = { sessaoId: "s", acumuladoMs: 0, salvoEm: t - 5 * 3_600_000, rodando: true };
     expect(tempoRetomado("s", 0, local, t, 2 * 3_600_000).acumuladoMs).toBe(3_600_000);
+  });
+});
+
+describe("maiorSequencia", () => {
+  it("acha a maior corrida, mesmo antiga, e ignora repetidos", () => {
+    expect(maiorSequencia(["2026-10-01", "2026-10-02", "2026-10-03", "2026-11-13", "2026-11-14", "2026-10-02"])).toBe(3);
+  });
+  it("sem atividade → 0", () => {
+    expect(maiorSequencia([])).toBe(0);
+  });
+});
+
+describe("agregarPorSemana", () => {
+  const hoje = "2026-11-14"; // sábado
+  it("semana começa na segunda; a última contém hoje; vazias vêm zeradas", () => {
+    const s = agregarPorSemana([], hoje);
+    expect(s).toHaveLength(8);
+    expect(s[7].inicio).toBe("2026-11-09"); // segunda
+    expect(s[0].inicio).toBe("2026-09-21");
+    expect(s.every((x) => x.respostas === 0 && x.acertos === 0 && x.segundos === 0)).toBe(true);
+  });
+  it("hoje sendo segunda abre semana nova; domingo fecha a anterior", () => {
+    expect(agregarPorSemana([], "2026-11-16")[7].inicio).toBe("2026-11-16");
+    expect(agregarPorSemana([], "2026-11-15")[7].inicio).toBe("2026-11-09");
+  });
+  it("usa o dia de SP: segunda 01:00 UTC ainda é domingo em SP", () => {
+    const s = agregarPorSemana(
+      [
+        { em: new Date("2026-11-09T01:00:00Z"), respostas: 2, acertos: 1 }, // domingo 08/11 em SP
+        { em: new Date("2026-11-09T03:00:00Z"), respostas: 3, acertos: 3, segundos: 600 }, // segunda em SP
+      ],
+      hoje,
+    );
+    expect(s[6]).toMatchObject({ inicio: "2026-11-02", respostas: 2, acertos: 1 });
+    expect(s[7]).toMatchObject({ respostas: 3, acertos: 3, segundos: 600 });
+  });
+  it("ignora o que está fora do período", () => {
+    const s = agregarPorSemana([{ em: new Date("2026-09-20T15:00:00Z"), respostas: 9 }], hoje);
+    expect(s.reduce((t, x) => t + x.respostas, 0)).toBe(0);
+  });
+});
+
+describe("acertosInicioFim", () => {
+  const sem = (respostas: number, acertos: number) => ({ inicio: "", respostas, acertos, segundos: 0 });
+  it("primeira × última semana com resposta, pulando as vazias", () => {
+    expect(acertosInicioFim([sem(0, 0), sem(10, 5), sem(0, 0), sem(4, 3), sem(0, 0)])).toEqual({ inicio: 50, fim: 75 });
+  });
+  it("uma semana só → fim null; nenhuma → null", () => {
+    expect(acertosInicioFim([sem(3, 2), sem(0, 0)])).toEqual({ inicio: 67, fim: null });
+    expect(acertosInicioFim([sem(0, 0)])).toBeNull();
   });
 });
