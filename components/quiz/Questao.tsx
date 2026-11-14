@@ -5,6 +5,7 @@ import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { type Conferencia, responder, sinalizarErro } from "@/app/(app)/questoes/actions";
 import { useMovimentoReduzido } from "@/components/movimento-reduzido";
+import { ExpliqueMelhor } from "@/components/quiz/ExpliqueMelhor";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TEXTO_SOBRE_TINTA, tintaClara } from "@/lib/cores";
@@ -34,6 +35,8 @@ type Props = { questao: QuestaoExibida; onProxima: () => void } & (
       sequenciaAntes: number;
       onRespondida: (r: RespostaPontuada) => void;
       ultima?: boolean;
+      /** Mostra "Explique melhor (IA)" quando errar (servidor com GEMINI_API_KEY). */
+      ia?: boolean;
     }
   | {
       /** final (simulado): não envia nada; a escolha (letra original ou V/F) sobe para a prova, que entrega no fim. */
@@ -320,6 +323,8 @@ export function Questao(props: Props) {
             </p>
           </motion.div>
         )}
+
+        {errou && props.ia && <ExpliqueMelhor questaoId={questao.id} />}
 
         {fase === "respondida" ? (
           <div className="flex flex-col gap-2">

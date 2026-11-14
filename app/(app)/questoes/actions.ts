@@ -1,9 +1,18 @@
 "use server";
 
 import { z } from "zod";
+import { type Explicacao, explicarComCache, getProvider } from "@/lib/ai/provider";
 import { requireUser } from "@/lib/auth/require-user";
 import { definirMarcacao } from "@/lib/db/questoes";
-import { getGabarito, getProcedimento, getRevisao, gravarResposta, respostaGravada } from "@/lib/db/quiz";
+import {
+  getExplicacaoIa,
+  getGabarito,
+  getProcedimento,
+  getRevisao,
+  gravarResposta,
+  respostaGravada,
+  salvarExplicacaoIa,
+} from "@/lib/db/quiz";
 import type { Checklist } from "@/lib/db/schema";
 import { sessaoAberta } from "@/lib/db/sessoes";
 import { IdSchema } from "@/lib/disciplinas/schema";
@@ -128,6 +137,20 @@ export async function conferirProcedimento(entrada: z.input<typeof ConferirSchem
   const ja = await respostaGravada(r.sessaoId, r.questaoId);
   if (!ja) throw new Error("Conferência não encontrada.");
   return conferencia(ja.notas ?? {}, ja.tempoMs);
+}
+
+// "Explique melhor (IA)": cache em explicacoes_ia; sem cache, só chama com o OK dela (confirmado).
+export async function explicarMelhor(questaoId: string, confirmado: boolean): Promise<Explicacao> {
+  await requireUser();
+  const id = IdSchema.parse(questaoId);
+  const q = await getGabarito(id);
+  if (!q || q.tipo === "procedimento") throw new Error("Questão não encontrada.");
+  return explicarComCache(
+    { enunciado: q.enunciado, alternativas: q.alternativas, gabarito: q.gabarito, explicacao: q.explicacao },
+    z.boolean().parse(confirmado),
+    { ler: () => getExplicacaoIa(id), salvar: (texto) => salvarExplicacaoIa(id, texto) },
+    getProvider(),
+  );
 }
 
 export async function sinalizarErro(questaoId: string, valor: boolean) {

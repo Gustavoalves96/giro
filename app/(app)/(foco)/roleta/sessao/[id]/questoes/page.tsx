@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import type { QuestaoExibida } from "@/components/quiz/Questao";
+import { iaDisponivel } from "@/lib/ai/provider";
 import { listarCandidatasSessao, respostasDaSessao } from "@/lib/db/sessoes";
 import { MAX_PROCEDIMENTOS_POR_RODADA, opcoesDaQuestao, selecionarRodada } from "@/lib/domain/selecao-questoes";
 import { carregarSessao, rota } from "../carregar";
@@ -45,6 +46,7 @@ async function Conteudo({ params }: Props) {
       questoes={questoes}
       resultado={rota(s.id, "resultado")}
       vazio="Este tópico ficou sem questões ativas. A rodada fecha só com o estudo."
+      ia={iaDisponivel()}
     />
   );
 }

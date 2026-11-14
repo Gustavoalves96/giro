@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { carregarSessao } from "@/app/(app)/(foco)/roleta/sessao/[id]/carregar";
 import { QuestoesSessao } from "@/app/(app)/(foco)/roleta/sessao/[id]/questoes/questoes";
+import { iaDisponivel } from "@/lib/ai/provider";
 import { filtrarErros, listarErros } from "@/lib/db/erros";
 import { respostasDaSessao } from "@/lib/db/sessoes";
 import { opcoesDaQuestao } from "@/lib/domain/selecao-questoes";
@@ -38,6 +39,7 @@ async function Conteudo({ params, searchParams }: Props) {
       }))}
       resultado={resultado}
       vazio="Nenhum erro para refazer neste filtro."
+      ia={iaDisponivel()}
     />
   );
 }

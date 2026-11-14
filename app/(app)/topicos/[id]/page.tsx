@@ -1,4 +1,4 @@
-import { ChevronRight, Eye, EyeOff, Flag, FlagOff, Pencil, Plus, Sparkles } from "lucide-react";
+import { ChevronRight, Eye, EyeOff, Flag, FlagOff, Pencil, Plus } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -269,11 +269,6 @@ async function Conteudo({ id }: { id: string }) {
               Nova questão
             </EditorQuestao>
             <ImportarNotebookLM tipo="questoes" {...importar} enunciados={questoes.map((q) => q.enunciado)} />
-            {/* espaço reservado: IA (sessão 18) */}
-            <Button variant="secondary" disabled title="Em breve">
-              <Sparkles aria-hidden />
-              Gerar com IA <span className="font-normal text-ink3">· em breve</span>
-            </Button>
           </>
         }
         vazio={

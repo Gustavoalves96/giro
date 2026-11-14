@@ -11,9 +11,10 @@ import { Button } from "@/components/ui/button";
 import { resumoSessao, type RespostaPontuada } from "@/lib/domain/pontuacao";
 
 // Roleta e revisão: `resultado` é para onde ir depois de finalizar; `vazio`, o texto quando não há o que responder.
-type Props = { sessaoId: string; feitas: RespostaPontuada[]; questoes: QuestaoExibida[]; resultado: string; vazio: string };
+// `ia`: servidor com GEMINI_API_KEY (iaDisponivel); sem ela o "Explique melhor" nem aparece.
+type Props = { sessaoId: string; feitas: RespostaPontuada[]; questoes: QuestaoExibida[]; resultado: string; vazio: string; ia: boolean };
 
-export function QuestoesSessao({ sessaoId, feitas, questoes, resultado, vazio }: Props) {
+export function QuestoesSessao({ sessaoId, feitas, questoes, resultado, vazio, ia }: Props) {
   const router = useRouter();
   const [i, setI] = useState(0);
   const [respostas, setRespostas] = useState(feitas);
@@ -22,7 +23,6 @@ export function QuestoesSessao({ sessaoId, feitas, questoes, resultado, vazio }:
   const resumo = resumoSessao(respostas);
   const total = feitas.length + questoes.length;
   const atual = questoes[i];
-  const Item = atual?.tipo === "procedimento" ? Procedimento : Questao;
 
   // A pontuação que vale é a que o servidor calcula das respostas gravadas; a do topo é só o placar.
   function verResultado() {
@@ -50,16 +50,18 @@ export function QuestoesSessao({ sessaoId, feitas, questoes, resultado, vazio }:
         />
       )}
       {atual && !finalizando ? (
-        <Item
-          key={atual.id}
-          questao={atual}
-          feedback="imediato"
-          sessaoId={sessaoId}
-          sequenciaAntes={resumo.sequencia}
-          onRespondida={(r) => setRespostas((rs) => [...rs, r])}
-          onProxima={() => (i === questoes.length - 1 ? verResultado() : setI((n) => n + 1))}
-          ultima={i === questoes.length - 1}
-        />
+        (() => {
+          const p = {
+            questao: atual,
+            feedback: "imediato" as const,
+            sessaoId,
+            sequenciaAntes: resumo.sequencia,
+            onRespondida: (r: RespostaPontuada) => setRespostas((rs) => [...rs, r]),
+            onProxima: () => (i === questoes.length - 1 ? verResultado() : setI((n) => n + 1)),
+            ultima: i === questoes.length - 1,
+          };
+          return atual.tipo === "procedimento" ? <Procedimento key={atual.id} {...p} /> : <Questao key={atual.id} {...p} ia={ia} />;
+        })()
       ) : (
         <section className="max-w-xl rounded-3xl border border-line bg-sf p-6">
           <h1 className="font-display text-[28px] font-extrabold">

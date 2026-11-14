@@ -30,7 +30,7 @@ Além das questões, o tópico tem **procedimentos** (manobras e exames, ex.: "C
 | Animação | Motion (`motion/react`, ex-Framer Motion): roleta, transições, feedback de acerto/erro |
 | Auth | Auth.js (NextAuth v5) com login Google, restrito a uma allowlist de e-mails via env |
 | Repetição espaçada | `ts-fsrs` (algoritmo FSRS, roda local, sem IA) |
-| IA (opcional, plano B) | `@google/genai` com Gemini Flash no **plano gratuito** da API |
+| IA (opcional, plano B) | `@google/genai` com `gemini-3.5-flash-lite` (`MODELO_GEMINI` em `lib/ai/gemini.ts`) no **plano gratuito** da API; só o "Explique melhor" (§6) |
 | Deploy | Vercel (plano Hobby) |
 
 ### Restrições importantes
@@ -39,7 +39,7 @@ Além das questões, o tópico tem **procedimentos** (manobras e exames, ex.: "C
   - disparada por clique explícito da usuária, nunca automática,
   - com resultado **salvo no banco** para nunca gerar a mesma coisa duas vezes,
   - com tratamento de erro 429 (mensagem amigável: "limite diário de IA atingido, tente amanhã").
-- **Nunca** enviar material dos professores para a API. No plano gratuito os dados podem ser usados pelo Google.
+- **Nunca** enviar material dos professores para a API sem o OK dela. No plano gratuito os dados podem ser usados pelo Google (inclusive lidos por revisores humanos). Como as questões vêm das fontes dela no NotebookLM, o "Explique melhor" **pede confirmação a cada questão nova** com esse aviso (decisão dela na sessão 18, 14/11/2026); o servidor só chama com `confirmado`. Cache já salvo aparece sem confirmação.
 - Funções serverless do Vercel têm limite de tempo: nada de processamento longo em request.
 - O driver do Neon é HTTP/serverless. A conexão é pela env `DATABASE_URL`.
 
@@ -220,7 +220,7 @@ Para verdadeiro/falso use "tipo":"verdadeiro_falso", omita "alternativas" e use 
 
 Outras formas de criar questões:
 - **Manual:** formulário completo (inclusive para questões de **provas antigas**, `origem = 'prova_antiga'`)
-- ~~IA: gerar questões pelo nome do tópico~~: **cortado** (contraria "conteúdo só das fontes dela"; ver `docs/plano/README.md` › Decisões). O botão "Gerar com IA · em breve" do tópico é só marcador até a sessão 18 decidir.
+- ~~IA: gerar questões pelo nome do tópico~~: **cortado** (contraria "conteúdo só das fontes dela"; ver `docs/plano/README.md` › Decisões). O botão "Gerar com IA · em breve" do tópico saiu na sessão 18. Questões e procedimentos nunca são gerados por IA.
 
 ### Procedimentos (mesmo fluxo, painel parametrizado)
 Na seção "Procedimentos" do tópico, o mesmo painel de 3 passos (`importar-notebooklm.tsx` com `tipo="procedimentos"`) copia `PROMPT_PROCEDIMENTOS` (`montarPromptProcedimentos` em `lib/prompts/notebooklm.ts`: só das fontes; passos na ordem de execução, um verbo por passo; `critico: true` só no que, se esquecido, compromete o exame ou a segurança; material e pontos de atenção). `lerProcedimentos()` (`lib/import/parse-json.ts`) reaproveita a extração e valida **por procedimento**; duplicata = nome normalizado (`normalizarEnunciado`) já existente **entre os procedimentos** do tópico ou repetido no lote. A importação preserva a ordem do JSON, gera os `id` dos passos e grava com `origem = 'notebooklm'`. Cadastro manual: "Novo procedimento" (passos com adicionar/remover/subir/descer, Alt+↑/↓ no texto, caixa "crítico"; origem `manual` ou `prova_antiga`).
@@ -239,9 +239,18 @@ const ImportProcedimentosSchema = z.object({ procedimentos: z.array(Procedimento
 Formato pedido no prompt: `{"procedimentos":[{"nome":"...","material":["..."],"passos":[{"texto":"...","critico":true}],"pontosDeAtencao":"...","fonte":"..."}]}`.
 
 ## 6. Uso de IA permitido (opcional)
-1. **"Explique melhor"** numa questão errada: envia enunciado + alternativas + gabarito + explicação e pede uma explicação didática curta. Resultado salvo em `explicacoes_ia`. Se já existir, mostrar sem chamar a API.
+É o **único** uso de IA (sessão 18). Gerar questões, gerar procedimentos ou explicar procedimentos com IA está fora: o conteúdo vem só das fontes dela.
 
-Encapsular tudo em `lib/ai/` atrás de uma interface (`AIProvider`) para trocar de provedor sem mexer no resto. Se `GEMINI_API_KEY` não estiver definida, esconder os botões de IA.
+1. **"Explique melhor (IA)"** (`components/quiz/ExpliqueMelhor.tsx`): aparece só no feedback imediato de questão **errada** (inclusive "Não sei") da roleta, da revisão do dia e do refazer erros (`QuestoesSessao`). Fica fora do simulado, do Caderno de erros e de procedimentos. A Server Action `explicarMelhor(questaoId, confirmado)` (`app/(app)/questoes/actions.ts`) faz o seguinte:
+   - lê `explicacoes_ia` primeiro; se já existir, mostra sem chamar a API e sem pedir confirmação;
+   - sem cache e sem `confirmado`, devolve `{confirmar: true}` e a tela mostra o aviso ("vai para o Gemini, do Google, no plano gratuito; pode ser usado e lido por pessoas") com "Enviar e explicar" / "Cancelar";
+   - com o OK, chama, salva e mostra.
+
+   Envia só enunciado, alternativas, gabarito e explicação (`montarPromptExplicacao`, `lib/prompts/explicacao.ts`). As alternativas vão **sem letra** e o gabarito vai como texto, porque ela viu a ordem embaralhada e "a C" do banco não é a C da tela. O prompt também proíbe citar letras e pede sem saudação. A regra pura de cache e erros fica em `explicarComCache` (`lib/ai/provider.ts`, testada com provider falso em `tests/ia.test.ts`).
+2. **Erros:** 429 → `LimiteIA` → "Limite diário de IA atingido, tente amanhã."; rede, timeout (25 s) ou resposta vazia → "Não deu para gerar a explicação agora…". As mensagens ficam em `lib/ai/mensagens.ts`, que o cliente importa sem puxar o SDK, e aparecem em `text-ink2`, nunca em vermelho. Falha não grava nada.
+3. **Log:** cada chamada real registra `[ia] chamada ao <modelo>` no servidor, e cada falha registra `[ia] falha: <status>` (sem chave nem conteúdo). O cache não passa por ali.
+
+Tudo fica em `lib/ai/` atrás de `AIProvider` (`getProvider()` devolve `null` sem chave), para trocar de provedor sem mexer no resto. Sem `GEMINI_API_KEY`, `iaDisponivel()` é falso e o botão **não aparece**. As páginas leem a chave dentro do `<Suspense>` (runtime). A chave fica no `.env.local` e nas env do Vercel, nunca no código nem em log.
 
 ## 7. Estrutura
 
@@ -262,7 +271,8 @@ lib/
   db/        schema.ts, index.ts e uma consulta por área (inicio, estatisticas, erros, revisao, sessoes, quiz…)
   domain/    funções puras: dominio, roleta, pontuacao, procedimento, fsrs, selecao-questoes, erros, provas, stats, inicio, simulado
   import/    parse-json.ts, schemas.ts
-  prompts/   notebooklm.ts
+  prompts/   notebooklm.ts, explicacao.ts
+  ai/        provider.ts (AIProvider, LimiteIA, iaDisponivel, explicarComCache), gemini.ts, mensagens.ts
   auth/ disciplinas/ topicos/ provas/ perfil/ erros/ questoes/   -> schemas Zod e rótulos por área
 components/
   roleta/ quiz/ foco/ navegacao/ ui/ (shadcn) + mapa-calor, barra-dominio, seletores, movimento-reduzido
@@ -289,7 +299,7 @@ AUTH_SECRET=
 AUTH_GOOGLE_ID=
 AUTH_GOOGLE_SECRET=
 ALLOWED_EMAILS=          # e-mails permitidos, separados por vírgula
-GEMINI_API_KEY=          # opcional
+GEMINI_API_KEY=          # opcional; sem ela o "Explique melhor" some. Criar em aistudio.google.com (sem billing)
 ```
 
 ## 10. Comandos

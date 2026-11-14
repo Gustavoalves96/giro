@@ -31,7 +31,7 @@ Uma sessão do Claude Code por arquivo. Em cada sessão, anexe **só** o arquivo
 | [x] | 15 | [Estatísticas](15-estatisticas.md) | 14 |
 | [x] | 19 | [Polimento](19-polimento.md) | 12–16 |
 | [x] | 17 | [Simulado](17-simulado.md) | 08, 12 |
-| [ ] | 18 | [IA opcional](18-ia-opcional.md) | 08, 12 |
+| [x] | 18 | [IA opcional](18-ia-opcional.md) | 08, 12 |
 
 06, 07 e 08 podem ser feitas em qualquer ordem depois da 05.
 **A tabela está na ordem de execução** (checkup de 13/11/2026); os números dos arquivos não mudaram. A 12 vem primeiro porque mexe no schema enquanto o banco está quase vazio; a 16 sobe porque ela tem prova nas próximas semanas; 17 e 18 ficam por último (são as menos ligadas ao uso diário) e fazem o próprio polimento.
@@ -56,7 +56,11 @@ As sessões 10 e 11 (procedimentos) entraram em 13/11/2026, antes do FSRS: assim
 - **Uma resposta por questão em cada sessão** (sessão 12): índice único em `respostas (sessao_id, questao_id)`; reenviar não grava de novo.
 - **Excluir tópico** só quando ele não tem respostas (sessão 12); com histórico, desativar as questões.
 - **Caderno de erros é uma tela separada** da Revisão do dia (escolha dela em 13/11/2026), mesmo com a sobreposição com o FSRS.
-- **IA:** só "Explique melhor". Gerar questões pelo nome do tópico foi cortado (contraria "conteúdo só das fontes dela").
+- **IA:** só "Explique melhor". Gerar questões pelo nome do tópico foi cortado (contraria "conteúdo só das fontes dela"); o botão "Gerar com IA · em breve" saiu na sessão 18.
+- **"Explique melhor"** (decisões de 14/11/2026, sessão 18):
+  - Como as questões vêm do material dos professores via NotebookLM e o plano gratuito do Gemini pode usar e mostrar a revisores o que recebe, cada questão **nova** pede o OK dela, com esse aviso, antes de enviar. O que já está em cache aparece direto.
+  - O botão fica só no feedback imediato de questão errada (roleta, revisão, refazer erros); fora do gabarito do simulado e do Caderno de erros.
+  - Modelo `gemini-3.5-flash-lite`, estável. A escolha inicial foi o `gemini-3.8-flash`, mas no teste ele deu 503/504 por alta demanda no plano gratuito; o 3.6-flash levou ~20 s e o Flash-Lite ~1 s. O Google não publica mais o limite diário do plano gratuito por modelo: o limite fica no painel do AI Studio dela.
 - **Procedimentos (manobras e exames):** segundo tipo de item do tópico (`questoes.tipo = 'procedimento'` + `checklist`), praticado na mesma rodada: ela vê o nome, tenta lembrar os passos sem pressão de tempo, confere o checklist e marca lembrei / com erro / esqueci. Conteúdo só das fontes dela (NotebookLM ou manual), nunca gerado por IA na hora. No máximo 1 procedimento por rodada; fora do simulado.
 - **Banco zerado na sessão 19** (14/11/2026): tudo o que havia era teste (o seed e rodadas de teste), nada dela. Com OK explícito, a 19 tirou foto (contagem + md5) e backup JSON, apagou só dados (schema e migrations intactos), testou o primeiro uso no banco de verdade e deixou o banco **pronto para o uso real**: só a linha de `perfil` (nome "Ana Laura", 600 s, meta 4). Daqui em diante o banco tem dados dela: teste em disciplina própria ("Teste NN"), com ids guardados e apagados por id no fim; nunca zerar de novo.
 - **Primeiro uso no celular** (sessão 19): a barra inferior não tem Provas, então o Início sempre mostra o card "Próxima prova" (sem prova: "Marcar prova").
@@ -72,4 +76,5 @@ As sessões 10 e 11 (procedimentos) entraram em 13/11/2026, antes do FSRS: assim
 ## Em aberto
 - O seed (`npm run db:seed`) não está no banco desde a sessão 19. Se for rodado de novo, validar com ela o conteúdo médico antes de usar as questões como material de estudo.
 - Validar com ela os primeiros checklists de procedimento importados (ordem dos passos e o que é "crítico") antes de confiar na pontuação. **Em 13/11/2026 ainda não validado** (0 procedimentos no banco). Confirmado na sessão 12: a resposta dela foi "ainda não testei", então o `PROMPT_PROCEDIMENTOS` segue como está; validar quando ela importar os primeiros.
+- "Explique melhor" (sessão 18): conferir com as primeiras explicações reais se o texto do Gemini está correto e útil, e se 150 palavras é o tamanho certo. Ver no AI Studio se o limite diário do `gemini-3.5-flash-lite` aguenta o uso. Se a qualidade não bastar, testar de novo o `gemini-3.8-flash` (`MODELO_GEMINI`) quando a demanda baixar.
 - Conferir com respostas reais se "Hard acima de 45 s" pune caso clínico de vinheta longa (sessão 12: só havia 15 respostas de teste e nenhuma linha em `revisoes`; ficou para quando houver uso real).

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { carregarSessao } from "@/app/(app)/(foco)/roleta/sessao/[id]/carregar";
 import { QuestoesSessao } from "@/app/(app)/(foco)/roleta/sessao/[id]/questoes/questoes";
+import { iaDisponivel } from "@/lib/ai/provider";
 import { listarPendentesRevisao } from "@/lib/db/revisao";
 import { respostasDaSessao } from "@/lib/db/sessoes";
 import { opcoesDaQuestao } from "@/lib/domain/selecao-questoes";
@@ -26,6 +27,7 @@ async function Conteudo({ params }: Props) {
       questoes={pendentes.map(({ alternativas, ...q }) => ({ ...q, opcoes: q.tipo === "procedimento" ? [] : opcoesDaQuestao(alternativas) }))}
       resultado={resultado}
       vazio="Nada venceu para revisar agora."
+      ia={iaDisponivel()}
     />
   );
 }

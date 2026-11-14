@@ -2,7 +2,7 @@ import { and, eq, getTableColumns, sql } from "drizzle-orm";
 import { db } from "./index";
 import type { Estado } from "@/lib/domain/fsrs";
 import type { Nota } from "@/lib/domain/procedimento";
-import { type NovaResposta, questoes, respostas, respostasPassos, revisoes } from "./schema";
+import { explicacoesIa, type NovaResposta, questoes, respostas, respostasPassos, revisoes } from "./schema";
 
 // Consultas da tela de questão (components/quiz). O gabarito só sai daqui depois da resposta.
 
@@ -25,6 +25,7 @@ export async function getProcedimento(id: string) {
 export async function getGabarito(id: string) {
   const [q] = await db
     .select({
+      enunciado: questoes.enunciado,
       alternativas: questoes.alternativas,
       tipo: questoes.tipo,
       gabarito: questoes.gabarito,
@@ -34,6 +35,16 @@ export async function getGabarito(id: string) {
     .from(questoes)
     .where(eq(questoes.id, id));
   return q ?? null;
+}
+
+// Cache do "Explique melhor": uma explicação por questão, nunca gerada duas vezes.
+export async function getExplicacaoIa(questaoId: string) {
+  const [r] = await db.select({ texto: explicacoesIa.texto }).from(explicacoesIa).where(eq(explicacoesIa.questaoId, questaoId));
+  return r?.texto ?? null;
+}
+
+export async function salvarExplicacaoIa(questaoId: string, texto: string) {
+  await db.insert(explicacoesIa).values({ questaoId, texto }).onConflictDoNothing();
 }
 
 // Estado FSRS atual do item (null = nunca agendado).
