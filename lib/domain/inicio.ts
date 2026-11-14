@@ -2,10 +2,10 @@
 
 const horaSP = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", hour: "numeric", hourCycle: "h23" });
 
-/** "Boa noite, Ana! Bora uma rodada?" — Bom dia antes das 12 h, Boa tarde antes das 18 h (em SP). */
+/** "Boa noite, Ana! Bora uma rodada?" — Bom dia das 5 às 12 h, Boa tarde até 18 h, Boa noite à noite e de madrugada (em SP). */
 export function saudacao(agora: Date, nome: string | null | undefined) {
   const h = Number(horaSP.format(agora));
-  const s = h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
+  const s = h >= 5 && h < 12 ? "Bom dia" : h >= 12 && h < 18 ? "Boa tarde" : "Boa noite";
   return `${s}${nome ? `, ${nome}` : ""}! Bora uma rodada?`;
 }
 

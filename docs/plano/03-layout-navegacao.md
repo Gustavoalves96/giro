@@ -11,7 +11,7 @@ Casca do app com navegação responsiva, layout de foco para as sessões de estu
 - Navegação responsiva (um componente, o CSS decide):
   - `< md` (celular): barra inferior de 76 px, 5 abas (Provas sai).
   - `md` a `< xl` (iPad): trilho lateral de 96 px, ícone sobre rótulo.
-  - `≥ xl` (notebook): barra lateral de 240 px com logotipo "giro" e rótulo ao lado do ícone.
+  - `≥ xl` (notebook): barra lateral de 240 px com logotipo "Giro" e rótulo ao lado do ícone.
   - Item ativo em Brasa suave. Ícones `lucide-react`.
 - `app/(app)/(foco)/layout.tsx`: sem navegação; só "Sair" e o indicador Estudo · Questões · Resultado (recebe a etapa atual).
 - Páginas placeholder para cada destino.

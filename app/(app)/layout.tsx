@@ -16,7 +16,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
       >
         <Link href="/" className="flex min-h-11 items-center gap-2">
           <MarcaGiro className="size-7" />
-          <span className="font-display text-xl font-extrabold">giro</span>
+          <span className="font-display text-xl font-extrabold">Giro</span>
         </Link>
         <Link
           href="/perfil"
@@ -39,7 +39,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
       >
         <Link href="/" aria-label="giro — início" className="mb-4 hidden min-h-11 items-center gap-3 md:flex xl:px-2">
           <MarcaGiro className="size-10" />
-          <span className="hidden font-display text-[28px] font-extrabold xl:inline">giro</span>
+          <span className="hidden font-display text-[28px] font-extrabold xl:inline">Giro</span>
         </Link>
         <Suspense fallback={<ListaDestinos pathname={null} />}>
           <ListaDestinosAtiva />

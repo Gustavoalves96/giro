@@ -7,7 +7,7 @@
 Tela inicial que diz o que fazer agora e mostra o progresso.
 
 ## Entregáveis
-- Data por extenso e saudação pelo horário em `America/Sao_Paulo` (Bom dia antes das 12 h, Boa tarde antes das 18 h, Boa noite depois) + nome de `perfil` se houver: "Boa noite, Ana! Bora uma rodada?". Sem nome: "Boa noite! Bora uma rodada?".
+- Data por extenso e saudação pelo horário em `America/Sao_Paulo` (Bom dia das 5 às 12 h, Boa tarde até 18 h, Boa noite à noite e de madrugada) + nome de `perfil` se houver: "Boa noite, Ana! Bora uma rodada?". Sem nome: "Boa noite! Bora uma rodada?".
 - Chips: sequência de dias (ouro) e XP total.
 - Card escuro com mini-roleta: "Rodada de hoje · x de 2" (conta sessões `roleta` finalizadas hoje no fuso SP) e CTA "Girar a roleta". **Antes de começar, confirmar a meta com ela:** estuda várias horas por dia e 2 pode ficar pequeno.
 - **"Continuar rodada":** se houver sessão `roleta` aberta iniciada hoje (fuso SP), o card mostra o tópico e leva de volta para a etapa em que parou; o mesmo aviso na Roleta. A rodada não fecha sozinha (decisão dela em 13/11/2026).

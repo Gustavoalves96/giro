@@ -16,7 +16,10 @@ export async function resumoSessoes() {
   return db.select({ modo: sessoes.modo, pontuacao: sessoes.pontuacao, finalizadaEm: sessoes.finalizadaEm }).from(sessoes);
 }
 
-/** Pontos fracos: os tópicos de menor domínio entre os que já têm resposta, de disciplinas não arquivadas. */
+/**
+ * Pontos fracos: os tópicos de menor domínio entre os que têm resposta de sessão finalizada (o domínio só é
+ * recalculado ao finalizar), de disciplinas não arquivadas. Resposta sem sessão (anterior à sessão 12) conta.
+ */
 export async function pontosFracos(limite = 3) {
   return db
     .select({ id: topicos.id, nome: topicos.nome, dominio: topicos.dominio, disciplina: disciplinas.nome, cor: disciplinas.cor })
@@ -25,7 +28,8 @@ export async function pontosFracos(limite = 3) {
     .where(
       and(
         eq(disciplinas.arquivada, false),
-        sql`exists (select 1 from respostas r join questoes q on q.id = r.questao_id where q.topico_id = "topicos"."id")`,
+        sql`exists (select 1 from respostas r join questoes q on q.id = r.questao_id left join sessoes s on s.id = r.sessao_id
+          where q.topico_id = "topicos"."id" and (r.sessao_id is null or s.finalizada_em is not null))`,
       ),
     )
     .orderBy(asc(topicos.dominio), asc(topicos.nome))

@@ -27,7 +27,7 @@ export default function LoginPage({ searchParams }: PageProps<"/login">) {
     <main className="flex flex-1 items-center justify-center bg-bg px-4 py-12">
       <div className="flex w-full max-w-sm flex-col items-center text-center">
         <MarcaGiro className="size-28" />
-        <h1 className="mt-5 font-display text-[34px] font-extrabold text-ink">giro</h1>
+        <h1 className="mt-5 font-display text-[34px] font-extrabold text-ink">Giro</h1>
         <p className="mt-2 text-lg text-ink2">Gire. Estude. Domine o tópico.</p>
 
         <Suspense>

@@ -92,6 +92,8 @@ describe("saudacao", () => {
     expect(saudacao(new Date("2026-11-14T15:00:00Z"), null)).toBe("Boa tarde! Bora uma rodada?"); // 12:00
     expect(saudacao(new Date("2026-11-14T21:00:00Z"), "Ana")).toBe("Boa noite, Ana! Bora uma rodada?"); // 18:00
     expect(saudacao(new Date("2026-11-14T02:00:00Z"), "")).toBe("Boa noite! Bora uma rodada?"); // 23:00
+    expect(saudacao(new Date("2026-11-14T07:59:00Z"), null)).toBe("Boa noite! Bora uma rodada?"); // 04:59, madrugada
+    expect(saudacao(new Date("2026-11-14T08:00:00Z"), null)).toBe("Bom dia! Bora uma rodada?"); // 05:00
   });
 });
 
