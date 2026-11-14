@@ -31,11 +31,55 @@ export function extrairJson(texto: string) {
 }
 
 /**
- * O NotebookLM copia a resposta como markdown e escapa `_`, `*`, `[`… (`"verdadeiro\_falso"`), o que não é JSON
- * válido. Tira a barra de todo escape que o JSON não conhece; os válidos (\" \\ \/ \b \f \n \r \t \u) ficam.
+ * Conserta o JSON que o NotebookLM entrega quando a resposta é copiada como markdown (só usado se o JSON.parse
+ * direto falhar): (1) desfaz os escapes de markdown (`\_` → `_`, `10\.` → `10.`, `\\n` → `\n`);
+ * (2) escapa aspas no meio de um texto (`texto = "Python"`). Uma aspa só fecha o texto se depois vem `:`, `}`, `]`,
+ * `, "chave":`, `, {` ou `, [`; dentro de uma lista de textos (ex.: material), também `, "`.
  */
-export function semEscapesDeMarkdown(json: string) {
-  return json.replace(/\\(["\\/bfnrtu])|\\/g, (_, valido?: string) => (valido ? `\\${valido}` : ""));
+export function repararJson(json: string) {
+  const s = json.replace(/\\([!-/:-@[-`{-~])/g, "$1");
+  const pilha: string[] = []; // "{" ou "["
+  let out = "";
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if (c === "{" || c === "[") pilha.push(c);
+    else if (c === "}" || c === "]") pilha.pop();
+    if (c !== '"') {
+      out += c;
+      continue;
+    }
+    // abre um texto: copia até a aspa que de fato fecha
+    out += c;
+    const emLista = pilha.at(-1) === "[";
+    for (i++; i < s.length; i++) {
+      const d = s[i];
+      if (d === "\\" && i + 1 < s.length) {
+        out += d + s[++i];
+        continue;
+      }
+      if (d === "\n") {
+        out += "\\n";
+        continue;
+      }
+      if (d !== '"') {
+        out += d;
+        continue;
+      }
+      const resto = s.slice(i + 1, i + 200);
+      const fecha = /^\s*(?:[:}\]]|$|,\s*(?:"[A-Za-z_]\w*"\s*:|[{[]))/.test(resto) || (emLista && /^\s*,\s*"/.test(resto));
+      out += fecha ? '"' : '\\"';
+      if (fecha) break;
+    }
+  }
+  return out;
+}
+
+function lerJson(json: string): unknown {
+  try {
+    return JSON.parse(json);
+  } catch {
+    return JSON.parse(repararJson(json));
+  }
 }
 
 // O que muda entre importar questões e procedimentos: chave do envelope, schema, campo comparado e palavras.
@@ -102,7 +146,7 @@ function lerItens<T>(texto: string, existentes: string[], tipo: Tipo<T>): Leitur
   }
   let dados: unknown;
   try {
-    dados = JSON.parse(semEscapesDeMarkdown(json));
+    dados = lerJson(json);
   } catch {
     return {
       ok: false,

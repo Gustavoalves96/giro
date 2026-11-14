@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extrairJson, lerResposta, normalizarEnunciado, semEscapesDeMarkdown } from "@/lib/import/parse-json";
+import { extrairJson, lerResposta, normalizarEnunciado, repararJson } from "@/lib/import/parse-json";
 import { montarPrompt } from "@/lib/prompts/notebooklm";
 
 const alternativas = ["A", "B", "C", "D", "E"].map((letra) => ({ letra, texto: `Opção ${letra}` }));
@@ -40,20 +40,31 @@ describe("extrairJson", () => {
   });
 });
 
-describe("semEscapesDeMarkdown", () => {
-  it("tira \\_ \\* \\[ e mantém os escapes válidos do JSON", () => {
-    expect(semEscapesDeMarkdown(String.raw`{"t":"verdadeiro\_falso","f":"a\*b\[1\]","q":"diz \"oi\"\n","b":"c:\\_x","u":"\u00e9"}`)).toBe(
-      String.raw`{"t":"verdadeiro_falso","f":"a*b[1]","q":"diz \"oi\"\n","b":"c:\\_x","u":"\u00e9"}`,
-    );
+describe("repararJson", () => {
+  it("JSON válido continua igual depois de reparado", () => {
+    const valido = json([me('Diz "oi"\ne sai?', { fonte: "a_b.pdf" }), vf]);
+    expect(JSON.parse(repararJson(valido))).toEqual(JSON.parse(valido));
+  });
+  it("lista de textos (material) com vírgulas entre itens", () => {
+    expect(JSON.parse(repararJson(String.raw`{"material": ["Luva", "Gaze \"estéril\""], "x": 1}`))).toEqual({
+      material: ["Luva", 'Gaze "estéril"'],
+      x: 1,
+    });
   });
 });
 
 describe("lerResposta", () => {
-  it("lê a resposta copiada do NotebookLM com _ escapado como markdown", () => {
-    const colado = json([vf, me("Questão com fonte de imagem?", { fonte: "simulado_algoritmo.jpeg, Questão 10" })]).replaceAll("_", "\\_");
+  // como chega a resposta do NotebookLM copiada em markdown: \_ e \. escapados, \\n e aspas internas sem escape
+  const colado = String.raw`{ "questoes": [ { "tipo": "multipla\_escolha", "enunciado": "Com texto = "Python", o que imprime print(texto[1:4])?\\n\\ndef f(x):\\n return x", "alternativas": [ { "letra": "A", "texto": "Pyt" }, { "letra": "B", "texto": "yth" } ], "gabarito": "B", "explicacao": "Vai do índice 1 ("y") ao 3: ("y", "t", "h") = 3\. Por isso a B.", "fonte": "simulado\_x.jpeg, Questão 2", "dificuldade": "facil" }, { "tipo": "verdadeiro\_falso", "enunciado": "O recurso "Desfazer" usa uma pilha.", "gabarito": "V", "explicacao": "LIFO: o último a entrar é o primeiro a sair.", "fonte": "simulado\_x.jpeg, Questão 13", "dificuldade": "media" } ] }`;
+
+  it("lê a resposta copiada do NotebookLM em markdown", () => {
     const r = ok(colado);
-    expect(r.validas.map((q) => q.tipo)).toEqual(["verdadeiro_falso", "multipla_escolha"]);
-    expect(r.validas[1].fonte).toBe("simulado_algoritmo.jpeg, Questão 10");
+    expect(r.invalidas).toEqual([]);
+    expect(r.validas.map((q) => q.tipo)).toEqual(["multipla_escolha", "verdadeiro_falso"]);
+    expect(r.validas[0].enunciado).toBe('Com texto = "Python", o que imprime print(texto[1:4])?\n\ndef f(x):\n return x');
+    expect(r.validas[0].explicacao).toBe('Vai do índice 1 ("y") ao 3: ("y", "t", "h") = 3. Por isso a B.');
+    expect(r.validas[0].fonte).toBe("simulado_x.jpeg, Questão 2");
+    expect(r.validas[1].enunciado).toBe('O recurso "Desfazer" usa uma pilha.');
   });
 
   it("aceita texto antes/depois e cerca ```json", () => {
