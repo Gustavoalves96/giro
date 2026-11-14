@@ -1,4 +1,4 @@
-import { ArrowRight, CalendarDays, Flame, NotebookPen, RotateCw, Sparkles } from "lucide-react";
+import { ArrowRight, CalendarDays, Flame, NotebookPen, RotateCw, Sparkles, Timer } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
@@ -204,6 +204,21 @@ async function Conteudo() {
               </Button>
             </div>
           </section>
+
+          {!passo && (
+            <section aria-labelledby="simulado-titulo" className={CARD}>
+              <h2 id="simulado-titulo" className={ROTULO}>
+                Simulado
+              </h2>
+              <p className="mt-2 text-ink2">Prova com tempo total; nota e gabarito comentado só no fim.</p>
+              <Button asChild variant="secondary" className="mt-4 w-full sm:w-auto">
+                <Link href="/simulado">
+                  <Timer aria-hidden />
+                  Fazer um simulado
+                </Link>
+              </Button>
+            </section>
+          )}
         </div>
 
         <div className="flex min-w-0 flex-col gap-4 md:gap-6">

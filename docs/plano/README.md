@@ -30,7 +30,7 @@ Uma sessão do Claude Code por arquivo. Em cada sessão, anexe **só** o arquivo
 | [x] | 14 | [Início (painel)](14-inicio.md) | 12, 13, 16 |
 | [x] | 15 | [Estatísticas](15-estatisticas.md) | 14 |
 | [x] | 19 | [Polimento](19-polimento.md) | 12–16 |
-| [ ] | 17 | [Simulado](17-simulado.md) | 08, 12 |
+| [x] | 17 | [Simulado](17-simulado.md) | 08, 12 |
 | [ ] | 18 | [IA opcional](18-ia-opcional.md) | 08, 12 |
 
 06, 07 e 08 podem ser feitas em qualquer ordem depois da 05.
@@ -41,6 +41,8 @@ As sessões 10 e 11 (procedimentos) entraram em 13/11/2026, antes do FSRS: assim
 - **Nome do app: Giro.** "RoletaMed" é só o nome da pasta.
 - **Nome da usuária:** editável em **Meu perfil** (`/perfil`), tabela `perfil`, usado na saudação. Sem nome → saudação sem nome.
 - **Simulado atualiza o FSRS:** toda resposta, em qualquer modo, passa pelo FSRS.
+- **Simulado** (decisões de 14/11/2026, sessão 17): questão em branco (na entrega ou no tempo esgotado) conta como erro na nota, mas **não** é gravada em `respostas` nem passa pelo FSRS. Vale 10 pts por acerto, sem bônus de tempo nem sequência; entra no XP, não no recorde. Acesso pela Roleta e pelo Início (não na navegação). **Sair no meio descarta a prova** (a sessão é apagada; nada foi gravado). Recarregar a aba não é sair: continua.
+- **Cursor** (sessão 17): regra global em `app/globals.css` dá `cursor: pointer` a botão, `role` button/radio/switch/checkbox, label de campo, checkbox/radio, summary e select; desativado (`:disabled`, `aria-disabled`) volta a `default`.
 - **Tailwind v4:** tokens em CSS (`@theme` + variáveis em `:root` / `.dark`), não em `theme.extend`.
 - **Tema** claro/escuro com `next-themes`. Componentes shadcn: Button, Badge, ToggleGroup, Switch, Progress, RadioGroup, Textarea, Sheet/Dialog.
 - **Cor da disciplina:** guarda só a cor cheia; a tinta clara é calculada com `color-mix(in srgb, <cor> 20%, white)`.

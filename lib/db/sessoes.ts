@@ -1,5 +1,6 @@
 import { and, asc, desc, eq, gte, isNotNull, isNull, lt, lte, max, ne, sql } from "drizzle-orm";
 import { db } from "./index";
+import { calcularDominio, topicosARecalcular } from "@/lib/domain/dominio";
 import { fracaoLembrada, type Nota } from "@/lib/domain/procedimento";
 import { diaSP } from "@/lib/domain/stats";
 import { disciplinas, questoes, respostas, revisoes, type Sessao, sessoes, topicos } from "./schema";
@@ -129,6 +130,21 @@ export async function fecharSessao(
     .where(and(eq(sessoes.id, id), isNull(sessoes.finalizadaEm)))
     .returning({ topicoId: sessoes.topicoId, finalizadaEm: sessoes.finalizadaEm });
   return s ?? null;
+}
+
+/**
+ * Fecha a sessão com o resumo e, se foi esta chamada que fechou, recalcula o domínio do tópico da sessão e de
+ * todo tópico com resposta nela (CLAUDE.md §4.1). Qualquer modo; o simulado passa o próprio resumo.
+ */
+export async function fecharERecalcular(id: string, rs: { topicoId: string }[], resumo: Parameters<typeof fecharSessao>[1]) {
+  const fechada = await fecharSessao(id, resumo);
+  const fim = fechada?.finalizadaEm;
+  if (!fechada || !fim) return;
+  await Promise.all(
+    topicosARecalcular(fechada.topicoId, rs).map(async (t) =>
+      atualizarDominioTopico(t, calcularDominio(await acertosRecentesTopico(t, fim, true)), fim),
+    ),
+  );
 }
 
 /** Acertos das últimas 20 respostas do tópico até `ate` (inclusive ou não), da mais recente para a mais antiga. */

@@ -25,17 +25,25 @@ export type QuestaoExibida = {
   opcoes: Opcao[]; // já embaralhadas
 };
 
-type Props = {
-  questao: QuestaoExibida;
-  /** imediato: certo/errado + explicação a cada questão · final (simulado): só registra. */
-  feedback: "imediato" | "final";
-  sessaoId: string;
-  /** Acertos seguidos antes desta questão (para "+N XP" e o selo). */
-  sequenciaAntes: number;
-  onRespondida: (r: RespostaPontuada) => void;
-  onProxima: () => void;
-  ultima?: boolean;
-};
+type Props = { questao: QuestaoExibida; onProxima: () => void } & (
+  | {
+      /** imediato: confere no servidor e mostra certo/errado + explicação a cada questão. */
+      feedback: "imediato";
+      sessaoId: string;
+      /** Acertos seguidos antes desta questão (para "+N XP" e o selo). */
+      sequenciaAntes: number;
+      onRespondida: (r: RespostaPontuada) => void;
+      ultima?: boolean;
+    }
+  | {
+      /** final (simulado): não envia nada; a escolha (letra original ou V/F) sobe para a prova, que entrega no fim. */
+      feedback: "final";
+      escolhida: string | null;
+      onEscolher: (valor: Opcao["valor"]) => void;
+      /** Coluna da direita: navegação da prova. */
+      painel: React.ReactNode;
+    }
+);
 
 type Fase = "respondendo" | "enviando" | "respondida";
 type Estado = "normal" | "selecionada" | "correta" | "sua" | "esmaecida";
@@ -43,9 +51,13 @@ type Estado = "normal" | "selecionada" | "correta" | "sua" | "esmaecida";
 const ROTULO = "text-[13px] font-bold tracking-[0.06em] uppercase";
 const ATRASO_ERRO = 0.35; // fade âmbar 200 ms; 150 ms depois a correta e a explicação
 
-export function Questao({ questao, feedback, sessaoId, sequenciaAntes, onRespondida, onProxima, ultima }: Props) {
+export function Questao(props: Props) {
+  const { questao, feedback, onProxima } = props;
+  const ultima = props.feedback === "imediato" && props.ultima;
   const reduzir = useMovimentoReduzido();
-  const [selecionada, setSelecionada] = useState<string | null>(null);
+  const [selecionada, setSelecionada] = useState<string | null>(() =>
+    props.feedback === "final" ? (questao.opcoes.find((o) => o.valor === props.escolhida)?.letra ?? null) : null,
+  );
   const [fase, setFase] = useState<Fase>("respondendo");
   const [conf, setConf] = useState<(Extract<Conferencia, { ok: true }> & { pontos: number; sequencia: number; naoSei: boolean }) | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -63,7 +75,15 @@ export function Questao({ questao, feedback, sessaoId, sequenciaAntes, onRespond
     if (fase === "respondida") proxima.current?.focus({ preventScroll: true });
   }, [fase]);
 
+  function escolher(letra: string) {
+    setSelecionada(letra);
+    const o = questao.opcoes.find((x) => x.letra === letra);
+    if (props.feedback === "final" && o) props.onEscolher(o.valor);
+  }
+
   async function confirmar(naoSei: boolean) {
+    if (props.feedback !== "imediato") return;
+    const { sessaoId, sequenciaAntes, onRespondida } = props;
     if (fase !== "respondendo" || (!naoSei && !selecionada)) return;
     const valor = naoSei ? null : (questao.opcoes.find((o) => o.letra === selecionada)?.valor ?? null);
     const tempoMs = Math.min(30 * 60_000, Date.now() - inicio.current);
@@ -107,7 +127,7 @@ export function Questao({ questao, feedback, sessaoId, sequenciaAntes, onRespond
       if (e.key === "Enter") {
         if (alvo?.closest("button, a") && !alvo.closest("[role=radio]")) return;
         e.preventDefault();
-        if (fase === "respondida") onProxima();
+        if (fase === "respondida" || feedback === "final") onProxima();
         else void confirmar(false);
         return;
       }
@@ -118,7 +138,7 @@ export function Questao({ questao, feedback, sessaoId, sequenciaAntes, onRespond
       const opcao = porLetra ?? ("ABCDE".includes(k) ? porPosicao : undefined);
       if (!opcao) return;
       e.preventDefault();
-      setSelecionada(opcao.letra);
+      escolher(opcao.letra);
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -132,7 +152,7 @@ export function Questao({ questao, feedback, sessaoId, sequenciaAntes, onRespond
     const n = questao.opcoes.length;
     const i = questao.opcoes.findIndex((o) => o.letra === selecionada);
     const j = i < 0 ? (passo > 0 ? 0 : n - 1) : (i + passo + n) % n;
-    setSelecionada(questao.opcoes[j].letra);
+    escolher(questao.opcoes[j].letra);
     grupo.current?.querySelectorAll<HTMLElement>("[role=radio]")[j]?.focus();
   }
 
@@ -191,7 +211,7 @@ export function Questao({ questao, feedback, sessaoId, sequenciaAntes, onRespond
                 data-letra={o.letra}
                 data-valor={o.valor}
                 data-estado={e}
-                onClick={() => fase === "respondendo" && setSelecionada(o.letra)}
+                onClick={() => fase === "respondendo" && escolher(o.letra)}
                 style={{ transitionDelay: `${atraso}s` }}
                 className={cn(
                   "flex min-h-[50px] w-full items-center gap-3 rounded-2xl border-2 bg-sf px-2.5 py-2 text-left outline-none md:min-h-14 md:px-3",
@@ -240,7 +260,8 @@ export function Questao({ questao, feedback, sessaoId, sequenciaAntes, onRespond
         </div>
       </section>
 
-      <aside aria-label="Resposta" className="flex flex-col gap-4 lg:sticky lg:top-6 lg:self-start">
+      <aside aria-label={feedback === "final" ? "Navegação da prova" : "Resposta"} className="flex flex-col gap-4 lg:sticky lg:top-6 lg:self-start">
+        {props.feedback === "final" ? props.painel : <>
         {/* sempre no DOM: o leitor de tela anuncia quando o conteúdo muda */}
         <div role="status">
           {mostrar && (
@@ -282,9 +303,6 @@ export function Questao({ questao, feedback, sessaoId, sequenciaAntes, onRespond
                 </div>
               )}
             </motion.div>
-          )}
-          {respondida && feedback === "final" && (
-            <p className="rounded-3xl border border-line bg-sf p-5 font-bold">Resposta registrada. O resultado sai no fim.</p>
           )}
         </div>
 
@@ -332,6 +350,7 @@ export function Questao({ questao, feedback, sessaoId, sequenciaAntes, onRespond
           </div>
         )}
         {erro && <p className="text-warn">{erro}</p>}
+        </>}
       </aside>
     </div>
   );

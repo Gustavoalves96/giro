@@ -35,5 +35,5 @@ export function IndicadorEtapas({ atual, semEstudo = false }: { atual: Etapa | n
 export function IndicadorEtapasAtual() {
   const segmentos = useSelectedLayoutSegments();
   const atual = segmentos.findLast((s): s is Etapa => ETAPAS.some((e) => e.id === s));
-  return <IndicadorEtapas atual={atual ?? null} semEstudo={segmentos[0] === "revisao" || segmentos[0] === "erros"} />;
+  return <IndicadorEtapas atual={atual ?? null} semEstudo={segmentos[0] !== "roleta"} />;
 }

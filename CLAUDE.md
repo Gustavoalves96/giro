@@ -88,7 +88,9 @@ revisoes                                -- estado FSRS por questão
 sessoes
   id uuid pk, modo enum('roleta','simulado','revisao','erros'),
   topico_id fk null, iniciada_em, estudo_segundos int, finalizada_em null,
-  total_questoes int, acertos int, pontuacao int, maior_sequencia int
+  total_questoes int, acertos int, pontuacao int, maior_sequencia int,
+  questao_ids uuid[] null, limite_segundos int null  -- só simulado (sessão 17): questões sorteadas
+                                                     -- na ordem da prova (sem FK) e o tempo total
 
 provas
   id uuid pk, disciplina_id fk, titulo text, data date, topico_ids uuid[]
@@ -154,7 +156,7 @@ Só entram tópicos com pelo menos 1 questão ativa. Se a lista ficar vazia, mos
 
 ### 4.6 Outros modos
 - **Caderno de erros** (`/erros`, sessão 13): questões e procedimentos ativos, de disciplinas não arquivadas, cuja **última** resposta foi errada (`DISTINCT ON` em `lib/db/erros.ts`; a mesma regra pura em `cadernoDeErros`, `lib/domain/erros.ts`). Mostra enunciado, tópico, data do erro e resposta dada × gabarito (texto da alternativa, sem a letra, que ela viu embaralhada); procedimento mostra "% lembrado" e os passos esquecidos daquela tentativa. Filtro por disciplina e tópico em search params (id inválido é ignorado). "Refazer" (uma ou todas as filtradas) cria sessão `modo='erros'` e o filtro vai na URL de `/erros/sessao/[id]/questoes`, que lista os erros do filtro ainda não respondidos nela; acertou → sai do caderno. Acesso pela Revisão e por "Revisar N erros" do resultado da roleta (`/erros?topico=`).
-- **Simulado:** N questões aleatórias das disciplinas escolhidas, com tempo total de prova, sem feedback até o fim.
+- **Simulado** (`/simulado`, sessão 17): acesso pela Roleta e pelo Início. Escolhe disciplinas (não arquivadas), nº de questões (padrão 20, até 100) e tempo total (padrão 1 min por questão). O servidor sorteia N questões ativas (procedimento fica fora) e guarda na sessão `modo='simulado'` (`sessoes.questao_ids`, na ordem da prova, e `limite_segundos`). Prova em `/simulado/sessao/[id]/questoes`: `Questao` com `feedback="final"` (controlado: não envia nada, só sobe a escolha), timer total, anterior/próxima, mapa de questões e "Entregar"; tempo esgotado entrega sozinho. Respostas em andamento no `sessionStorage` ("giro:simulado:<id>"); o fim da prova vem do servidor (`iniciada_em + limite_segundos`), então recarregar não zera o tempo; a ordem das alternativas sai de uma semente (sessão + questão). Trocar de resposta é livre até entregar. Na entrega (`entregarSimulado`) só a resposta final de cada questão marcada é gravada, com FSRS só Again/Good (`tempo_ms` 0); **em branco conta como erro na nota mas não vai ao banco**. Pontos: 10 por acerto, sem bônus nem sequência (entra no XP, não no recorde); `total_questoes` conta as em branco; fecha e recalcula o domínio por `fecharERecalcular` (`lib/db/sessoes.ts`, o mesmo de `finalizar()`). **Sair no meio descarta a prova** (apaga a sessão aberta sem resposta). Resultado: nota (0–10), acertos, tempo, XP e gabarito comentado questão por questão (com as em branco). Funções puras em `lib/domain/simulado.ts` (`corrigirSimulado`, `sortearIds`, `rngDeSemente`, `segundosRestantes`).
 - **Calendário de provas** (`/provas`, sessão 16): disciplina, título, data e tópicos da disciplina. Lista com as próximas primeiro (contagem "hoje", "amanhã", "em N dias") e as passadas recolhidas. Afeta o peso da roleta (4.2). A action recusa data inválida, título vazio, disciplina inexistente e tópico de outra disciplina. `proximaProva(hoje)` em `lib/db/provas.ts` alimenta o card do Início (sessão 14).
 
 ### 4.7 Painel / "ranking"
@@ -248,8 +250,8 @@ app/
   (auth)/login/
   (app)/
     page.tsx                 -> Início (painel)
-    (foco)/                  -> telas sem navegação: roleta|revisao|erros/sessao/[id]/{estudo,questoes,resultado}
-    roleta/ revisao/ erros/  -> telas de entrada de cada modo (+ actions.ts)
+    (foco)/                  -> telas sem navegação: roleta|revisao|erros|simulado/sessao/[id]/{estudo,questoes,resultado}
+    roleta/ revisao/ erros/ simulado/  -> telas de entrada de cada modo (+ actions.ts)
     disciplinas/[id]/        -> tópicos, link NotebookLM
     topicos/[id]/            -> questões, procedimentos, importar do NotebookLM
     provas/ estatisticas/ perfil/
@@ -258,7 +260,7 @@ app/
   manifest.ts apple-icon.tsx icon.svg
 lib/
   db/        schema.ts, index.ts e uma consulta por área (inicio, estatisticas, erros, revisao, sessoes, quiz…)
-  domain/    funções puras: dominio, roleta, pontuacao, procedimento, fsrs, selecao-questoes, erros, provas, stats, inicio
+  domain/    funções puras: dominio, roleta, pontuacao, procedimento, fsrs, selecao-questoes, erros, provas, stats, inicio, simulado
   import/    parse-json.ts, schemas.ts
   prompts/   notebooklm.ts
   auth/ disciplinas/ topicos/ provas/ perfil/ erros/ questoes/   -> schemas Zod e rótulos por área
@@ -275,6 +277,7 @@ A lógica de negócio fica em `lib/domain/` como **funções puras**, testáveis
 - Server Actions validam a entrada com Zod e checam a sessão (auth) em todas as mutações.
 - Datas no banco em UTC. Exibição no fuso `America/Sao_Paulo`.
 - **Dispositivos:** ela estuda principalmente no **iPad** (toque, retrato e paisagem) e no **notebook**. O celular é secundário, mas deve funcionar. Layout responsivo que aproveita telas maiores (duas colunas a partir de `md`/`lg`), alvos de toque ≥ 44 px e atalhos de teclado nas questões (A–E para escolher, Enter para confirmar/avançar). Testar no Safari do iPadOS.
+- **Cursor** (sessão 17): o Tailwind v4 deixa `button` com `cursor: default`; uma regra em `@layer base` de `app/globals.css` dá `pointer` a tudo que é clicável (button, `role` button/radio/switch/checkbox, label de campo, checkbox/radio, summary, select) e devolve `default` ao desativado (`:disabled`, `aria-disabled="true"`). Um utilitário `cursor-*` ainda vence.
 - Respeitar `prefers-reduced-motion`: `useMovimentoReduzido()` (`components/movimento-reduzido.ts`) soma o sistema e o interruptor "Movimento reduzido" da roleta (`localStorage` "giro:movimento-reduzido"); com ele a roleta sorteia sem giro, sem confete, e o feedback usa só cor e opacidade. Uma regra em `app/globals.css` tira zoom/deslize de Dialog/Sheet e para o `animate-pulse` dos esqueletos.
 - **Acessibilidade** (revisada na sessão 19): botão só de ícone sempre com `aria-label` (ou "Fechar" em `sr-only`); foco visível com o anel **Brasa cheio** (`ring-ring` / `outline-ring`, nunca `/50`: a 50% dava 1,9–2,5:1); gráficos e mapa de calor com descrição em texto. Contraste AA calculado nos 2 temas: no claro, texto pequeno em Menta não vai sobre `sf2` nem sobre tinta acima de `ok/6` (4,33 e 4,38:1); caixas internas com texto colorido usam `bg-bg`. Texto pequeno nunca sobre Brasa.
 - Testes com **Vitest** para `lib/domain/*` e para o parser de importação.

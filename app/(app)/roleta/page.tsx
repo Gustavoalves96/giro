@@ -1,5 +1,8 @@
+import { Timer } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { connection } from "next/server";
+import { Button } from "@/components/ui/button";
 import { Suspense } from "react";
 import { ContinuarRodada } from "@/components/continuar-rodada";
 import { Roleta } from "@/components/roleta/roleta";
@@ -39,6 +42,20 @@ async function Conteudo() {
         estudoPadrao={perfil?.estudoSegundos ?? ESTUDO_PADRAO}
         disciplinasAtivas={disciplinasAtivas}
       />
+      <section aria-labelledby="simulado-titulo" className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 rounded-3xl border border-line bg-sf p-5">
+        <div className="min-w-0 flex-1">
+          <h2 id="simulado-titulo" className="font-display text-[20px] font-extrabold">
+            Prefere uma prova?
+          </h2>
+          <p className="text-ink2">Simulado com tempo total e gabarito comentado no fim.</p>
+        </div>
+        <Button asChild variant="secondary">
+          <Link href="/simulado">
+            <Timer aria-hidden />
+            Fazer um simulado
+          </Link>
+        </Button>
+      </section>
     </>
   );
 }

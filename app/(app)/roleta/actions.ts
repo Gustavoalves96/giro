@@ -2,19 +2,11 @@
 
 import { z } from "zod";
 import { requireUser } from "@/lib/auth/require-user";
-import {
-  acertosRecentesTopico,
-  atualizarDominioTopico,
-  criarSessaoRoleta,
-  fecharSessao,
-  respostasDaSessao,
-  salvarEstudoSessao,
-} from "@/lib/db/sessoes";
+import { criarSessaoRoleta, fecharERecalcular, respostasDaSessao, salvarEstudoSessao } from "@/lib/db/sessoes";
 import { provasDesde } from "@/lib/db/provas";
 import { listarTopicosRoleta } from "@/lib/db/topicos";
 import { hojeEmSP, topicosComProvaEm14Dias } from "@/lib/domain/provas";
 import { IdSchema } from "@/lib/disciplinas/schema";
-import { calcularDominio, topicosARecalcular } from "@/lib/domain/dominio";
 import { resumoSessao } from "@/lib/domain/pontuacao";
 import { EstudoSegundosSchema } from "@/lib/perfil/schema";
 import { candidatoDe, MOTIVO_SORTE, montarFatias, motivoPeso, motivoVazio, sortear, type Fatia } from "@/lib/domain/roleta";
@@ -68,17 +60,10 @@ export async function finalizar(sessaoId: string) {
   const id = IdSchema.parse(sessaoId);
   const rs = await respostasDaSessao(id);
   const r = resumoSessao(rs);
-  const fechada = await fecharSessao(id, {
+  await fecharERecalcular(id, rs, {
     totalQuestoes: rs.length,
     acertos: r.acertos,
     pontuacao: r.total,
     maiorSequencia: r.maiorSequencia,
   });
-  const fim = fechada?.finalizadaEm;
-  if (!fechada || !fim) return;
-  await Promise.all(
-    topicosARecalcular(fechada.topicoId, rs).map(async (t) =>
-      atualizarDominioTopico(t, calcularDominio(await acertosRecentesTopico(t, fim, true)), fim),
-    ),
-  );
 }

@@ -93,6 +93,9 @@ export const sessoes = pgTable("sessoes", {
   acertos: integer("acertos").notNull().default(0),
   pontuacao: integer("pontuacao").notNull().default(0),
   maiorSequencia: integer("maior_sequencia").notNull().default(0),
+  // só simulado (sessão 17): as questões sorteadas, na ordem da prova (sem FK, como provas.topico_ids), e o tempo total
+  questaoIds: uuid("questao_ids").array(),
+  limiteSegundos: integer("limite_segundos"),
 });
 
 export const respostas = pgTable(

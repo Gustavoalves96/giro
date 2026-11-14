@@ -120,6 +120,25 @@
   body {
     @apply bg-background font-sans text-foreground;
   }
+  /* O Tailwind v4 deixa button com cursor default: tudo que é clicável ganha a mãozinha (pedido da sessão 17).
+     Em @layer base, então um utilitário cursor-* ainda vence. */
+  button,
+  [role="button"],
+  [role="radio"],
+  [role="switch"],
+  [role="checkbox"],
+  label:has(input, select, textarea),
+  label[for],
+  input[type="checkbox"],
+  input[type="radio"],
+  summary,
+  select {
+    cursor: pointer;
+  }
+  :is(button, [role], label, input, summary, select):is(:disabled, [aria-disabled="true"]),
+  [aria-disabled="true"] :is(button, [role], label, input) {
+    cursor: default;
+  }
 }
 
 /* Movimento reduzido: diálogos só com fade (sem zoom/deslize) e esqueletos de carregamento parados.
