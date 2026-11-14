@@ -37,7 +37,7 @@ async function Conta() {
       </section>
       <section className={CARD}>
         <Rotulo>Conta</Rotulo>
-        <p className="text-ink3">Conectada como</p>
+        <p className="text-ink3">Conta conectada:</p>
         <p className="mb-4 font-bold break-all">{sessao?.user?.email}</p>
         <form action={sair}>
           <Button type="submit" variant="secondary">

@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 export const NomeSchema = z
-  .string({ error: "Digite como você quer ser chamada." })
+  .string({ error: "Digite o nome para a saudação." })
   .trim()
-  .min(1, "Digite como você quer ser chamada.")
+  .min(1, "Digite o nome para a saudação.")
   .max(40, "Use no máximo 40 caracteres.");
 
 // Tempo de estudo: 5 a 60 min, de 5 em 5 (em segundos no banco e nos formulários).

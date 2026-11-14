@@ -70,7 +70,7 @@ async function Conteudo() {
     <>
       <header className="mb-6">
         <h1 className="font-display text-[28px] leading-tight font-extrabold md:text-[34px]">Estatísticas</h1>
-        <p className="mt-1 text-ink2">Você contra você mesma. Período: últimas {SEMANAS} semanas.</p>
+        <p className="mt-1 text-ink2">Você contra seus próprios números. Período: últimas {SEMANAS} semanas.</p>
       </header>
 
       <div className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-4">

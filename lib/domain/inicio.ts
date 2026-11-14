@@ -22,7 +22,7 @@ export type Etapa = "estudo" | "questoes";
 /**
  * Onde a rodada aberta continua: com resposta gravada, nas questões; sem nenhuma, no estudo (o timer
  * retoma de estudo_segundos). Quem pulou para as questões e saiu sem responder volta ao estudo: o banco
- * não guarda o clique em "Já estou pronta", e um clique leva de volta.
+ * não guarda o clique em "Ir para as questões", e um clique leva de volta.
  */
 export function etapaParaContinuar(respostas: number): Etapa {
   return respostas > 0 ? "questoes" : "estudo";

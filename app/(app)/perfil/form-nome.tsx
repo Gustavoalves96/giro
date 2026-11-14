@@ -11,7 +11,7 @@ export function FormNome({ nomeAtual }: { nomeAtual: string }) {
   return (
     <form action={acao} className="space-y-3">
       <label htmlFor="nome" className="block font-bold">
-        Como você quer ser chamada?
+        Como você prefere que o Giro te chame?
       </label>
       <div className="flex flex-col gap-3 sm:flex-row">
         <input

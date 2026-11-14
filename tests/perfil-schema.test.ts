@@ -33,7 +33,7 @@ describe("NomeSchema", () => {
   it("recusa campo ausente com mensagem em português", () => {
     const r = NomeSchema.safeParse(null);
     expect(r.success).toBe(false);
-    expect(r.error?.issues[0]?.message).toBe("Digite como você quer ser chamada.");
+    expect(r.error?.issues[0]?.message).toBe("Digite o nome para a saudação.");
   });
 });
 
