@@ -21,6 +21,7 @@ export function EditorDisciplina({
   className?: string;
   variant?: "destaque" | "default" | "secondary" | "ghost";
   ariaLabel?: string;
+  title?: string;
 }) {
   return (
     <EditorResponsivo

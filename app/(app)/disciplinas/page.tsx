@@ -54,16 +54,16 @@ function LinhaAtiva({ d, primeira, ultima }: { d: Linha; primeira: boolean; ulti
       <Detalhes d={d} />
       <div className="flex flex-wrap items-center gap-1">
         <BotaoNotebook url={d.notebooklmUrl} />
-        <EditorDisciplina disciplina={d} variant="ghost" className={ICONE} ariaLabel={`Editar ${d.nome}`}>
+        <EditorDisciplina disciplina={d} variant="ghost" className={ICONE} ariaLabel={`Editar ${d.nome}`} title="Editar">
           <Pencil aria-hidden />
         </EditorDisciplina>
         <form action={mover.bind(null, d.id, "subir")}>
-          <Button type="submit" variant="ghost" className={ICONE} disabled={primeira} aria-label={`Subir ${d.nome}`}>
+          <Button type="submit" variant="ghost" className={ICONE} disabled={primeira} aria-label={`Subir ${d.nome}`} title="Subir na lista">
             <ArrowUp aria-hidden />
           </Button>
         </form>
         <form action={mover.bind(null, d.id, "descer")}>
-          <Button type="submit" variant="ghost" className={ICONE} disabled={ultima} aria-label={`Descer ${d.nome}`}>
+          <Button type="submit" variant="ghost" className={ICONE} disabled={ultima} aria-label={`Descer ${d.nome}`} title="Descer na lista">
             <ArrowDown aria-hidden />
           </Button>
         </form>
