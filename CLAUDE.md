@@ -179,7 +179,7 @@ Esta é a forma **principal** de criar questões.
 2. O app copia para a área de transferência o prompt abaixo, já preenchido com disciplina e tópico.
 3. Ela cola no caderno da disciplina no NotebookLM, que gera as questões com base nos arquivos dela.
 4. Ela copia a resposta e cola num `<textarea>` do app → **"Importar"**.
-5. O app extrai o JSON (aceitar resposta envolta em blocos ```json e texto antes/depois), valida com Zod e mostra uma **pré-visualização** com as questões válidas e as inválidas (com o motivo). Ela confirma → salva com `origem = 'notebooklm'`.
+5. O app extrai o JSON (aceitar resposta envolta em blocos ```json e texto antes/depois), valida com Zod (se o `JSON.parse` falhar, `repararJson` em `lib/import/parse-json.ts` conserta a cópia em markdown do NotebookLM: `\_`, `\.`, `\\n` e aspas sem escape dentro do texto; visto com resposta real em 14/11/2026) e mostra uma **pré-visualização** com as questões válidas e as inválidas (com o motivo). Ela confirma → salva com `origem = 'notebooklm'`.
 6. Evitar duplicatas: ignorar questão cujo enunciado normalizado (minúsculo, sem acento, sem espaços extras) já exista no tópico.
 
 ### Schema de importação (Zod)
