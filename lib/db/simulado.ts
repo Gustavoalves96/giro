@@ -5,7 +5,7 @@ import { disciplinas, questoes, respostas, sessoes, topicos } from "./schema";
 // Simulado (sessão 17): só questões (procedimento fica fora), ativas, de disciplinas não arquivadas.
 
 const elegivel = (dono: string) =>
-  and(eq(disciplinas.dono, dono), eq(questoes.ativa, true), ne(questoes.tipo, "procedimento"), eq(disciplinas.arquivada, false));
+  and(eq(disciplinas.dono, dono), eq(questoes.ativa, true), ne(questoes.tipo, "procedimento"), eq(disciplinas.arquivada, false), eq(topicos.arquivado, false));
 
 /** Disciplinas não arquivadas com o nº de questões que podem cair no simulado. */
 export async function disciplinasDoSimulado(dono: string) {

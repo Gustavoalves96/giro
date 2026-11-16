@@ -22,6 +22,7 @@ export async function listarTopicos(dono: string, disciplinaId: string) {
       nome: topicos.nome,
       descricao: topicos.descricao,
       dominio: topicos.dominio,
+      arquivado: topicos.arquivado,
       questoesAtivas: sql<number>`(select count(*) from questoes q where q.topico_id = "topicos"."id" and q.ativa and q.tipo <> 'procedimento')`.mapWith(
         Number,
       ),
@@ -43,6 +44,7 @@ export async function getTopico(dono: string, id: string) {
       id: topicos.id,
       nome: topicos.nome,
       dominio: topicos.dominio,
+      arquivado: topicos.arquivado,
       disciplinaId: disciplinas.id,
       disciplinaNome: disciplinas.nome,
       cor: disciplinas.cor,
@@ -55,7 +57,7 @@ export async function getTopico(dono: string, id: string) {
   return t ?? null;
 }
 
-// Fatias da roleta: tópicos com ≥ 1 questão ativa, de disciplina não arquivada, agrupados por disciplina.
+// Fatias da roleta: tópicos não arquivados com ≥ 1 questão ativa, de disciplina não arquivada, agrupados por disciplina.
 export async function listarTopicosRoleta(dono: string) {
   return db
     .select({
@@ -75,6 +77,7 @@ export async function listarTopicosRoleta(dono: string) {
       and(
         eq(disciplinas.dono, dono),
         eq(disciplinas.arquivada, false),
+        eq(topicos.arquivado, false),
         // questão ou procedimento ativo: tópico só com procedimentos também ganha fatia
         sql`exists (select 1 from questoes q where q.topico_id = "topicos"."id" and q.ativa)`,
       ),
@@ -91,6 +94,11 @@ export async function criarTopico(dono: string, disciplinaId: string, dados: Dad
 
 export async function editarTopico(dono: string, id: string, dados: Dados) {
   await db.update(topicos).set(dados).where(and(eq(topicos.id, id), topicoDoDono(dono, topicos.id)));
+}
+
+// Arquivado = fora da roleta, revisão, erros, simulado e pontos fracos; o histórico fica.
+export async function definirTopicoArquivado(dono: string, id: string, arquivado: boolean) {
+  await db.update(topicos).set({ arquivado }).where(and(eq(topicos.id, id), topicoDoDono(dono, topicos.id)));
 }
 
 // Só tópico sem respostas (o histórico não se apaga); o cascade leva questões e revisões. false = recusado.

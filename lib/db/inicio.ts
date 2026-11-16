@@ -48,6 +48,7 @@ export async function pontosFracos(dono: string, limite: number | null = 3) {
       and(
         eq(disciplinas.dono, dono),
         eq(disciplinas.arquivada, false),
+        eq(topicos.arquivado, false),
         sql`exists (select 1 from respostas r join questoes q on q.id = r.questao_id left join sessoes s on s.id = r.sessao_id
           where q.topico_id = "topicos"."id" and (r.sessao_id is null or s.finalizada_em is not null))`,
       ),

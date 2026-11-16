@@ -1,4 +1,12 @@
-import { ChevronRight, Eye, EyeOff, Flag, FlagOff, Pencil, Plus } from "lucide-react";
+import {
+  ChevronRight,
+  Eye,
+  EyeOff,
+  Flag,
+  FlagOff,
+  Pencil,
+  Plus,
+} from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -24,7 +32,8 @@ const SELO = "h-7 px-2.5 text-[13px]";
 
 type Questao = Awaited<ReturnType<typeof listarQuestoes>>[number];
 
-const contagem = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
+const contagem = (n: number, um: string, varios: string) =>
+  `${n} ${n === 1 ? um : varios}`;
 
 // Linha de questão ou de procedimento: selos, texto e as mesmas ações (editar, sinalizar, ativar).
 function LinhaItem({
@@ -67,7 +76,10 @@ function LinhaItem({
             </Badge>
           )}
           {!q.ativa && (
-            <Badge variant="chip" className={cn(SELO, "border-dashed text-ink3")}>
+            <Badge
+              variant="chip"
+              className={cn(SELO, "border-dashed text-ink3")}
+            >
               <EyeOff aria-hidden />
               {proc ? "Inativo" : "Inativa"}
             </Badge>
@@ -77,15 +89,31 @@ function LinhaItem({
       </div>
       <div className="flex items-center gap-1 self-end md:self-start">
         {editor(rotulo)}
-        <form action={marcar.bind(null, q.id, topicoId, "sinalizadaComErro", !q.sinalizadaComErro)}>
+        <form
+          action={marcar.bind(
+            null,
+            q.id,
+            topicoId,
+            "sinalizadaComErro",
+            !q.sinalizadaComErro,
+          )}
+        >
           <Button
             type="submit"
             variant="ghost"
             className={ICONE}
-            aria-label={q.sinalizadaComErro ? `Desmarcar erro d${g} ${rotulo}` : `Sinalizar erro n${g} ${rotulo}`}
+            aria-label={
+              q.sinalizadaComErro
+                ? `Desmarcar erro d${g} ${rotulo}`
+                : `Sinalizar erro n${g} ${rotulo}`
+            }
             title={q.sinalizadaComErro ? "Desmarcar erro" : "Sinalizar erro"}
           >
-            {q.sinalizadaComErro ? <FlagOff aria-hidden /> : <Flag aria-hidden />}
+            {q.sinalizadaComErro ? (
+              <FlagOff aria-hidden />
+            ) : (
+              <Flag aria-hidden />
+            )}
           </Button>
         </form>
         <form action={marcar.bind(null, q.id, topicoId, "ativa", !q.ativa)}>
@@ -94,7 +122,9 @@ function LinhaItem({
             variant="ghost"
             className={ICONE}
             aria-label={q.ativa ? `Desativar ${rotulo}` : `Ativar ${rotulo}`}
-            title={q.ativa ? "Desativar (sai da roleta e das revisões)" : "Ativar"}
+            title={
+              q.ativa ? "Desativar (sai da roleta e das revisões)" : "Ativar"
+            }
           >
             {q.ativa ? <EyeOff aria-hidden /> : <Eye aria-hidden />}
           </Button>
@@ -104,7 +134,15 @@ function LinhaItem({
   );
 }
 
-function LinhaQuestao({ q, topicoId, n }: { q: Questao; topicoId: string; n: number }) {
+function LinhaQuestao({
+  q,
+  topicoId,
+  n,
+}: {
+  q: Questao;
+  topicoId: string;
+  n: number;
+}) {
   const taxa = q.respostas ? Math.round((q.acertos / q.respostas) * 100) : null;
   return (
     <LinhaItem
@@ -112,12 +150,20 @@ function LinhaQuestao({ q, topicoId, n }: { q: Questao; topicoId: string; n: num
       topicoId={topicoId}
       n={n}
       editor={(rotulo) => (
-        <EditorQuestao topicoId={topicoId} questao={q} variant="ghost" className={ICONE} ariaLabel={`Editar ${rotulo}`}>
+        <EditorQuestao
+          topicoId={topicoId}
+          questao={q}
+          variant="ghost"
+          className={ICONE}
+          ariaLabel={`Editar ${rotulo}`}
+        >
           <Pencil aria-hidden />
         </EditorQuestao>
       )}
     >
-      <p className={cn("line-clamp-3 text-ink", !q.ativa && "text-ink3")}>{q.enunciado}</p>
+      <p className={cn("line-clamp-3 text-ink", !q.ativa && "text-ink3")}>
+        {q.enunciado}
+      </p>
       <p className="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-[13px] text-ink3">
         <span>{q.fonte ?? "Sem fonte"}</span>
         <span aria-hidden>·</span>
@@ -132,7 +178,15 @@ function LinhaQuestao({ q, topicoId, n }: { q: Questao; topicoId: string; n: num
   );
 }
 
-function LinhaProcedimento({ q, topicoId, n }: { q: Questao; topicoId: string; n: number }) {
+function LinhaProcedimento({
+  q,
+  topicoId,
+  n,
+}: {
+  q: Questao;
+  topicoId: string;
+  n: number;
+}) {
   const passos = q.checklist?.passos ?? [];
   const criticos = passos.filter((p) => p.critico).length;
   return (
@@ -152,10 +206,13 @@ function LinhaProcedimento({ q, topicoId, n }: { q: Questao; topicoId: string; n
         </EditorProcedimento>
       )}
     >
-      <p className={cn("font-bold text-ink", !q.ativa && "text-ink3")}>{q.enunciado}</p>
+      <p className={cn("font-bold text-ink", !q.ativa && "text-ink3")}>
+        {q.enunciado}
+      </p>
       <p className="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-[13px] text-ink3">
         <span className="font-bold text-ink2 tabular-nums">
-          {contagem(passos.length, "passo", "passos")} · {contagem(criticos, "crítico", "críticos")}
+          {contagem(passos.length, "passo", "passos")} ·{" "}
+          {contagem(criticos, "crítico", "críticos")}
         </span>
         <span aria-hidden>·</span>
         <span>{q.fonte ?? "Sem fonte"}</span>
@@ -184,7 +241,10 @@ function Secao({
     <section aria-labelledby={idTitulo} className="not-first-of-type:mt-12">
       <div className="mb-4 flex flex-col gap-3">
         <h2 id={idTitulo} className="font-display text-2xl font-extrabold">
-          {titulo} <span className="font-sans text-base font-normal text-ink3">· {resumo}</span>
+          {titulo}{" "}
+          <span className="font-sans text-base font-normal text-ink3">
+            · {resumo}
+          </span>
         </h2>
         <div className="flex flex-wrap gap-2">{acoes}</div>
       </div>
@@ -226,7 +286,10 @@ async function Conteudo({ id }: { id: string }) {
       <nav aria-label="Caminho" className="mb-2 text-ink3">
         <ol className="flex flex-wrap items-center gap-1">
           <li>
-            <Link href="/disciplinas" className="inline-flex min-h-11 items-center font-bold hover:text-ink">
+            <Link
+              href="/disciplinas"
+              className="inline-flex min-h-11 items-center font-bold hover:text-ink"
+            >
               Disciplinas
             </Link>
           </li>
@@ -236,7 +299,11 @@ async function Conteudo({ id }: { id: string }) {
               href={`/disciplinas/${topico.disciplinaId}`}
               className="inline-flex min-h-11 items-center gap-2 font-bold hover:text-ink"
             >
-              <span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: topico.cor }} aria-hidden />
+              <span
+                className="size-2.5 shrink-0 rounded-full"
+                style={{ backgroundColor: topico.cor }}
+                aria-hidden
+              />
               {topico.disciplinaNome}
             </Link>
           </li>
@@ -248,16 +315,32 @@ async function Conteudo({ id }: { id: string }) {
       </nav>
 
       <div className="mb-8 min-w-0">
-        <h1 className="font-display text-[32px] font-extrabold wrap-break-word md:text-[34px]">{topico.nome}</h1>
+        <h1 className="font-display text-[32px] font-extrabold wrap-break-word md:text-[34px]">
+          {topico.nome}
+        </h1>
         <p className="mt-1 text-ink3">
-          domínio <span className="font-bold text-ink2 tabular-nums">{topico.respondido ? `${dominio}%` : "—"}</span>
+          domínio{" "}
+          <span className="font-bold text-ink2 tabular-nums">
+            {topico.respondido ? `${dominio}%` : "—"}
+          </span>
           {!topico.respondido && (
             <Badge variant="chip" className={cn(SELO, "ml-2")}>
               novo
             </Badge>
           )}
         </p>
-        {topico.respondido && <BarraDominio valor={dominio} cor={topico.cor} className="mt-2 max-w-60" />}
+        {topico.respondido && (
+          <BarraDominio
+            valor={dominio}
+            cor={topico.cor}
+            className="mt-2 max-w-60"
+          />
+        )}
+        {topico.arquivado && (
+          <p className="mt-4 rounded-2xl bg-sf2 px-4 py-3 text-ink2">
+            Tópico arquivado: fora da roleta.
+          </p>
+        )}
       </div>
 
       <Secao
@@ -270,7 +353,11 @@ async function Conteudo({ id }: { id: string }) {
               <Plus aria-hidden />
               Nova questão
             </EditorQuestao>
-            <ImportarNotebookLM tipo="questoes" {...importar} enunciados={questoes.map((q) => q.enunciado)} />
+            <ImportarNotebookLM
+              tipo="questoes"
+              {...importar}
+              enunciados={questoes.map((q) => q.enunciado)}
+            />
           </>
         }
         vazio={
@@ -299,7 +386,11 @@ async function Conteudo({ id }: { id: string }) {
               <Plus aria-hidden />
               Novo procedimento
             </EditorProcedimento>
-            <ImportarNotebookLM tipo="procedimentos" {...importar} enunciados={procedimentos.map((q) => q.enunciado)} />
+            <ImportarNotebookLM
+              tipo="procedimentos"
+              {...importar}
+              enunciados={procedimentos.map((q) => q.enunciado)}
+            />
           </>
         }
         vazio={
@@ -324,7 +415,14 @@ async function Conteudo({ id }: { id: string }) {
 export default function Page({ params }: PageProps<"/topicos/[id]">) {
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-6 md:px-8 md:py-10">
-      <Suspense fallback={<div className="h-64 animate-pulse rounded-3xl border border-line bg-sf" aria-busy="true" />}>
+      <Suspense
+        fallback={
+          <div
+            className="h-64 animate-pulse rounded-3xl border border-line bg-sf"
+            aria-busy="true"
+          />
+        }
+      >
         {params.then(({ id }) => (
           <Conteudo id={id} />
         ))}

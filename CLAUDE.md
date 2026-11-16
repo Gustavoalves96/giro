@@ -53,7 +53,7 @@ disciplinas
 topicos
   id uuid pk, disciplina_id fk, nome text, descricao text null,
   dominio real default 0        -- 0..100, cache recalculado após cada sessão
-  ultima_vez_estudado timestamptz null, criado_em
+  ultima_vez_estudado timestamptz null, arquivado bool default false, criado_em
 
 questoes
   id uuid pk, topico_id fk,
@@ -118,7 +118,8 @@ perfil                                  -- uma linha por conta, editável em /pe
 - Média ponderada das **últimas 20 respostas** do tópico, com decaimento: a resposta mais recente pesa 1.0 e cada anterior pesa ×0.9.
 - Tópico sem nenhuma resposta tem domínio 0 e status "novo".
 - Recalcular e salvar em `topicos.dominio` ao finalizar cada sessão, em qualquer modo: `finalizar()` recalcula o tópico da sessão e **todo tópico com resposta nela** (revisão, erros e simulado têm `topico_id` null).
-- **Excluir tópico** só quando ele não tem respostas (o histórico não se apaga); com histórico, o diálogo manda desativar as questões.
+- **Excluir tópico** só quando ele não tem respostas (o histórico não se apaga); com histórico, o diálogo oferece arquivar.
+- **Arquivar tópico** (16/11/2026, ícone na linha do tópico em `/disciplinas/[id]`, seção "Arquivados" recolhida com "Desarquivar"): como a disciplina arquivada, fica fora da roleta, revisão, caderno de erros, simulado, pontos fracos e "passos que você mais esquece" (`eq(topicos.arquivado, false)` ao lado de cada `disciplinas.arquivada`). O histórico fica.
 - **Excluir disciplina** (lixeira em `/disciplinas`, `excluirDisciplina` em `lib/db/disciplinas.ts`): mesma regra, nenhuma resposta em nenhum tópico dela; o cascade leva tópicos, questões e provas. Com histórico, o diálogo oferece arquivar.
 
 ### 4.2 Roleta

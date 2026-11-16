@@ -59,6 +59,7 @@ export const topicos = pgTable(
     descricao: text("descricao"),
     dominio: real("dominio").notNull().default(0),
     ultimaVezEstudado: timestamp("ultima_vez_estudado", tz),
+    arquivado: boolean("arquivado").notNull().default(false),
     criadoEm: criadoEm(),
   },
   (t) => [index("topicos_disciplina_id_idx").on(t.disciplinaId)],

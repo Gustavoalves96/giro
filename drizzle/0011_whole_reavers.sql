@@ -1,0 +1,1 @@
+ALTER TABLE "topicos" ADD COLUMN "arquivado" boolean DEFAULT false NOT NULL;

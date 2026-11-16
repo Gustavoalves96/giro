@@ -23,4 +23,4 @@ export const TopicoSchema = z.object({
 
 // Excluir tópico só sem respostas (sessão 12): o diálogo e a action usam o mesmo texto.
 export const TOPICO_COM_HISTORICO =
-  "Ele já tem respostas, e o histórico não é apagado. Para tirá-lo da roleta e das revisões, desative as questões e os procedimentos dele.";
+  "Ele já tem respostas, e o histórico não é apagado. Para tirá-lo da roleta e das revisões, arquive.";

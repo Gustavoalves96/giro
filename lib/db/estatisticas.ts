@@ -46,7 +46,7 @@ export async function passosEsquecidos(dono: string, limite = 10) {
     join topicos t on t.id = q.topico_id
     join disciplinas d on d.id = t.disciplina_id
     cross join lateral jsonb_array_elements(q.checklist->'passos') with ordinality as p(passo, ordem)
-    where p.passo->>'id' = rp.passo_id and rp.nota in ('esqueci', 'com_erro') and q.ativa and not d.arquivada and d.dono = ${dono}
+    where p.passo->>'id' = rp.passo_id and rp.nota in ('esqueci', 'com_erro') and q.ativa and not d.arquivada and not t.arquivado and d.dono = ${dono}
     group by q.id, q.enunciado, q.topico_id, p.passo->>'texto', p.ordem
     order by n desc, q.enunciado, p.ordem
     limit ${limite}`);

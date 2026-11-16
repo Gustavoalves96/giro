@@ -1,4 +1,11 @@
-import { ChevronLeft, ExternalLink, Pencil, Plus } from "lucide-react";
+import {
+  Archive,
+  ArchiveRestore,
+  ChevronLeft,
+  ExternalLink,
+  Pencil,
+  Plus,
+} from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -8,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getDisciplina, listarTopicos } from "@/lib/db/topicos";
 import { IdSchema } from "@/lib/disciplinas/schema";
+import { arquivar } from "./actions";
 import { EditorTopico } from "./editor-topico";
 import { ExcluirTopico } from "./excluir-topico";
 import { dono } from "@/lib/auth/require-user";
@@ -18,32 +26,48 @@ const ICONE = "size-11 px-0 has-[>svg]:px-0";
 
 type Topico = Awaited<ReturnType<typeof listarTopicos>>[number];
 
-function LinhaTopico({ t, cor, disciplinaId }: { t: Topico; cor: string; disciplinaId: string }) {
+function LinhaTopico({
+  t,
+  cor,
+  disciplinaId,
+}: {
+  t: Topico;
+  cor: string;
+  disciplinaId: string;
+}) {
   const dominio = Math.round(t.dominio);
   return (
     <li className="flex flex-col gap-3 rounded-3xl border border-line bg-sf p-4 md:flex-row md:items-center md:p-5">
       <div className="min-w-0 flex-1">
         <h2 className="font-display text-xl font-bold">
-          <Link href={`/topicos/${t.id}`} className="flex min-h-11 items-center underline-offset-4 hover:underline">
+          <Link
+            href={`/topicos/${t.id}`}
+            className="flex min-h-11 items-center underline-offset-4 hover:underline"
+          >
             <span className="truncate">{t.nome}</span>
           </Link>
         </h2>
         <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-ink3">
           <span>
-            {t.questoesAtivas} {t.questoesAtivas === 1 ? "questão ativa" : "questões ativas"}
+            {t.questoesAtivas}{" "}
+            {t.questoesAtivas === 1 ? "questão ativa" : "questões ativas"}
           </span>
           {t.procedimentosAtivos > 0 && (
             <>
               <span aria-hidden>·</span>
               <span>
-                {t.procedimentosAtivos} {t.procedimentosAtivos === 1 ? "procedimento" : "procedimentos"}
+                {t.procedimentosAtivos}{" "}
+                {t.procedimentosAtivos === 1 ? "procedimento" : "procedimentos"}
               </span>
             </>
           )}
           <span aria-hidden>·</span>
           {t.respondido ? (
             <span>
-              domínio <span className="font-bold text-ink2 tabular-nums">{dominio}%</span>
+              domínio{" "}
+              <span className="font-bold text-ink2 tabular-nums">
+                {dominio}%
+              </span>
             </span>
           ) : (
             <span>
@@ -54,21 +78,49 @@ function LinhaTopico({ t, cor, disciplinaId }: { t: Topico; cor: string; discipl
             </span>
           )}
         </p>
-        {t.respondido && <BarraDominio valor={dominio} cor={cor} className="mt-2 max-w-60" />}
+        {t.respondido && (
+          <BarraDominio valor={dominio} cor={cor} className="mt-2 max-w-60" />
+        )}
       </div>
-      <div className="flex items-center gap-1">
-        <EditorTopico disciplinaId={disciplinaId} topico={t} variant="ghost" className={ICONE} ariaLabel={`Editar ${t.nome}`}>
-          <Pencil aria-hidden />
-        </EditorTopico>
-        <ExcluirTopico
-          id={t.id}
-          disciplinaId={disciplinaId}
-          nome={t.nome}
-          totalQuestoes={t.totalQuestoes}
-          respondido={t.respondido}
-          className={ICONE}
-        />
-      </div>
+      {t.arquivado ? (
+        <form action={arquivar.bind(null, t.id, disciplinaId, false)}>
+          <Button type="submit" variant="secondary">
+            <ArchiveRestore aria-hidden />
+            Desarquivar
+          </Button>
+        </form>
+      ) : (
+        <div className="flex items-center gap-1">
+          <EditorTopico
+            disciplinaId={disciplinaId}
+            topico={t}
+            variant="ghost"
+            className={ICONE}
+            ariaLabel={`Editar ${t.nome}`}
+          >
+            <Pencil aria-hidden />
+          </EditorTopico>
+          <form action={arquivar.bind(null, t.id, disciplinaId, true)}>
+            <Button
+              type="submit"
+              variant="ghost"
+              className={ICONE}
+              aria-label={`Arquivar ${t.nome}`}
+              title="Arquivar"
+            >
+              <Archive aria-hidden />
+            </Button>
+          </form>
+          <ExcluirTopico
+            id={t.id}
+            disciplinaId={disciplinaId}
+            nome={t.nome}
+            totalQuestoes={t.totalQuestoes}
+            respondido={t.respondido}
+            className={ICONE}
+          />
+        </div>
+      )}
     </li>
   );
 }
@@ -79,19 +131,29 @@ async function Conteudo({ id }: { id: string }) {
   if (!IdSchema.safeParse(id).success) notFound();
   const disciplina = await getDisciplina(conta, id);
   if (!disciplina) notFound();
-  const topicos = await listarTopicos(conta, id);
+  const todos = await listarTopicos(conta, id);
+  const topicos = todos.filter((t) => !t.arquivado);
+  const arquivados = todos.filter((t) => t.arquivado);
 
   return (
     <>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <h1 className="flex min-w-0 items-center gap-3 font-display text-[32px] font-extrabold md:text-[34px]">
-          <span className="size-4 shrink-0 rounded-full" style={{ backgroundColor: disciplina.cor }} aria-hidden />
+          <span
+            className="size-4 shrink-0 rounded-full"
+            style={{ backgroundColor: disciplina.cor }}
+            aria-hidden
+          />
           <span className="min-w-0 wrap-break-word">{disciplina.nome}</span>
         </h1>
         <div className="flex flex-wrap gap-2">
           {disciplina.notebooklmUrl && (
             <Button asChild variant="secondary">
-              <a href={disciplina.notebooklmUrl} target="_blank" rel="noopener noreferrer">
+              <a
+                href={disciplina.notebooklmUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <ExternalLink aria-hidden />
                 Abrir no NotebookLM
               </a>
@@ -104,20 +166,51 @@ async function Conteudo({ id }: { id: string }) {
         </div>
       </div>
       {disciplina.arquivada && (
-        <p className="mb-4 rounded-2xl bg-sf2 px-4 py-3 text-ink2">Disciplina arquivada: fora da roleta.</p>
+        <p className="mb-4 rounded-2xl bg-sf2 px-4 py-3 text-ink2">
+          Disciplina arquivada: fora da roleta.
+        </p>
       )}
 
       {topicos.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-line p-8 text-center">
-          <p className="font-bold">Nenhum tópico ainda.</p>
-          <p className="mt-1 text-ink3">Crie o primeiro tópico e depois adicione questões a ele.</p>
+          <p className="font-bold">
+            {arquivados.length > 0
+              ? "Nenhum tópico ativo."
+              : "Nenhum tópico ainda."}
+          </p>
+          <p className="mt-1 text-ink3">
+            Crie o primeiro tópico e depois adicione questões a ele.
+          </p>
         </div>
       ) : (
         <ul className="space-y-3">
           {topicos.map((t) => (
-            <LinhaTopico key={t.id} t={t} cor={disciplina.cor} disciplinaId={id} />
+            <LinhaTopico
+              key={t.id}
+              t={t}
+              cor={disciplina.cor}
+              disciplinaId={id}
+            />
           ))}
         </ul>
+      )}
+
+      {arquivados.length > 0 && (
+        <details className="mt-8">
+          <summary className="flex min-h-11 cursor-pointer items-center text-[13px] font-bold tracking-[0.06em] text-ink3 uppercase">
+            Arquivados ({arquivados.length}) · fora da roleta
+          </summary>
+          <ul className="mt-3 space-y-3 opacity-80">
+            {arquivados.map((t) => (
+              <LinhaTopico
+                key={t.id}
+                t={t}
+                cor={disciplina.cor}
+                disciplinaId={id}
+              />
+            ))}
+          </ul>
+        </details>
       )}
     </>
   );
@@ -133,7 +226,14 @@ export default function Page({ params }: PageProps<"/disciplinas/[id]">) {
         <ChevronLeft className="size-5" aria-hidden />
         Disciplinas
       </Link>
-      <Suspense fallback={<div className="h-64 animate-pulse rounded-3xl border border-line bg-sf" aria-busy="true" />}>
+      <Suspense
+        fallback={
+          <div
+            className="h-64 animate-pulse rounded-3xl border border-line bg-sf"
+            aria-busy="true"
+          />
+        }
+      >
         {params.then(({ id }) => (
           <Conteudo id={id} />
         ))}

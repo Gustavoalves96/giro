@@ -5,7 +5,7 @@ import { disciplinas, questoes, revisoes, sessoes, topicos } from "./schema";
 // Revisão do dia (FSRS): questões e procedimentos ativos com due <= agora, de todas as disciplinas não arquivadas.
 
 const pendente = (dono: string, agora: Date) =>
-  and(eq(disciplinas.dono, dono), eq(questoes.ativa, true), eq(disciplinas.arquivada, false), lte(revisoes.due, agora));
+  and(eq(disciplinas.dono, dono), eq(questoes.ativa, true), eq(disciplinas.arquivada, false), eq(topicos.arquivado, false), lte(revisoes.due, agora));
 
 const base = () =>
   db
@@ -49,7 +49,7 @@ export async function proximaRevisao(dono: string, agora: Date) {
     .innerJoin(questoes, eq(questoes.id, revisoes.questaoId))
     .innerJoin(topicos, eq(topicos.id, questoes.topicoId))
     .innerJoin(disciplinas, eq(disciplinas.id, topicos.disciplinaId))
-    .where(and(eq(disciplinas.dono, dono), eq(questoes.ativa, true), eq(disciplinas.arquivada, false), gt(revisoes.due, agora)))
+    .where(and(eq(disciplinas.dono, dono), eq(questoes.ativa, true), eq(disciplinas.arquivada, false), eq(topicos.arquivado, false), gt(revisoes.due, agora)))
     .orderBy(asc(revisoes.due))
     .limit(1);
   return r?.due ?? null;

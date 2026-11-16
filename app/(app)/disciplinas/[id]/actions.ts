@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { dono } from "@/lib/auth/require-user";
-import { criarTopico, editarTopico, excluirTopico } from "@/lib/db/topicos";
+import { criarTopico, definirTopicoArquivado, editarTopico, excluirTopico } from "@/lib/db/topicos";
 import { IdSchema } from "@/lib/disciplinas/schema";
 import { TOPICO_COM_HISTORICO, TopicoSchema } from "@/lib/topicos/schema";
 
@@ -30,4 +30,10 @@ export async function excluir(id: string, disciplinaId: string): Promise<{ ok: t
   const excluido = await excluirTopico(conta, IdSchema.parse(id));
   revalidatePath(`/disciplinas/${IdSchema.parse(disciplinaId)}`);
   return excluido ? { ok: true } : { ok: false, mensagem: TOPICO_COM_HISTORICO };
+}
+
+export async function arquivar(id: string, disciplinaId: string, arquivado: boolean) {
+  const conta = await dono();
+  await definirTopicoArquivado(conta, IdSchema.parse(id), z.boolean().parse(arquivado));
+  revalidatePath(`/disciplinas/${IdSchema.parse(disciplinaId)}`);
 }

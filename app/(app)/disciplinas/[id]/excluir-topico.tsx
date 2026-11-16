@@ -1,7 +1,6 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
-import Link from "next/link";
+import { Archive, Trash2 } from "lucide-react";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,10 +13,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { TOPICO_COM_HISTORICO } from "@/lib/topicos/schema";
-import { excluir } from "./actions";
+import { arquivar, excluir } from "./actions";
 
 // Só tópico sem respostas (o histórico fica); apaga as questões dele (cascade): confirma dizendo quantas.
-// Com respostas, o diálogo explica e leva ao tópico para desativar as questões.
+// Com respostas, o diálogo explica e oferece arquivar.
 export function ExcluirTopico({
   id,
   disciplinaId,
@@ -60,8 +59,9 @@ export function ExcluirTopico({
             <Button variant="secondary">{bloqueado ? "Fechar" : "Cancelar"}</Button>
           </DialogClose>
           {bloqueado ? (
-            <Button asChild>
-              <Link href={`/topicos/${id}`}>Abrir o tópico</Link>
+            <Button disabled={excluindo} onClick={() => iniciar(async () => arquivar(id, disciplinaId, true))}>
+              <Archive aria-hidden />
+              {excluindo ? "Arquivando…" : "Arquivar"}
             </Button>
           ) : (
             <Button

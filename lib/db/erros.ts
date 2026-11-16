@@ -45,7 +45,7 @@ export async function listarErros(dono: string) {
     .innerJoin(questoes, eq(questoes.id, ultima.questaoId))
     .innerJoin(topicos, eq(topicos.id, questoes.topicoId))
     .innerJoin(disciplinas, eq(disciplinas.id, topicos.disciplinaId))
-    .where(and(eq(disciplinas.dono, dono), eq(ultima.acertou, false), eq(questoes.ativa, true), eq(disciplinas.arquivada, false)));
+    .where(and(eq(disciplinas.dono, dono), eq(ultima.acertou, false), eq(questoes.ativa, true), eq(disciplinas.arquivada, false), eq(topicos.arquivado, false)));
   return cadernoDeErros(linhas);
 }
 
