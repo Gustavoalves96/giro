@@ -157,8 +157,8 @@ export function Roleta({
 
   return (
     // overflow-x-clip: a roda girada (caixa do quadrado rotacionado) e o confete não podem criar rolagem lateral
-    <div className="flex flex-col items-center gap-8 overflow-x-clip lg:grid lg:grid-cols-[500px_340px] lg:items-start lg:justify-center lg:gap-10 xl:grid-cols-[580px_400px] xl:gap-12">
-      <div className="flex w-full max-w-[300px] flex-col items-center gap-4 md:w-[540px] md:max-w-none lg:w-[500px] xl:w-[580px]">
+    <div className="flex flex-col items-center gap-8 overflow-x-clip lg:grid lg:grid-cols-[minmax(0,500px)_340px] lg:items-start lg:justify-center lg:gap-10 xl:grid-cols-[minmax(0,580px)_400px] xl:gap-12">
+      <div className="flex w-full max-w-[300px] flex-col items-center gap-4 md:w-[540px] md:max-w-none lg:w-full lg:max-w-[500px] xl:max-w-[580px]">
         {/* Visor: o tópico sob o ponteiro (resolve a leitura com muitas fatias e no celular) */}
         <div
           aria-live="polite"
