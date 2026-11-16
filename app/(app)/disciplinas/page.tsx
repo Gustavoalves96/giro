@@ -54,10 +54,10 @@ function LinhaAtiva({ d, primeira, ultima }: { d: Linha; primeira: boolean; ulti
   return (
     <li className="flex flex-col gap-3 rounded-3xl border border-line bg-sf p-4 md:p-5 lg:flex-row lg:items-center">
       <Detalhes d={d} />
-      {/* Celular: NotebookLM na linha de cima inteira, ícones embaixo. sm+: uma fileira só (abaixo do nome até lg). */}
+      {/* Celular: NotebookLM na linha de cima inteira, ícones centralizados embaixo. sm+: uma fileira só, ícones à direita. */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-1">
         <BotaoNotebook url={d.notebooklmUrl} />
-        <div className="flex items-center gap-1">
+        <div className="flex items-center justify-center gap-1 sm:ml-auto">
           <EditorDisciplina disciplina={d} variant="ghost" className={ICONE} ariaLabel={`Editar ${d.nome}`} title="Editar">
             <Pencil aria-hidden />
           </EditorDisciplina>
