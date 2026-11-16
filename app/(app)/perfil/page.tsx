@@ -1,5 +1,6 @@
-import { LogOut } from "lucide-react";
+import { ChevronRight, LogOut, Trophy } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
 import { auth } from "@/auth";
 import { SeletorTema } from "@/components/seletor-tema";
@@ -56,6 +57,16 @@ export default function PerfilPage() {
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-6 md:px-8 md:py-10">
       <h1 className="font-display text-[32px] font-extrabold md:text-[34px]">Meu perfil</h1>
+      {/* abaixo de md a barra de baixo não tem a aba Recompensas */}
+      <Button asChild variant="secondary" className="h-14 w-full justify-between px-5 text-base md:hidden">
+        <Link href="/recompensas">
+          <span className="flex items-center gap-3">
+            <Trophy aria-hidden />
+            Recompensas
+          </span>
+          <ChevronRight aria-hidden />
+        </Link>
+      </Button>
       <Suspense fallback={<div className={`${CARD} h-40 animate-pulse`} aria-busy="true" />}>
         <Conta />
       </Suspense>
