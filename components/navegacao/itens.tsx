@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, CalendarDays, ChartColumn, CircleUser, Disc3, House, RotateCcw } from "lucide-react";
+import { BookOpen, CalendarDays, ChartColumn, CircleUser, Disc3, House, RotateCcw, Trophy } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -11,8 +11,9 @@ const DESTINOS = [
   { href: "/revisao", rotulo: "Revisão", Icone: RotateCcw },
   { href: "/disciplinas", rotulo: "Disciplinas", Icone: BookOpen },
   { href: "/estatisticas", rotulo: "Estatísticas", Icone: ChartColumn },
-  // celular: 5 abas, Provas sai da barra
+  // celular: 5 abas, Provas e Recompensas saem da barra (Recompensas abre pelo chip do nível no Início)
   { href: "/provas", rotulo: "Provas", Icone: CalendarDays, soTelaGrande: true },
+  { href: "/recompensas", rotulo: "Recompensas", Icone: Trophy, soTelaGrande: true },
 ] as const;
 
 const PERFIL = { href: "/perfil", rotulo: "Meu perfil", Icone: CircleUser };
@@ -49,7 +50,7 @@ function LinkNav({ item, pathname, className }: { item: Item; pathname: string |
   );
 }
 
-/** Lista dos 6 destinos. `pathname` null = sem destaque (fallback do Suspense). */
+/** Lista dos 7 destinos. `pathname` null = sem destaque (fallback do Suspense). */
 export function ListaDestinos({ pathname }: { pathname: string | null }) {
   return DESTINOS.map((d) => <LinkNav key={d.href} item={d} pathname={pathname} />);
 }

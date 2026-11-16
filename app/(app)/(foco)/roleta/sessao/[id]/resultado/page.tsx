@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import { NivelDaSessao } from "@/components/recompensas/nivel-sessao";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TEXTO_SOBRE_TINTA, tintaClara } from "@/lib/cores";
@@ -94,6 +95,8 @@ async function Conteudo({ params }: Props) {
           </dl>
           <p className="mt-2 text-[13px] text-ink3">Tempo: {numeros[2].nota}</p>
         </section>
+
+        <NivelDaSessao conta={conta} pontuacao={s.pontuacao} finalizadaEm={s.finalizadaEm} />
 
         {antes && depois && s.cor && (
           <section aria-labelledby="dominio-titulo" className={CARD}>

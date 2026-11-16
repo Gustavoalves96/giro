@@ -1,4 +1,4 @@
-import { ArrowRight, CalendarDays, Flame, NotebookPen, RotateCw, Sparkles, Timer } from "lucide-react";
+import { ArrowRight, CalendarDays, Flame, NotebookPen, RotateCw, Sparkles, Timer, Trophy } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
@@ -20,6 +20,7 @@ import { rodadaAbertaHoje } from "@/lib/db/sessoes";
 import { listarTopicosRoleta } from "@/lib/db/topicos";
 import { primeiroPasso, saudacao, TEXTO_PRIMEIRO_PASSO } from "@/lib/domain/inicio";
 import { contagemRegressiva, diasAte, hojeEmSP, topicosComProvaEm14Dias } from "@/lib/domain/provas";
+import { nivel } from "@/lib/domain/nivel";
 import { candidatoDe, montarFatias } from "@/lib/domain/roleta";
 import { agregarPorDia, mapaDeCalor, rodadasHoje, streak, xpTotal } from "@/lib/domain/stats";
 import { META_PADRAO } from "@/lib/perfil/schema";
@@ -80,6 +81,7 @@ async function Conteudo() {
   const porDia = agregarPorDia(horas);
   const sequencia = streak(porDia.keys(), hoje);
   const xp = xpTotal(sessoes);
+  const niv = nivel(xp);
   const feitas = rodadasHoje(sessoes, hoje);
   const meta = perfil?.metaRodadas ?? META_PADRAO;
   const comProva = topicosComProvaEm14Dias(provas, hoje);
@@ -112,6 +114,22 @@ async function Conteudo() {
             <Badge variant="chip" data-xp={xp}>
               <Sparkles className="text-gold" aria-hidden />
               <span className="tabular-nums">{numero.format(xp)}</span> XP
+            </Badge>
+          </li>
+          <li>
+            <Badge asChild variant="chip" className="relative hover:bg-sf2 after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']" data-nivel={niv.nivel}>
+              <Link href="/recompensas">
+                <Trophy className="text-gold" aria-hidden />
+                <span>
+                  Nível <span className="tabular-nums">{niv.nivel}</span> · {niv.titulo}
+                  <span className="sr-only">
+                    , faltam {numero.format(niv.xpDoNivel - niv.xpNoNivel)} XP para o nível {niv.nivel + 1}
+                  </span>
+                </span>
+                <span className="h-1.5 w-10 overflow-hidden rounded-full bg-sf2" aria-hidden>
+                  <span className="block h-full rounded-full bg-gold" style={{ width: `${(100 * niv.xpNoNivel) / niv.xpDoNivel}%` }} />
+                </span>
+              </Link>
             </Badge>
           </li>
         </ul>

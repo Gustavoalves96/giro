@@ -1,4 +1,4 @@
-import { and, asc, count, eq, sql } from "drizzle-orm";
+import { and, asc, count, eq, lte, sql } from "drizzle-orm";
 import { questaoDoDono } from "./dono";
 import { db } from "./index";
 import { disciplinas, respostas, sessoes, topicos } from "./schema";
@@ -23,6 +23,15 @@ export async function resumoSessoes(dono: string) {
     .select({ modo: sessoes.modo, pontuacao: sessoes.pontuacao, finalizadaEm: sessoes.finalizadaEm })
     .from(sessoes)
     .where(eq(sessoes.dono, dono));
+}
+
+/** XP total até o fim de uma sessão (ela inclusa): o "depois" do nível no resultado, igual ao recarregar. */
+export async function xpAte(dono: string, finalizadaEm: Date) {
+  const [r] = await db
+    .select({ xp: sql<number>`coalesce(sum(${sessoes.pontuacao}), 0)`.mapWith(Number) })
+    .from(sessoes)
+    .where(and(eq(sessoes.dono, dono), lte(sessoes.finalizadaEm, finalizadaEm)));
+  return r?.xp ?? 0;
 }
 
 /**
