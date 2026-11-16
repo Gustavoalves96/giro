@@ -1,4 +1,4 @@
-import { and, asc, count, eq, lte, sql } from "drizzle-orm";
+import { and, asc, count, eq, sql } from "drizzle-orm";
 import { questaoDoDono } from "./dono";
 import { db } from "./index";
 import { disciplinas, respostas, sessoes, topicos } from "./schema";
@@ -30,7 +30,8 @@ export async function xpAte(dono: string, finalizadaEm: Date) {
   const [r] = await db
     .select({ xp: sql<number>`coalesce(sum(${sessoes.pontuacao}), 0)`.mapWith(Number) })
     .from(sessoes)
-    .where(and(eq(sessoes.dono, dono), lte(sessoes.finalizadaEm, finalizadaEm)));
+    // o banco guarda microssegundos e o Date só milissegundos: sem o corte, a própria sessão ficava de fora
+    .where(and(eq(sessoes.dono, dono), sql`date_trunc('milliseconds', ${sessoes.finalizadaEm}) <= ${finalizadaEm}`));
   return r?.xp ?? 0;
 }
 

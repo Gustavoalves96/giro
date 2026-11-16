@@ -2,8 +2,11 @@ import { Check, Lock, Trophy } from "lucide-react";
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Suspense } from "react";
+import { DiscoMedalha } from "@/components/recompensas/medalha";
 import { dono } from "@/lib/auth/require-user";
+import { medalhasDaConta, verificarConquistas } from "@/lib/db/conquistas";
 import { resumoSessoes } from "@/lib/db/inicio";
+import { MEDALHAS } from "@/lib/domain/conquistas";
 import { nivel, TITULOS, xpParaNivel } from "@/lib/domain/nivel";
 import { xpTotal } from "@/lib/domain/stats";
 import { cn } from "@/lib/utils";
@@ -13,12 +16,23 @@ export const metadata: Metadata = { title: "Recompensas · Giro" };
 const CARD = "rounded-3xl border border-line bg-sf p-5 md:p-6";
 const ROTULO = "text-[13px] font-bold tracking-[0.06em] text-ink3 uppercase";
 const numero = new Intl.NumberFormat("pt-BR");
+const dataCurta = new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "2-digit" });
+
+// Sem nenhuma medalha gravada, confere o histórico (quem já estudava antes das medalhas ganha as dela aqui,
+// sem comemoração). Com alguma, quem grava é o fim de cada sessão.
+async function medalhas(conta: string) {
+  const gravadas = await medalhasDaConta(conta);
+  if (gravadas.length) return gravadas;
+  return (await verificarConquistas(conta, null)).length ? medalhasDaConta(conta) : [];
+}
 
 // auth() e banco são da requisição: tudo dentro de <Suspense> (Cache Components).
 async function Conteudo() {
   const conta = await dono();
   await connection();
-  const xp = xpTotal(await resumoSessoes(conta));
+  const [sessoes, gravadas] = await Promise.all([resumoSessoes(conta), medalhas(conta)]);
+  const xp = xpTotal(sessoes);
+  const ganhas = new Map(gravadas.map((g) => [g.medalha, g.em]));
   const n = nivel(xp);
   const pct = (100 * n.xpNoNivel) / n.xpDoNivel;
 
@@ -78,6 +92,29 @@ async function Conteudo() {
             );
           })}
         </ol>
+      </section>
+
+      <section aria-labelledby="medalhas-titulo" className={cn(CARD, "lg:col-span-2")} data-medalhas={ganhas.size}>
+        <h2 id="medalhas-titulo" className={ROTULO}>
+          Medalhas · <span className="tabular-nums">{ganhas.size}</span> de <span className="tabular-nums">{MEDALHAS.length}</span>
+        </h2>
+        <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {MEDALHAS.map((m) => {
+            const em = ganhas.get(m.id);
+            return (
+              <li key={m.id} className="flex items-center gap-3" data-medalha={m.id} data-ganha={Boolean(em)}>
+                <DiscoMedalha id={m.id} ganha={Boolean(em)} />
+                <span className="min-w-0">
+                  <span className={cn("block font-bold wrap-break-word", !em && "text-ink2")}>
+                    {m.nome}
+                    <span className="sr-only">{em ? " (ganha)" : " (bloqueada)"}</span>
+                  </span>
+                  <span className="block text-[14px] text-ink2">{em ? `Ganha em ${dataCurta.format(em)}` : m.comoGanhar}</span>
+                </span>
+              </li>
+            );
+          })}
+        </ul>
       </section>
     </div>
   );

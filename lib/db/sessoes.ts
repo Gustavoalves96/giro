@@ -1,4 +1,5 @@
 import { and, asc, desc, eq, gte, isNotNull, isNull, lt, lte, max, ne, sql } from "drizzle-orm";
+import { verificarConquistas } from "./conquistas";
 import { db } from "./index";
 import { calcularDominio, topicosARecalcular } from "@/lib/domain/dominio";
 import { fracaoLembrada, type Nota } from "@/lib/domain/procedimento";
@@ -153,6 +154,8 @@ export async function fecharERecalcular(
       atualizarDominioTopico(t, calcularDominio(await acertosRecentesTopico(t, fim, true)), fim),
     ),
   );
+  // depois do domínio (a medalha "Domínio total" lê o recalculado). A sessão já está gravada: falha aqui só vai ao log.
+  await verificarConquistas(dono, id, fim).catch((e: unknown) => console.error("[conquistas] falha:", e instanceof Error ? e.message : e));
 }
 
 /** Acertos das últimas 20 respostas do tópico até `ate` (inclusive ou não), da mais recente para a mais antiga. */

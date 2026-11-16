@@ -64,6 +64,13 @@
       "when": 1794853684998,
       "tag": "0008_perfil_por_dono",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794867012799,
+      "tag": "0009_conquistas",
+      "breakpoints": true
     }
   ]
 }

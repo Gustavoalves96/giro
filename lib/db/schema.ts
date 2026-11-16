@@ -190,6 +190,19 @@ export const perfil = pgTable("perfil", {
   atualizadoEm: timestamp("atualizado_em", tz).notNull().defaultNow(),
 });
 
+// Medalhas ganhas (sessão 20): uma linha por medalha e conta. `medalha` = id em MEDALHAS (lib/domain/conquistas.ts).
+// sessao_id = sessão que deu a medalha (o resultado comemora); null = retroativa, entrou sem comemorar.
+export const conquistas = pgTable(
+  "conquistas",
+  {
+    dono: text("dono").notNull(),
+    medalha: text("medalha").notNull(),
+    em: timestamp("em", tz).notNull().defaultNow(),
+    sessaoId: uuid("sessao_id").references(() => sessoes.id, { onDelete: "set null" }),
+  },
+  (t) => [primaryKey({ columns: [t.dono, t.medalha] })],
+);
+
 export type Disciplina = typeof disciplinas.$inferSelect;
 export type NovaDisciplina = typeof disciplinas.$inferInsert;
 export type Topico = typeof topicos.$inferSelect;

@@ -2,7 +2,7 @@ import { Check, RotateCcw, RotateCw, X } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { carregarSessao } from "@/app/(app)/(foco)/roleta/sessao/[id]/carregar";
-import { NivelDaSessao } from "@/components/recompensas/nivel-sessao";
+import { RecompensasDaSessao } from "@/components/recompensas/da-sessao";
 import { Button } from "@/components/ui/button";
 import { respostasDaSessao } from "@/lib/db/sessoes";
 import { cn } from "@/lib/utils";
@@ -48,7 +48,7 @@ export async function ResultadoSimples({ id, modo, textos }: Props) {
           </dl>
           <p className="mt-3 text-ink2">{textos.nota}</p>
         </section>
-        <NivelDaSessao conta={conta} pontuacao={s.pontuacao} finalizadaEm={s.finalizadaEm} />
+        <RecompensasDaSessao conta={conta} id={s.id} pontuacao={s.pontuacao} finalizadaEm={s.finalizadaEm} />
         <nav aria-label="Próximos passos" className="flex flex-col gap-2">
           <Button asChild>
             <Link href={textos.voltar.href}>

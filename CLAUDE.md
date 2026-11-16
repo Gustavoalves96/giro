@@ -100,6 +100,10 @@ provas
 explicacoes_ia                          -- cache das chamadas de IA
   questao_id pk/fk, texto text, gerado_em
 
+conquistas                              -- medalhas ganhas (sessão 20)
+  dono text, medalha text (id em MEDALHAS), em timestamptz,
+  sessao_id fk → sessoes null (null = retroativa, sem comemoração), pk (dono, medalha)
+
 perfil                                  -- uma linha por conta, editável em /perfil
   dono text pk, nome text null,       -- nome usado na saudação; null = saudação sem nome
   estudo_segundos int default 600,      -- tempo de estudo padrão da roleta (5 a 60 min)
@@ -167,7 +171,8 @@ Como a usuária é uma só, o ranking é **contra ela mesma**:
 - Evolução semanal: acertos %, questões respondidas, minutos estudados
 - Sequência de dias estudando (streak) e total de XP (soma das pontuações)
 - Mapa de calor de atividade (estilo contribuições do GitHub)
-- **Nível** (sessão 20, `lib/domain/nivel.ts`): sai do XP total, sem tabela. Do nível n ao n+1 são `80 × n` XP (total `40·n·(n−1)`); títulos por faixa em `TITULOS` (Ciclo básico 1 … Referência 40, Dr/a. Aura 42). Chip no Início (leva a `/recompensas`), `CardNivel` em todo resultado (antes = `xpAte(fim da sessão)` − pontos dela; selo "Subiu para o nível N!") e a página **Recompensas** (`/recompensas`, no menu só a partir de `md`). Planejado depois: medalhas (tabela `conquistas`) e visuais (estilo da roleta, moldura do perfil).
+- **Nível** (sessão 20, `lib/domain/nivel.ts`): sai do XP total, sem tabela. Do nível n ao n+1 são `80 × n` XP (total `40·n·(n−1)`); títulos por faixa em `TITULOS` (Ciclo básico 1 … Referência 40, Dr/a. Aura 42). Chip no Início (leva a `/recompensas`), `CardNivel` em todo resultado (antes = `xpAte(fim da sessão)` − pontos dela; selo "Subiu para o nível N!") e a página **Recompensas** (`/recompensas`, no menu só a partir de `md`).
+- **Medalhas** (sessão 20, `MEDALHAS` em `lib/domain/conquistas.ts`; o `id` vai ao banco, nunca renomear): primeiro giro, ofensiva 3/7/30/100 dias (maior sequência de sempre), 1.000/5.000/20.000 XP, 100/500/1.000 respostas, rodada perfeita (roleta 5+), nota 10 (simulado 10+), procedimento 100%, domínio 100 (10+ respostas), revisão em dia, caderno limpo. `verificarConquistas` (`lib/db/conquistas.ts`) roda no fim de `fecharERecalcular` (todo modo; falha só vai ao log) e grava as novas em `conquistas` com a `sessao_id`, que o resultado comemora (`RecompensasDaSessao`). Retroativas (conta sem medalha que já tinha outra sessão, ou vindas de `/recompensas`) entram com `sessao_id` null, sem comemoração. Planejado depois: visuais (estilo da roleta, moldura do perfil).
 
 **Estatísticas** (`/estatisticas`, sessão 15): período fixo das últimas 8 semanas (segunda a domingo, dia de SP; `agregarPorSemana`, `maiorSequencia`, `acertosInicioFim` em `lib/domain/stats.ts`; consultas em `lib/db/estatisticas.ts`). Quatro números: XP total e maior sequência (com a atual) de sempre; % de acertos da 1ª × última semana com resposta; questões respondidas nas 8 semanas (procedimento conta, com o `acertou` gravado). Evolução semanal em três gráficos SVG de uma série (questões, % de acertos, minutos de `sessoes.estudo_segundos` pela semana de `iniciada_em`), sem eixo duplo. Ranking de todos os tópicos com a regra dos pontos fracos (`pontosFracos(null)`); top 10 da roleta finalizada; "Passos que você mais esquece" (esqueci/com erro, procedimentos ativos de disciplinas não arquivadas, passo apagado do checklist não entra), só aparece se há alguma linha em `respostas_passos`.
 

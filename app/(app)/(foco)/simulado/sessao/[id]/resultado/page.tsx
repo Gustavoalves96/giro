@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { NivelDaSessao } from "@/components/recompensas/nivel-sessao";
+import { RecompensasDaSessao } from "@/components/recompensas/da-sessao";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TEXTO_SOBRE_TINTA, tintaClara } from "@/lib/cores";
@@ -71,7 +71,7 @@ async function Conteudo({ params }: Props) {
             Os erros voltam mais cedo na revisão.
           </p>
         </section>
-        <NivelDaSessao conta={conta} pontuacao={s.pontuacao} finalizadaEm={s.finalizadaEm} />
+        <RecompensasDaSessao conta={conta} id={s.id} pontuacao={s.pontuacao} finalizadaEm={s.finalizadaEm} />
         <nav aria-label="Próximos passos" className="flex flex-col gap-2">
           <Button asChild>
             <Link href="/simulado">
