@@ -13,6 +13,7 @@ import { rodadaAbertaHoje } from "@/lib/db/sessoes";
 import { listarTopicosRoleta } from "@/lib/db/topicos";
 import { hojeEmSP, topicosComProvaEm14Dias } from "@/lib/domain/provas";
 import { candidatoDe } from "@/lib/domain/roleta";
+import { estiloRoletaDe } from "@/lib/domain/visuais";
 import { ESTUDO_PADRAO } from "@/lib/perfil/schema";
 import { dono } from "@/lib/auth/require-user";
 
@@ -43,6 +44,7 @@ async function Conteudo() {
         candidatos={linhas.map((l) => candidatoDe(l, agora, comProva))}
         estudoPadrao={perfil?.estudoSegundos ?? ESTUDO_PADRAO}
         disciplinasAtivas={disciplinasAtivas}
+        estilo={estiloRoletaDe(perfil?.estiloRoleta)}
       />
       <section aria-labelledby="simulado-titulo" className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 rounded-3xl border border-line bg-sf p-5">
         <div className="min-w-0 flex-1 basis-56">

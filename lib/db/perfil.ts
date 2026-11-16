@@ -28,3 +28,11 @@ export async function salvarMetaPerfil(dono: string, metaRodadas: number) {
     .values({ dono, metaRodadas })
     .onConflictDoUpdate({ target: perfil.dono, set: { metaRodadas, atualizadoEm: new Date() } });
 }
+
+/** Visual já validado (existe e está liberado) pela action. */
+export async function salvarVisualPerfil(dono: string, visual: { estiloRoleta: string } | { moldura: string }) {
+  await db
+    .insert(perfil)
+    .values({ dono, ...visual })
+    .onConflictDoUpdate({ target: perfil.dono, set: { ...visual, atualizadoEm: new Date() } });
+}

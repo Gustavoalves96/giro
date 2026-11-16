@@ -3,13 +3,18 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { DiscoMedalha } from "@/components/recompensas/medalha";
+import { AmostraRoleta, Moldura } from "@/components/recompensas/visuais";
 import { dono } from "@/lib/auth/require-user";
 import { medalhasDaConta, verificarConquistas } from "@/lib/db/conquistas";
 import { resumoSessoes } from "@/lib/db/inicio";
+import { getPerfil } from "@/lib/db/perfil";
 import { MEDALHAS } from "@/lib/domain/conquistas";
 import { nivel, TITULOS, xpParaNivel } from "@/lib/domain/nivel";
 import { xpTotal } from "@/lib/domain/stats";
+import { ESTILOS_ROLETA, estiloRoletaDe, liberado, MOLDURAS, molduraDe, textoLibera, type TipoVisual } from "@/lib/domain/visuais";
 import { cn } from "@/lib/utils";
+import { escolherVisual } from "./actions";
+import { BotaoUsar } from "./botao-usar";
 
 export const metadata: Metadata = { title: "Recompensas · Giro" };
 
@@ -30,11 +35,16 @@ async function medalhas(conta: string) {
 async function Conteudo() {
   const conta = await dono();
   await connection();
-  const [sessoes, gravadas] = await Promise.all([resumoSessoes(conta), medalhas(conta)]);
+  const [sessoes, gravadas, perfil] = await Promise.all([resumoSessoes(conta), medalhas(conta), getPerfil(conta)]);
   const xp = xpTotal(sessoes);
   const ganhas = new Map(gravadas.map((g) => [g.medalha, g.em]));
   const n = nivel(xp);
   const pct = (100 * n.xpNoNivel) / n.xpDoNivel;
+  const medalhasGanhas = new Set(ganhas.keys());
+  const grupos = [
+    { tipo: "roleta" as TipoVisual, titulo: "Estilo da roleta", nota: "Ponteiro e botão central da roleta.", itens: ESTILOS_ROLETA, atual: estiloRoletaDe(perfil?.estiloRoleta) },
+    { tipo: "moldura" as TipoVisual, titulo: "Moldura", nota: "Aparece ao lado da saudação no Início.", itens: MOLDURAS, atual: molduraDe(perfil?.moldura) },
+  ];
 
   return (
     <div className="grid gap-4 md:gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start">
@@ -116,6 +126,41 @@ async function Conteudo() {
           })}
         </ul>
       </section>
+
+      {grupos.map((g) => (
+        <section key={g.tipo} aria-labelledby={`visual-${g.tipo}`} className={CARD} data-visuais={g.tipo}>
+          <h2 id={`visual-${g.tipo}`} className={ROTULO}>
+            {g.titulo}
+          </h2>
+          <p className="mt-1 text-ink2">{g.nota}</p>
+          <ul className="mt-3 flex flex-col divide-y divide-line">
+            {g.itens.map((v) => {
+              const livre = liberado(v.libera, n.nivel, medalhasGanhas);
+              const emUso = g.atual === v.id;
+              return (
+                <li key={v.id} className="flex items-center gap-3 py-3" data-visual={v.id} data-liberado={livre} data-em-uso={emUso}>
+                  <span className={cn(!livre && "opacity-40 grayscale")}>
+                    {g.tipo === "roleta" ? <AmostraRoleta estilo={estiloRoletaDe(v.id)} /> : <Moldura id={molduraDe(v.id)} />}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className={cn("block font-bold wrap-break-word", !livre && "text-ink2")}>{v.nome}</span>
+                    <span className="block text-[14px] text-ink2">{livre ? (emUso ? "Em uso" : "Liberado") : textoLibera(v.libera)}</span>
+                  </span>
+                  {livre && !emUso && (
+                    <form action={escolherVisual}>
+                      <input type="hidden" name="tipo" value={g.tipo} />
+                      <input type="hidden" name="id" value={v.id} />
+                      <BotaoUsar nome={v.nome} />
+                    </form>
+                  )}
+                  {emUso && <Check className="size-6 shrink-0 text-ink" aria-hidden />}
+                  {!livre && <Lock className="size-5 shrink-0 text-ink3" aria-hidden />}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ))}
     </div>
   );
 }

@@ -187,6 +187,9 @@ export const perfil = pgTable("perfil", {
   nome: text("nome"),
   estudoSegundos: integer("estudo_segundos").notNull().default(600), // tempo de estudo padrão da roleta
   metaRodadas: integer("meta_rodadas").notNull().default(4), // "Rodada de hoje · x de N" no Início (sessão 14)
+  // visuais escolhidos em /recompensas (sessão 20): id em ESTILOS_ROLETA / MOLDURAS; null = padrão
+  estiloRoleta: text("estilo_roleta"),
+  moldura: text("moldura"),
   atualizadoEm: timestamp("atualizado_em", tz).notNull().defaultNow(),
 });
 

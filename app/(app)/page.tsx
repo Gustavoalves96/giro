@@ -7,6 +7,7 @@ import { BarraDominio } from "@/components/barra-dominio";
 import { ContinuarRodada } from "@/components/continuar-rodada";
 import { MapaCalor } from "@/components/mapa-calor";
 import { MarcaGiro } from "@/components/marca";
+import { Moldura } from "@/components/recompensas/visuais";
 import { Roda } from "@/components/roleta/roda";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ import { primeiroPasso, saudacao, TEXTO_PRIMEIRO_PASSO } from "@/lib/domain/inic
 import { contagemRegressiva, diasAte, hojeEmSP, topicosComProvaEm14Dias } from "@/lib/domain/provas";
 import { nivel } from "@/lib/domain/nivel";
 import { candidatoDe, montarFatias } from "@/lib/domain/roleta";
+import { molduraDe } from "@/lib/domain/visuais";
 import { agregarPorDia, mapaDeCalor, rodadasHoje, streak, xpTotal } from "@/lib/domain/stats";
 import { META_PADRAO } from "@/lib/perfil/schema";
 import { RevisarAgora } from "./revisao/revisar-agora";
@@ -94,12 +96,16 @@ async function Conteudo() {
     revisao.reduce((t, d) => t + d.procedimentos, 0),
   );
   const data = dataLonga.format(agora);
+  const moldura = molduraDe(perfil?.moldura);
 
   return (
     <>
       <header className="mb-6">
         <p className="text-ink3">{data[0].toUpperCase() + data.slice(1)}</p>
-        <h1 className="mt-1 font-display text-[28px] leading-tight font-extrabold md:text-[34px]">{saudacao(agora, perfil?.nome)}</h1>
+        <div className="mt-1 flex items-center gap-3">
+          {moldura !== "nenhuma" && <Moldura id={moldura} className="md:size-14" />}
+          <h1 className="min-w-0 font-display text-[28px] leading-tight font-extrabold md:text-[34px]">{saudacao(agora, perfil?.nome)}</h1>
+        </div>
         <ul className="mt-4 flex flex-wrap gap-2">
           <li>
             <Badge variant="chip" className="border-gold/60 bg-gold/15" data-streak={sequencia}>

@@ -71,6 +71,13 @@
       "when": 1794867012799,
       "tag": "0009_conquistas",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794867758418,
+      "tag": "0010_perfil_visuais",
+      "breakpoints": true
     }
   ]
 }

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { comecarEstudo, girar, type ResultadoGiro } from "@/app/(app)/roleta/actions";
 import { BarraDominio } from "@/components/barra-dominio";
+import { PonteiroRoleta, VISUAL_ROLETA } from "@/components/recompensas/visuais";
 import { CHAVE_REDUZIR, lerReduzirPainel } from "@/components/movimento-reduzido";
 import { SeletorEstudo } from "@/components/seletor-estudo";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { TEXTO_SOBRE_TINTA, tintaClara } from "@/lib/cores";
 import { primeiroPasso, TEXTO_PRIMEIRO_PASSO } from "@/lib/domain/inicio";
 import { anguloFinal, fatiaSobPonteiro, montarFatias, motivoVazio, type Candidato, type Fatia, type Modo } from "@/lib/domain/roleta";
+import type { EstiloRoleta } from "@/lib/domain/visuais";
 import { cn } from "@/lib/utils";
 import { Roda } from "./roda";
 
@@ -26,11 +28,15 @@ export function Roleta({
   candidatos,
   estudoPadrao,
   disciplinasAtivas,
+  estilo = "classico",
 }: {
   candidatos: Candidato[];
   estudoPadrao: number;
   disciplinasAtivas: number;
+  /** Estilo escolhido em /recompensas: ponteiro e botão central. */
+  estilo?: EstiloRoleta;
 }) {
+  const visual = VISUAL_ROLETA[estilo];
   const router = useRouter();
   const passo = primeiroPasso(disciplinasAtivas, candidatos.length);
   // tempo só desta rodada; começa no padrão do perfil e não o altera
@@ -193,26 +199,28 @@ export function Roleta({
               <motion.div className="size-full" style={{ rotate: rot }} data-roda>
                 <Roda fatias={fatias} destaque={destaque} borrado={girando && !reduzir} />
               </motion.div>
-              {/* ponteiro dourado no topo */}
+              {/* ponteiro no topo (forma e cor do estilo) */}
               <motion.div
                 className="absolute -top-2 left-1/2 -ml-3.5 h-7 w-7 origin-top"
                 style={{ rotate: ponteiro }}
                 aria-hidden
               >
-                <svg viewBox="0 0 28 28" className="size-full drop-shadow">
-                  <path d="M3 2 H25 L14 26 Z" fill="var(--gold)" stroke="var(--sf)" strokeWidth="2" strokeLinejoin="round" />
-                </svg>
+                <PonteiroRoleta estilo={estilo} />
               </motion.div>
               <motion.button
                 type="button"
                 onClick={girarRoleta}
                 disabled={girando}
                 aria-label="Girar a roleta"
-                className="absolute top-1/2 left-1/2 -mt-8 -ml-8 flex size-16 items-center justify-center rounded-full border-4 border-sf bg-ac text-on-ac shadow-md outline-none focus-visible:ring-[3px] focus-visible:ring-ring disabled:opacity-90 md:-mt-11 md:-ml-11 md:size-22"
+                className={cn(
+                  "absolute top-1/2 left-1/2 -mt-8 -ml-8 flex size-16 items-center justify-center rounded-full border-4 shadow-md outline-none focus-visible:ring-[3px] focus-visible:ring-ring disabled:opacity-90 md:-mt-11 md:-ml-11 md:size-22",
+                  visual.centro,
+                )}
+                style={visual.centroStyle}
                 animate={sorteado && !reduzir ? { scale: [1, 1.08, 1] } : { scale: 1 }}
                 transition={{ duration: 0.45 }}
               >
-                <RotateCw className="size-7 md:size-9" aria-hidden />
+                <visual.Icone className="size-7 md:size-9" aria-hidden />
               </motion.button>
               {sorteado && !reduzir && <Confete cores={[...new Set(fatias.map((f) => f.cor))]} chave={giro!.sorteadoId!} />}
             </>
