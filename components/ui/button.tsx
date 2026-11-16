@@ -38,7 +38,8 @@ const buttonVariants = cva(
       {
         variant: "destaque",
         size: "default",
-        class: "h-[60px] rounded-[18px] px-8 text-[20px] has-[>svg]:px-7",
+        // texto quebra em vez de estourar a tela estreita (320 px)
+        class: "h-auto min-h-[60px] rounded-[18px] px-8 py-2 text-center text-[20px] whitespace-normal has-[>svg]:px-7",
       },
     ],
     defaultVariants: {

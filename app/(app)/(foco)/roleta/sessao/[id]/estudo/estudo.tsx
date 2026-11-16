@@ -237,7 +237,6 @@ export function Estudo({ sessaoId, segundos, gravado, topico, disciplina, cor, n
         <Button variant={acabou ? "destaque" : "default"} onClick={irParaQuestoes} disabled={indo} className={cn(!acabou && "h-[60px]")}>
           {indo ? "Abrindo questões…" : "Ir para as questões"}
           <ArrowRight aria-hidden />
-          {!indo && "questões"}
         </Button>
         {erro && <p className="text-warn">{erro}</p>}
       </aside>

@@ -48,7 +48,7 @@ async function Conteudo({ params }: Props) {
   ];
 
   return (
-    <div className="mx-auto grid w-full max-w-[1100px] gap-6 px-4 py-6 md:px-8 md:py-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:items-start lg:gap-8">
+    <div className="mx-auto grid w-full max-w-[1100px] grid-cols-1 gap-6 px-4 py-6 md:px-8 md:py-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:items-start lg:gap-8">
       <div className="flex flex-col gap-6 lg:sticky lg:top-6">
         <section aria-labelledby="resultado-titulo" className={CARD}>
           <p className={ROTULO}>Simulado entregue</p>

@@ -28,7 +28,7 @@ function estaAtivo(href: string, pathname: string | null) {
 
 // Celular: aba (ícone sobre rótulo) · iPad: trilho (ícone sobre rótulo) · notebook: rótulo ao lado
 const ITEM =
-  "flex min-h-11 flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-1 text-[12px] font-bold text-ink3 transition-colors hover:text-ink " +
+  "flex min-h-11 flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-1 text-[12px] font-bold max-[359px]:px-0 max-[359px]:text-[11px] text-ink3 transition-colors hover:text-ink " +
   "md:h-16 md:w-20 md:flex-none " +
   "xl:h-12 xl:w-full xl:flex-row xl:justify-start xl:gap-3 xl:px-4 xl:text-base";
 const ATIVO = "bg-ac/12 text-acink hover:text-acink";

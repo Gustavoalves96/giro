@@ -150,8 +150,9 @@ export function Roleta({
   const vazia = !fatias.length;
 
   return (
-    <div className="flex flex-col items-center gap-8 lg:grid lg:grid-cols-[500px_340px] lg:items-start lg:justify-center lg:gap-10 xl:grid-cols-[580px_400px] xl:gap-12">
-      <div className="flex w-[300px] flex-col items-center gap-4 md:w-[540px] lg:w-[500px] xl:w-[580px]">
+    // overflow-x-clip: a roda girada (caixa do quadrado rotacionado) e o confete não podem criar rolagem lateral
+    <div className="flex flex-col items-center gap-8 overflow-x-clip lg:grid lg:grid-cols-[500px_340px] lg:items-start lg:justify-center lg:gap-10 xl:grid-cols-[580px_400px] xl:gap-12">
+      <div className="flex w-full max-w-[300px] flex-col items-center gap-4 md:w-[540px] md:max-w-none lg:w-[500px] xl:w-[580px]">
         {/* Visor: o tópico sob o ponteiro (resolve a leitura com muitas fatias e no celular) */}
         <div
           aria-live="polite"
@@ -172,7 +173,7 @@ export function Roleta({
           )}
         </div>
 
-        <div className="relative size-[300px] md:size-[540px] lg:size-[500px] xl:size-[580px]" data-sorteado={sorteado?.topicoId}>
+        <div className="relative aspect-square w-full" data-sorteado={sorteado?.topicoId}>
           {vazia ? (
             <div className="flex size-full flex-col items-center justify-center gap-4 rounded-full border-2 border-dashed border-line p-10 text-center">
               {passo ? (
@@ -277,7 +278,7 @@ export function Roleta({
                 }
               >
                 <Play aria-hidden />
-                <span className="truncate">{comecando ? "Abrindo…" : `Começar estudo · ${estudo / 60} min`}</span>
+                <span>{comecando ? "Abrindo…" : `Começar estudo · ${estudo / 60} min`}</span>
               </Button>
               <Button variant="secondary" onClick={girarRoleta} disabled={girando}>
                 <RotateCw aria-hidden />

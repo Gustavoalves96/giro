@@ -51,7 +51,7 @@ export function FormSimulado({ disciplinas }: { disciplinas: Disciplina[] }) {
     <form onSubmit={comecar} className="flex flex-col gap-6 rounded-3xl border border-line bg-sf p-5 md:p-6">
       <fieldset>
         <legend className={ROTULO}>Disciplinas</legend>
-        <ul className="mt-2 grid gap-2 sm:grid-cols-2">
+        <ul className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
           {disciplinas.map((d) => {
             const ligada = !desligadas.includes(d.id);
             return (

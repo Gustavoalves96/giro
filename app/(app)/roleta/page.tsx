@@ -45,7 +45,7 @@ async function Conteudo() {
         disciplinasAtivas={disciplinasAtivas}
       />
       <section aria-labelledby="simulado-titulo" className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 rounded-3xl border border-line bg-sf p-5">
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 basis-56">
           <h2 id="simulado-titulo" className="font-display text-[20px] font-extrabold">
             Prefere uma prova?
           </h2>
