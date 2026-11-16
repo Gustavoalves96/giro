@@ -114,6 +114,7 @@ perfil                                  -- uma linha por conta, editável em /pe
 - Tópico sem nenhuma resposta tem domínio 0 e status "novo".
 - Recalcular e salvar em `topicos.dominio` ao finalizar cada sessão, em qualquer modo: `finalizar()` recalcula o tópico da sessão e **todo tópico com resposta nela** (revisão, erros e simulado têm `topico_id` null).
 - **Excluir tópico** só quando ele não tem respostas (o histórico não se apaga); com histórico, o diálogo manda desativar as questões.
+- **Excluir disciplina** (lixeira em `/disciplinas`, `excluirDisciplina` em `lib/db/disciplinas.ts`): mesma regra, nenhuma resposta em nenhum tópico dela; o cascade leva tópicos, questões e provas. Com histórico, o diálogo oferece arquivar.
 
 ### 4.2 Roleta
 Dois modos:

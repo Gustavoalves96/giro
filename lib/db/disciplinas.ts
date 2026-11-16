@@ -1,4 +1,4 @@
-import { and, asc, avg, count, eq, max } from "drizzle-orm";
+import { and, asc, avg, count, eq, max, sql } from "drizzle-orm";
 import { db } from "./index";
 import { disciplinas, topicos } from "./schema";
 
@@ -15,6 +15,7 @@ export async function listarDisciplinas(dono: string) {
       arquivada: disciplinas.arquivada,
       totalTopicos: count(topicos.id),
       dominioMedio: avg(topicos.dominio),
+      respondida: sql<boolean>`exists (select 1 from respostas r join questoes q on q.id = r.questao_id join topicos t on t.id = q.topico_id where t.disciplina_id = ${disciplinas.id})`,
     })
     .from(disciplinas)
     .leftJoin(topicos, eq(topicos.disciplinaId, disciplinas.id))
@@ -36,6 +37,22 @@ export async function editarDisciplina(dono: string, id: string, dados: Dados) {
 
 export async function definirArquivada(dono: string, id: string, arquivada: boolean) {
   await db.update(disciplinas).set({ arquivada }).where(and(eq(disciplinas.id, id), eq(disciplinas.dono, dono)));
+}
+
+// Só disciplina sem respostas (o histórico não se apaga, como no tópico); o cascade leva tópicos, questões,
+// revisões e provas. false = recusado.
+export async function excluirDisciplina(dono: string, id: string) {
+  const r = await db
+    .delete(disciplinas)
+    .where(
+      and(
+        eq(disciplinas.id, id),
+        eq(disciplinas.dono, dono),
+        sql`not exists (select 1 from respostas r join questoes q on q.id = r.questao_id join topicos t on t.id = q.topico_id where t.disciplina_id = ${id})`,
+      ),
+    )
+    .returning({ id: disciplinas.id });
+  return r.length > 0;
 }
 
 // Troca de lugar com a vizinha entre as ativas e renumera 0..n (corrige ordens repetidas).

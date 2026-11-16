@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { listarDisciplinas } from "@/lib/db/disciplinas";
 import { arquivar, mover } from "./actions";
 import { EditorDisciplina } from "./editor-disciplina";
+import { ExcluirDisciplina } from "./excluir-disciplina";
 import { dono } from "@/lib/auth/require-user";
 
 export const metadata: Metadata = { title: "Disciplinas · Giro" };
@@ -40,7 +41,7 @@ function Detalhes({ d }: { d: Linha }) {
 function BotaoNotebook({ url }: { url: string | null }) {
   if (!url) return null;
   return (
-    <Button asChild variant="secondary">
+    <Button asChild variant="secondary" className="w-full sm:w-auto">
       <a href={url} target="_blank" rel="noopener noreferrer">
         <ExternalLink aria-hidden />
         NotebookLM
@@ -51,28 +52,32 @@ function BotaoNotebook({ url }: { url: string | null }) {
 
 function LinhaAtiva({ d, primeira, ultima }: { d: Linha; primeira: boolean; ultima: boolean }) {
   return (
-    <li className="flex flex-col gap-3 rounded-3xl border border-line bg-sf p-4 md:flex-row md:items-center md:p-5">
+    <li className="flex flex-col gap-3 rounded-3xl border border-line bg-sf p-4 md:p-5 lg:flex-row lg:items-center">
       <Detalhes d={d} />
-      <div className="flex flex-wrap items-center gap-1">
+      {/* Celular: NotebookLM na linha de cima inteira, ícones embaixo. sm+: uma fileira só (abaixo do nome até lg). */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-1">
         <BotaoNotebook url={d.notebooklmUrl} />
-        <EditorDisciplina disciplina={d} variant="ghost" className={ICONE} ariaLabel={`Editar ${d.nome}`} title="Editar">
-          <Pencil aria-hidden />
-        </EditorDisciplina>
-        <form action={mover.bind(null, d.id, "subir")}>
-          <Button type="submit" variant="ghost" className={ICONE} disabled={primeira} aria-label={`Subir ${d.nome}`} title="Subir na lista">
-            <ArrowUp aria-hidden />
-          </Button>
-        </form>
-        <form action={mover.bind(null, d.id, "descer")}>
-          <Button type="submit" variant="ghost" className={ICONE} disabled={ultima} aria-label={`Descer ${d.nome}`} title="Descer na lista">
-            <ArrowDown aria-hidden />
-          </Button>
-        </form>
-        <form action={arquivar.bind(null, d.id, true)}>
-          <Button type="submit" variant="ghost" className={ICONE} aria-label={`Arquivar ${d.nome}`} title="Arquivar">
-            <Archive aria-hidden />
-          </Button>
-        </form>
+        <div className="flex items-center gap-1">
+          <EditorDisciplina disciplina={d} variant="ghost" className={ICONE} ariaLabel={`Editar ${d.nome}`} title="Editar">
+            <Pencil aria-hidden />
+          </EditorDisciplina>
+          <form action={mover.bind(null, d.id, "subir")}>
+            <Button type="submit" variant="ghost" className={ICONE} disabled={primeira} aria-label={`Subir ${d.nome}`} title="Subir na lista">
+              <ArrowUp aria-hidden />
+            </Button>
+          </form>
+          <form action={mover.bind(null, d.id, "descer")}>
+            <Button type="submit" variant="ghost" className={ICONE} disabled={ultima} aria-label={`Descer ${d.nome}`} title="Descer na lista">
+              <ArrowDown aria-hidden />
+            </Button>
+          </form>
+          <form action={arquivar.bind(null, d.id, true)}>
+            <Button type="submit" variant="ghost" className={ICONE} aria-label={`Arquivar ${d.nome}`} title="Arquivar">
+              <Archive aria-hidden />
+            </Button>
+          </form>
+          <ExcluirDisciplina id={d.id} nome={d.nome} totalTopicos={d.totalTopicos} respondida={d.respondida} className={ICONE} />
+        </div>
       </div>
     </li>
   );

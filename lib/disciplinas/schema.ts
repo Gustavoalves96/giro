@@ -22,3 +22,7 @@ export const DisciplinaSchema = z.object({
 });
 
 export const IdSchema = z.uuid();
+
+// Excluir disciplina só sem respostas: o diálogo e a action usam o mesmo texto.
+export const DISCIPLINA_COM_HISTORICO =
+  "Ela já tem respostas, e o histórico não é apagado. Para tirá-la da roleta e das revisões, arquive.";
