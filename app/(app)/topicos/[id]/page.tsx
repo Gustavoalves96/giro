@@ -15,6 +15,7 @@ import { marcar } from "./actions";
 import { EditorProcedimento } from "./editor-procedimento";
 import { EditorQuestao } from "./editor-questao";
 import { ImportarNotebookLM } from "./importar-notebooklm";
+import { dono } from "@/lib/auth/require-user";
 
 export const metadata: Metadata = { title: "Tópico · Giro" };
 
@@ -203,10 +204,11 @@ function Vazio({ titulo, texto }: { titulo: string; texto: string }) {
 
 // params e banco são dados da requisição: ficam dentro de <Suspense> (Cache Components).
 async function Conteudo({ id }: { id: string }) {
+  const conta = await dono();
   if (!IdSchema.safeParse(id).success) notFound();
-  const topico = await getTopico(id);
+  const topico = await getTopico(conta, id);
   if (!topico) notFound();
-  const itens = await listarQuestoes(id);
+  const itens = await listarQuestoes(conta, id);
   const questoes = itens.filter((q) => q.tipo !== "procedimento");
   const procedimentos = itens.filter((q) => q.tipo === "procedimento");
   const ativas = questoes.filter((q) => q.ativa).length;

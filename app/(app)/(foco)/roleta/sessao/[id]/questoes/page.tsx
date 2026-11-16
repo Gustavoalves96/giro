@@ -7,6 +7,7 @@ import { listarCandidatasSessao, respostasDaSessao } from "@/lib/db/sessoes";
 import { MAX_PROCEDIMENTOS_POR_RODADA, opcoesDaQuestao, selecionarRodada } from "@/lib/domain/selecao-questoes";
 import { carregarSessao, rota } from "../carregar";
 import { QuestoesSessao } from "./questoes";
+import { dono } from "@/lib/auth/require-user";
 
 export const metadata: Metadata = { title: "Questões · Giro" };
 
@@ -16,12 +17,13 @@ type Props = PageProps<"/roleta/sessao/[id]/questoes">;
 
 // Recarregar no meio continua de onde parou: as já respondidas nesta sessão vêm do banco e saem das candidatas.
 async function Conteudo({ params }: Props) {
+  const conta = await dono();
   const { id } = await params;
   const s = await carregarSessao(id, "roleta");
   if (s.finalizadaEm) redirect(rota(id, "resultado"));
   const [feitas, candidatas] = await Promise.all([
-    respostasDaSessao(s.id),
-    s.topicoId ? listarCandidatasSessao(s.topicoId, s.id) : [],
+    respostasDaSessao(conta, s.id),
+    s.topicoId ? listarCandidatasSessao(conta, s.topicoId, s.id) : [],
   ]);
   const procsFeitos = feitas.filter((f) => f.tipo === "procedimento").length;
   // procedimento vai só com o nome (opcoes vazias); o checklist sai na hora de conferir

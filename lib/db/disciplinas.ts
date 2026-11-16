@@ -1,11 +1,11 @@
-import { asc, avg, count, eq, max } from "drizzle-orm";
+import { and, asc, avg, count, eq, max } from "drizzle-orm";
 import { db } from "./index";
 import { disciplinas, topicos } from "./schema";
 
 type Dados = { nome: string; cor: string; notebooklmUrl: string | null };
 
 // Todas as disciplinas (ativas e arquivadas) com nº de tópicos e domínio médio (null = sem tópicos).
-export async function listarDisciplinas() {
+export async function listarDisciplinas(dono: string) {
   const linhas = await db
     .select({
       id: disciplinas.id,
@@ -18,31 +18,32 @@ export async function listarDisciplinas() {
     })
     .from(disciplinas)
     .leftJoin(topicos, eq(topicos.disciplinaId, disciplinas.id))
+    .where(eq(disciplinas.dono, dono))
     .groupBy(disciplinas.id)
     .orderBy(asc(disciplinas.ordem), asc(disciplinas.criadoEm));
   // avg() volta como string (numeric do Postgres)
   return linhas.map((l) => ({ ...l, dominioMedio: l.dominioMedio === null ? null : Number(l.dominioMedio) }));
 }
 
-export async function criarDisciplina(dados: Dados) {
-  const [{ maior }] = await db.select({ maior: max(disciplinas.ordem) }).from(disciplinas);
-  await db.insert(disciplinas).values({ ...dados, ordem: (maior ?? -1) + 1 });
+export async function criarDisciplina(dono: string, dados: Dados) {
+  const [{ maior }] = await db.select({ maior: max(disciplinas.ordem) }).from(disciplinas).where(eq(disciplinas.dono, dono));
+  await db.insert(disciplinas).values({ ...dados, dono, ordem: (maior ?? -1) + 1 });
 }
 
-export async function editarDisciplina(id: string, dados: Dados) {
-  await db.update(disciplinas).set(dados).where(eq(disciplinas.id, id));
+export async function editarDisciplina(dono: string, id: string, dados: Dados) {
+  await db.update(disciplinas).set(dados).where(and(eq(disciplinas.id, id), eq(disciplinas.dono, dono)));
 }
 
-export async function definirArquivada(id: string, arquivada: boolean) {
-  await db.update(disciplinas).set({ arquivada }).where(eq(disciplinas.id, id));
+export async function definirArquivada(dono: string, id: string, arquivada: boolean) {
+  await db.update(disciplinas).set({ arquivada }).where(and(eq(disciplinas.id, id), eq(disciplinas.dono, dono)));
 }
 
 // Troca de lugar com a vizinha entre as ativas e renumera 0..n (corrige ordens repetidas).
-export async function moverDisciplina(id: string, direcao: "subir" | "descer") {
+export async function moverDisciplina(dono: string, id: string, direcao: "subir" | "descer") {
   const ativas = await db
     .select({ id: disciplinas.id, ordem: disciplinas.ordem })
     .from(disciplinas)
-    .where(eq(disciplinas.arquivada, false))
+    .where(and(eq(disciplinas.dono, dono), eq(disciplinas.arquivada, false)))
     .orderBy(asc(disciplinas.ordem), asc(disciplinas.criadoEm));
   const i = ativas.findIndex((d) => d.id === id);
   const j = direcao === "subir" ? i - 1 : i + 1;

@@ -11,6 +11,7 @@ import { questoesDoSimulado, respostasDoSimulado } from "@/lib/db/simulado";
 import { corrigirSimulado, relogio, type Situacao } from "@/lib/domain/simulado";
 import { cn } from "@/lib/utils";
 import { carregarSimulado } from "../carregar";
+import { dono } from "@/lib/auth/require-user";
 
 export const metadata: Metadata = { title: "Resultado do simulado · Giro" };
 
@@ -33,10 +34,11 @@ function textoDe(letra: string | null, alternativas: Alternativa[] | null) {
 
 // Tudo vem do banco: as questões sorteadas (com as em branco) e as respostas gravadas na entrega.
 async function Conteudo({ params }: Props) {
+  const conta = await dono();
   const { id } = await params;
   const s = await carregarSimulado(id);
   if (!s.finalizadaEm) redirect(`/simulado/sessao/${s.id}/questoes`);
-  const [qs, dadas] = await Promise.all([questoesDoSimulado(s.questaoIds ?? []), respostasDoSimulado(s.id)]);
+  const [qs, dadas] = await Promise.all([questoesDoSimulado(conta, s.questaoIds ?? []), respostasDoSimulado(conta, s.id)]);
   const lote = corrigirSimulado(qs, dadas);
   const segundos = Math.round((s.finalizadaEm.getTime() - s.iniciadaEm.getTime()) / 1000);
   const numeros = [

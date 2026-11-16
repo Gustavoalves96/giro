@@ -13,6 +13,7 @@ import { pontosQuestao } from "@/lib/domain/pontuacao";
 import { cn } from "@/lib/utils";
 import { carregarSessao, rota } from "../carregar";
 import { BarraAntesDepois, SeloRecorde } from "./animacoes";
+import { dono } from "@/lib/auth/require-user";
 
 export const metadata: Metadata = { title: "Resultado · Giro" };
 
@@ -42,12 +43,13 @@ type Props = PageProps<"/roleta/sessao/[id]/resultado">;
 
 // Tudo vem do banco: o resultado é o mesmo se recarregar ou abrir depois.
 async function Conteudo({ params }: Props) {
+  const conta = await dono();
   const { id } = await params;
   const s = await carregarSessao(id, "roleta");
   if (!s.finalizadaEm) redirect(rota(id, "questoes"));
   const [rs, recorde, antes, depois] = await Promise.all([
-    respostasDaSessao(s.id),
-    recordeAnterior(s.id, s.finalizadaEm),
+    respostasDaSessao(conta, s.id),
+    recordeAnterior(conta, s.id, s.finalizadaEm),
     s.topicoId ? acertosRecentesTopico(s.topicoId, s.iniciadaEm, false) : null,
     s.topicoId ? acertosRecentesTopico(s.topicoId, s.finalizadaEm, true) : null,
   ]);

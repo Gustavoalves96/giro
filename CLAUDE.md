@@ -4,7 +4,7 @@
 
 ## 1. O que é o produto
 
-Aplicação web pessoal de **prática ativa** para uma estudante de medicina (uma única usuária).
+Aplicação web pessoal de **prática ativa** para uma estudante de medicina. **Cada e-mail da allowlist é uma conta separada** (16/11/2026): disciplinas, sessões e perfil têm `dono` (e-mail minúsculo) e o resto chega a ele pela FK; nada se mistura entre contas.
 O diferencial é **gamificar a prática**: uma roleta animada sorteia um tópico, ela estuda por 10 minutos e depois responde questões, ganha pontos e acompanha a evolução.
 
 Além das questões, o tópico tem **procedimentos** (manobras e exames, ex.: "Coleta de citopatológico"): o nome e um **checklist de passos** que ela tenta lembrar de cabeça e depois confere. Conteúdo só das fontes dela (NotebookLM ou cadastro manual), nunca gerado por IA na hora. Cadastro e importação desde a sessão 10; na rodada desde a 11 (no máximo 1 por rodada, `components/quiz/Procedimento.tsx`, Server Action `conferirProcedimento`, notas em `respostas_passos`). Desde a sessão 12 toda resposta é de uma sessão (`/dev/questao` foi apagada); `/dev/tokens` saiu na 19, não há mais rotas `/dev`.
@@ -15,7 +15,7 @@ Além das questões, o tópico tem **procedimentos** (manobras e exames, ex.: "C
 - Upload e armazenamento de PDFs/slides
 - Geração de resumos, mapas mentais ou áudio
 - Chat com documentos / RAG / embeddings / pgvector
-- Multiusuário, times ou ranking público (por enquanto)
+- Times, compartilhamento entre contas ou ranking público (por enquanto)
 
 ## 2. Stack
 
@@ -47,7 +47,7 @@ Além das questões, o tópico tem **procedimentos** (manobras e exames, ex.: "C
 
 ```
 disciplinas
-  id uuid pk, nome text, cor text (hex), notebooklm_url text null,
+  id uuid pk, dono text (e-mail minúsculo da conta), nome text, cor text (hex), notebooklm_url text null,
   ordem int, arquivada bool default false, criado_em timestamptz
 
 topicos
@@ -86,7 +86,7 @@ revisoes                                -- estado FSRS por questão
   state int, last_review timestamptz null
 
 sessoes
-  id uuid pk, modo enum('roleta','simulado','revisao','erros'),
+  id uuid pk, dono text (próprio: revisão, erros e simulado não têm tópico), modo enum('roleta','simulado','revisao','erros'),
   topico_id fk null, iniciada_em, estudo_segundos int, finalizada_em null,
   total_questoes int, acertos int, pontuacao int, maior_sequencia int,
   questao_ids uuid[] null, limite_segundos int null  -- só simulado (sessão 17): questões sorteadas
@@ -100,8 +100,8 @@ provas
 explicacoes_ia                          -- cache das chamadas de IA
   questao_id pk/fk, texto text, gerado_em
 
-perfil                                  -- linha única (id = 1), editável em /perfil
-  id int pk default 1, nome text null,  -- nome usado na saudação; null = saudação sem nome
+perfil                                  -- uma linha por conta, editável em /perfil
+  dono text pk, nome text null,       -- nome usado na saudação; null = saudação sem nome
   estudo_segundos int default 600,      -- tempo de estudo padrão da roleta (5 a 60 min)
   meta_rodadas int default 4,           -- "Rodada de hoje · x de N" do Início (1 a 20; sessão 14)
   atualizado_em timestamptz
@@ -281,6 +281,8 @@ tests/       Vitest (rodar pelo PowerShell; no Git Bash falha)
 
 A lógica de negócio fica em `lib/domain/` como **funções puras**, testáveis sem banco.
 
+**Conta (dono):** toda função de `lib/db/*` recebe `dono` primeiro. Páginas e actions pegam com `dono()` (`lib/auth/require-user.ts`, e-mail minúsculo, `cache` por request). Busca e escrita por id filtram pela conta (`disciplinaDoDono`/`topicoDoDono`/`questaoDoDono` em `lib/db/dono.ts`, ou join até `disciplinas.dono`): id de outra conta = não encontrado. Funções sem `dono` (`criarQuestao`, `inserirQuestoes`, `gravarResposta`, `getRevisao`, cache da IA) só rodam depois de uma checagem dessas.
+
 ## 8. Convenções
 - TypeScript estrito, sem `any`.
 - Todo texto da interface em **português do Brasil**.
@@ -305,7 +307,7 @@ GEMINI_API_KEY=          # opcional; sem ela o "Explique melhor" some. Criar em 
 ## 10. Comandos
 ```
 npm run dev
-npm run db:seed          # conteúdo fictício de exemplo (idempotente); o banco de uso real não tem seed
+npm run db:seed          # conteúdo fictício de exemplo (idempotente) na conta SEED_DONO=<e-mail>; o banco de uso real não tem seed
 npm run build
 npm run lint
 npm run test             # vitest

@@ -4,8 +4,8 @@ import { disciplinas, questoes, revisoes, sessoes, topicos } from "./schema";
 
 // Revisão do dia (FSRS): questões e procedimentos ativos com due <= agora, de todas as disciplinas não arquivadas.
 
-const pendente = (agora: Date) =>
-  and(eq(questoes.ativa, true), eq(disciplinas.arquivada, false), lte(revisoes.due, agora));
+const pendente = (dono: string, agora: Date) =>
+  and(eq(disciplinas.dono, dono), eq(questoes.ativa, true), eq(disciplinas.arquivada, false), lte(revisoes.due, agora));
 
 const base = () =>
   db
@@ -24,7 +24,7 @@ const base = () =>
     .innerJoin(disciplinas, eq(disciplinas.id, topicos.disciplinaId));
 
 /** Quantos vencidos por disciplina (questões e procedimentos à parte, para a estimativa de tempo). */
-export async function resumoRevisao(agora: Date) {
+export async function resumoRevisao(dono: string, agora: Date) {
   return db
     .select({
       disciplina: disciplinas.nome,
@@ -36,31 +36,31 @@ export async function resumoRevisao(agora: Date) {
     .innerJoin(questoes, eq(questoes.id, revisoes.questaoId))
     .innerJoin(topicos, eq(topicos.id, questoes.topicoId))
     .innerJoin(disciplinas, eq(disciplinas.id, topicos.disciplinaId))
-    .where(pendente(agora))
+    .where(pendente(dono, agora))
     .groupBy(disciplinas.id, disciplinas.nome, disciplinas.cor, disciplinas.ordem, disciplinas.criadoEm)
     .orderBy(asc(disciplinas.ordem), asc(disciplinas.criadoEm));
 }
 
 /** Próximo vencimento depois de agora (estado vazio: "próxima revisão em …"). */
-export async function proximaRevisao(agora: Date) {
+export async function proximaRevisao(dono: string, agora: Date) {
   const [r] = await db
     .select({ due: revisoes.due })
     .from(revisoes)
     .innerJoin(questoes, eq(questoes.id, revisoes.questaoId))
     .innerJoin(topicos, eq(topicos.id, questoes.topicoId))
     .innerJoin(disciplinas, eq(disciplinas.id, topicos.disciplinaId))
-    .where(and(eq(questoes.ativa, true), eq(disciplinas.arquivada, false), gt(revisoes.due, agora)))
+    .where(and(eq(disciplinas.dono, dono), eq(questoes.ativa, true), eq(disciplinas.arquivada, false), gt(revisoes.due, agora)))
     .orderBy(asc(revisoes.due))
     .limit(1);
   return r?.due ?? null;
 }
 
 /** Vencidos ainda não respondidos nesta sessão, do mais atrasado ao mais recente. Sem gabarito. */
-export async function listarPendentesRevisao(sessaoId: string, agora: Date) {
+export async function listarPendentesRevisao(dono: string, sessaoId: string, agora: Date) {
   return base()
     .where(
       and(
-        pendente(agora),
+        pendente(dono, agora),
         sql`not exists (select 1 from respostas r where r.questao_id = ${questoes.id} and r.sessao_id = ${sessaoId})`,
       ),
     )
@@ -68,11 +68,11 @@ export async function listarPendentesRevisao(sessaoId: string, agora: Date) {
 }
 
 /** Revisão aberta mais recente (sair no meio e voltar continua a mesma sessão). */
-export async function revisaoAberta() {
+export async function revisaoAberta(dono: string) {
   const [s] = await db
     .select({ id: sessoes.id })
     .from(sessoes)
-    .where(and(eq(sessoes.modo, "revisao"), isNull(sessoes.finalizadaEm)))
+    .where(and(eq(sessoes.dono, dono), eq(sessoes.modo, "revisao"), isNull(sessoes.finalizadaEm)))
     .orderBy(desc(sessoes.iniciadaEm))
     .limit(1);
   return s?.id ?? null;

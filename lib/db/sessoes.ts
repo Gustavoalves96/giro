@@ -7,18 +7,19 @@ import { disciplinas, questoes, respostas, revisoes, type Sessao, sessoes, topic
 
 // Sessões de todos os modos: roleta (estudo → questões → resultado), revisão, erros e simulado.
 
-export async function criarSessaoRoleta(topicoId: string) {
-  const [s] = await db.insert(sessoes).values({ modo: "roleta", topicoId }).returning({ id: sessoes.id });
+// Quem chama já conferiu que o tópico é da conta (sorteio sobre listarTopicosRoleta).
+export async function criarSessaoRoleta(dono: string, topicoId: string) {
+  const [s] = await db.insert(sessoes).values({ dono, modo: "roleta", topicoId }).returning({ id: sessoes.id });
   return s.id;
 }
 
-export async function criarSessao(modo: Exclude<Sessao["modo"], "roleta">) {
-  const [s] = await db.insert(sessoes).values({ modo }).returning({ id: sessoes.id });
+export async function criarSessao(dono: string, modo: Exclude<Sessao["modo"], "roleta">) {
+  const [s] = await db.insert(sessoes).values({ dono, modo }).returning({ id: sessoes.id });
   return s.id;
 }
 
 // Sessão com tópico e disciplina (left join: o tópico pode ter sido excluído, topico_id vira null).
-export async function getSessao(id: string) {
+export async function getSessao(dono: string, id: string) {
   const [s] = await db
     .select({
       id: sessoes.id,
@@ -40,31 +41,31 @@ export async function getSessao(id: string) {
     .from(sessoes)
     .leftJoin(topicos, eq(topicos.id, sessoes.topicoId))
     .leftJoin(disciplinas, eq(disciplinas.id, topicos.disciplinaId))
-    .where(eq(sessoes.id, id));
+    .where(and(eq(sessoes.id, id), eq(sessoes.dono, dono)));
   return s ?? null;
 }
 
 // Só enquanto a sessão está aberta. false = não existe ou já finalizada.
-export async function salvarEstudoSessao(id: string, estudoSegundos: number) {
+export async function salvarEstudoSessao(dono: string, id: string, estudoSegundos: number) {
   const r = await db
     .update(sessoes)
     .set({ estudoSegundos })
-    .where(and(eq(sessoes.id, id), isNull(sessoes.finalizadaEm)))
+    .where(and(eq(sessoes.id, id), eq(sessoes.dono, dono), isNull(sessoes.finalizadaEm)))
     .returning({ id: sessoes.id });
   return r.length > 0;
 }
 
-export async function sessaoAberta(id: string) {
+export async function sessaoAberta(dono: string, id: string) {
   const [s] = await db
     .select({ id: sessoes.id })
     .from(sessoes)
-    .where(and(eq(sessoes.id, id), isNull(sessoes.finalizadaEm)));
+    .where(and(eq(sessoes.id, id), eq(sessoes.dono, dono), isNull(sessoes.finalizadaEm)));
   return !!s;
 }
 
 // Candidatas da sessão: questões ativas do tópico ainda não respondidas NESTA sessão, com o que
 // selecionarQuestoes() precisa (due da revisão, nº de respostas e de erros). Sem gabarito.
-export async function listarCandidatasSessao(topicoId: string, sessaoId: string) {
+export async function listarCandidatasSessao(dono: string, topicoId: string, sessaoId: string) {
   return db
     .select({
       id: questoes.id,
@@ -87,6 +88,7 @@ export async function listarCandidatasSessao(topicoId: string, sessaoId: string)
     .where(
       and(
         eq(questoes.topicoId, topicoId),
+        eq(disciplinas.dono, dono),
         eq(questoes.ativa, true),
         sql`not exists (select 1 from respostas r where r.questao_id = "questoes"."id" and r.sessao_id = ${sessaoId})`,
       ),
@@ -96,7 +98,7 @@ export async function listarCandidatasSessao(topicoId: string, sessaoId: string)
 
 // Respostas da sessão em ordem, com o enunciado (resultado e retomada das questões).
 // Procedimento: notas dos passos e a fração lembrada (para pontos e resultado); questão: notas e fracao null.
-export async function respostasDaSessao(sessaoId: string) {
+export async function respostasDaSessao(dono: string, sessaoId: string) {
   const linhas = await db
     .select({
       questaoId: respostas.questaoId,
@@ -110,7 +112,7 @@ export async function respostasDaSessao(sessaoId: string) {
     })
     .from(respostas)
     .innerJoin(questoes, eq(questoes.id, respostas.questaoId))
-    .where(eq(respostas.sessaoId, sessaoId))
+    .where(and(eq(respostas.sessaoId, sessaoId), sql`${respostas.sessaoId} in (select s.id from sessoes s where s.dono = ${dono})`))
     .orderBy(asc(respostas.respondidaEm), asc(respostas.id));
   return linhas.map((l) => ({ ...l, fracao: l.notas ? fracaoLembrada(l.notas.map((n) => n.nota)) : null }));
 }
@@ -120,6 +122,7 @@ export async function respostasDaSessao(sessaoId: string) {
  * que finalizou; null se a sessão não existe ou já estava finalizada (nada é regravado).
  */
 export async function fecharSessao(
+  dono: string,
   id: string,
   resumo: { totalQuestoes: number; acertos: number; pontuacao: number; maiorSequencia: number },
 ) {
@@ -127,7 +130,7 @@ export async function fecharSessao(
   const [s] = await db
     .update(sessoes)
     .set({ ...resumo, finalizadaEm: sql`now()` })
-    .where(and(eq(sessoes.id, id), isNull(sessoes.finalizadaEm)))
+    .where(and(eq(sessoes.id, id), eq(sessoes.dono, dono), isNull(sessoes.finalizadaEm)))
     .returning({ topicoId: sessoes.topicoId, finalizadaEm: sessoes.finalizadaEm });
   return s ?? null;
 }
@@ -136,8 +139,13 @@ export async function fecharSessao(
  * Fecha a sessão com o resumo e, se foi esta chamada que fechou, recalcula o domínio do tópico da sessão e de
  * todo tópico com resposta nela (CLAUDE.md §4.1). Qualquer modo; o simulado passa o próprio resumo.
  */
-export async function fecharERecalcular(id: string, rs: { topicoId: string }[], resumo: Parameters<typeof fecharSessao>[1]) {
-  const fechada = await fecharSessao(id, resumo);
+export async function fecharERecalcular(
+  dono: string,
+  id: string,
+  rs: { topicoId: string }[],
+  resumo: Parameters<typeof fecharSessao>[2],
+) {
+  const fechada = await fecharSessao(dono, id, resumo);
   const fim = fechada?.finalizadaEm;
   if (!fechada || !fim) return;
   await Promise.all(
@@ -164,13 +172,14 @@ export async function atualizarDominioTopico(topicoId: string, dominio: number, 
 }
 
 /** Maior pontuação entre as sessões da roleta finalizadas antes desta (revisão de 30 questões não vira recorde). */
-export async function recordeAnterior(id: string, finalizadaEm: Date) {
+export async function recordeAnterior(dono: string, id: string, finalizadaEm: Date) {
   const [r] = await db
     .select({ max: max(sessoes.pontuacao) })
     .from(sessoes)
     .where(
       and(
         ne(sessoes.id, id),
+        eq(sessoes.dono, dono),
         eq(sessoes.modo, "roleta"),
         isNotNull(sessoes.finalizadaEm),
         lt(sessoes.finalizadaEm, finalizadaEm),
@@ -180,7 +189,7 @@ export async function recordeAnterior(id: string, finalizadaEm: Date) {
 }
 
 /** "Continuar rodada": a rodada da roleta aberta mais recente iniciada hoje (dia de SP), com o nº de respostas. */
-export async function rodadaAbertaHoje(agora: Date) {
+export async function rodadaAbertaHoje(dono: string, agora: Date) {
   const desde = new Date(agora.getTime() - 24 * 60 * 60 * 1000); // folga; o dia de SP decide abaixo
   const [s] = await db
     .select({
@@ -191,7 +200,7 @@ export async function rodadaAbertaHoje(agora: Date) {
     })
     .from(sessoes)
     .leftJoin(topicos, eq(topicos.id, sessoes.topicoId))
-    .where(and(eq(sessoes.modo, "roleta"), isNull(sessoes.finalizadaEm), gte(sessoes.iniciadaEm, desde)))
+    .where(and(eq(sessoes.dono, dono), eq(sessoes.modo, "roleta"), isNull(sessoes.finalizadaEm), gte(sessoes.iniciadaEm, desde)))
     .orderBy(desc(sessoes.iniciadaEm))
     .limit(1);
   return s && diaSP(s.iniciadaEm) === diaSP(agora) ? s : null;

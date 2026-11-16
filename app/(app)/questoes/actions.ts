@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { type Explicacao, explicarComCache, getProvider } from "@/lib/ai/provider";
-import { requireUser } from "@/lib/auth/require-user";
+import { dono } from "@/lib/auth/require-user";
 import { definirMarcacao } from "@/lib/db/questoes";
 import {
   getExplicacaoIa,
@@ -45,9 +45,13 @@ export type Conferencia = { ok: true; acertou: boolean; gabarito: string; explic
 
 // O gabarito só sai do servidor aqui, depois da resposta. Reenviar devolve a conferência já gravada.
 export async function responder(entrada: z.input<typeof ResponderSchema>): Promise<Conferencia> {
-  await requireUser();
+  const conta = await dono();
   const r = ResponderSchema.parse(entrada);
-  const [q, aberta, estado] = await Promise.all([getGabarito(r.questaoId), sessaoAberta(r.sessaoId), getRevisao(r.questaoId)]);
+  const [q, aberta, estado] = await Promise.all([
+    getGabarito(conta, r.questaoId),
+    sessaoAberta(conta, r.sessaoId),
+    getRevisao(r.questaoId),
+  ]);
   if (!q) throw new Error("Questão não encontrada.");
   if (q.tipo === "procedimento") throw new Error("Use a conferência de passos.");
   const conferencia = (acertou: boolean) => ({ ok: true as const, acertou, gabarito: q.gabarito, explicacao: q.explicacao, fonte: q.fonte });
@@ -71,15 +75,15 @@ export async function responder(entrada: z.input<typeof ResponderSchema>): Promi
 
 // ── Procedimento: ela vê só o nome; o checklist sai daqui quando pede para conferir ──
 
-async function procedimentoAtivo(questaoId: string) {
-  const q = await getProcedimento(questaoId);
+async function procedimentoAtivo(conta: string, questaoId: string) {
+  const q = await getProcedimento(conta, questaoId);
   if (!q || q.tipo !== "procedimento" || !q.checklist) throw new Error("Procedimento não encontrado.");
   return { ...q, checklist: q.checklist };
 }
 
 export async function abrirChecklist(questaoId: string): Promise<{ ok: true; checklist: Checklist } | Recusa> {
-  await requireUser();
-  const q = await procedimentoAtivo(IdSchema.parse(questaoId));
+  const conta = await dono();
+  const q = await procedimentoAtivo(conta, IdSchema.parse(questaoId));
   return q.ativa ? { ok: true, checklist: q.checklist } : { ok: false, mensagem: PROCEDIMENTO_INATIVO };
 }
 
@@ -104,9 +108,13 @@ export type ConferenciaProcedimento =
   | (Recusa & { checklist?: Checklist });
 
 export async function conferirProcedimento(entrada: z.input<typeof ConferirSchema>): Promise<ConferenciaProcedimento> {
-  await requireUser();
+  const conta = await dono();
   const r = ConferirSchema.parse(entrada);
-  const [q, aberta, estado] = await Promise.all([procedimentoAtivo(r.questaoId), sessaoAberta(r.sessaoId), getRevisao(r.questaoId)]);
+  const [q, aberta, estado] = await Promise.all([
+    procedimentoAtivo(conta, r.questaoId),
+    sessaoAberta(conta, r.sessaoId),
+    getRevisao(r.questaoId),
+  ]);
   const { passos } = q.checklist;
   const conferencia = (notas: Record<string, (typeof NOTAS)[number]>, tempoMs: number) => ({
     ok: true as const,
@@ -141,9 +149,9 @@ export async function conferirProcedimento(entrada: z.input<typeof ConferirSchem
 
 // "Explique melhor (IA)": cache em explicacoes_ia; sem cache, só chama com o OK dela (confirmado).
 export async function explicarMelhor(questaoId: string, confirmado: boolean): Promise<Explicacao> {
-  await requireUser();
+  const conta = await dono();
   const id = IdSchema.parse(questaoId);
-  const q = await getGabarito(id);
+  const q = await getGabarito(conta, id); // da conta: só então lê/grava o cache
   if (!q || q.tipo === "procedimento") throw new Error("Questão não encontrada.");
   return explicarComCache(
     { enunciado: q.enunciado, alternativas: q.alternativas, gabarito: q.gabarito, explicacao: q.explicacao },
@@ -154,6 +162,6 @@ export async function explicarMelhor(questaoId: string, confirmado: boolean): Pr
 }
 
 export async function sinalizarErro(questaoId: string, valor: boolean) {
-  await requireUser();
-  await definirMarcacao(IdSchema.parse(questaoId), "sinalizadaComErro", z.boolean().parse(valor));
+  const conta = await dono();
+  await definirMarcacao(conta, IdSchema.parse(questaoId), "sinalizadaComErro", z.boolean().parse(valor));
 }

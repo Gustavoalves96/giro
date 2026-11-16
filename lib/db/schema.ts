@@ -33,15 +33,20 @@ export type Alternativa = { letra: "A" | "B" | "C" | "D" | "E"; texto: string };
 // Só procedimentos: ordem do array = ordem dos passos; id estável para a nota de cada passo (sessão 11).
 export type Checklist = { material: string[]; passos: { id: string; texto: string; critico: boolean }[] };
 
-export const disciplinas = pgTable("disciplinas", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  nome: text("nome").notNull(),
-  cor: text("cor").notNull(), // hex da cor cheia; a tinta clara é calculada na UI
-  notebooklmUrl: text("notebooklm_url"),
-  ordem: integer("ordem").notNull().default(0),
-  arquivada: boolean("arquivada").notNull().default(false),
-  criadoEm: criadoEm(),
-});
+export const disciplinas = pgTable(
+  "disciplinas",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    dono: text("dono").notNull(), // e-mail (minúsculo) da conta: cada e-mail vê só o que é seu
+    nome: text("nome").notNull(),
+    cor: text("cor").notNull(), // hex da cor cheia; a tinta clara é calculada na UI
+    notebooklmUrl: text("notebooklm_url"),
+    ordem: integer("ordem").notNull().default(0),
+    arquivada: boolean("arquivada").notNull().default(false),
+    criadoEm: criadoEm(),
+  },
+  (t) => [index("disciplinas_dono_idx").on(t.dono)],
+);
 
 export const topicos = pgTable(
   "topicos",
@@ -82,21 +87,26 @@ export const questoes = pgTable(
   (t) => [index("questoes_topico_id_idx").on(t.topicoId)],
 );
 
-export const sessoes = pgTable("sessoes", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  modo: modoSessao("modo").notNull(),
-  topicoId: uuid("topico_id").references(() => topicos.id, { onDelete: "set null" }),
-  iniciadaEm: timestamp("iniciada_em", tz).notNull().defaultNow(),
-  estudoSegundos: integer("estudo_segundos").notNull().default(0),
-  finalizadaEm: timestamp("finalizada_em", tz),
-  totalQuestoes: integer("total_questoes").notNull().default(0),
-  acertos: integer("acertos").notNull().default(0),
-  pontuacao: integer("pontuacao").notNull().default(0),
-  maiorSequencia: integer("maior_sequencia").notNull().default(0),
-  // só simulado (sessão 17): as questões sorteadas, na ordem da prova (sem FK, como provas.topico_ids), e o tempo total
-  questaoIds: uuid("questao_ids").array(),
-  limiteSegundos: integer("limite_segundos"),
-});
+export const sessoes = pgTable(
+  "sessoes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    dono: text("dono").notNull(), // próprio: revisão, erros e simulado não têm tópico
+    modo: modoSessao("modo").notNull(),
+    topicoId: uuid("topico_id").references(() => topicos.id, { onDelete: "set null" }),
+    iniciadaEm: timestamp("iniciada_em", tz).notNull().defaultNow(),
+    estudoSegundos: integer("estudo_segundos").notNull().default(0),
+    finalizadaEm: timestamp("finalizada_em", tz),
+    totalQuestoes: integer("total_questoes").notNull().default(0),
+    acertos: integer("acertos").notNull().default(0),
+    pontuacao: integer("pontuacao").notNull().default(0),
+    maiorSequencia: integer("maior_sequencia").notNull().default(0),
+    // só simulado (sessão 17): as questões sorteadas, na ordem da prova (sem FK, como provas.topico_ids), e o tempo total
+    questaoIds: uuid("questao_ids").array(),
+    limiteSegundos: integer("limite_segundos"),
+  },
+  (t) => [index("sessoes_dono_iniciada_em_idx").on(t.dono, t.iniciadaEm)],
+);
 
 export const respostas = pgTable(
   "respostas",
@@ -171,9 +181,9 @@ export const explicacoesIa = pgTable("explicacoes_ia", {
   geradoEm: timestamp("gerado_em", tz).notNull().defaultNow(),
 });
 
-// Linha única (id = 1): nome usado na saudação, tempo de estudo padrão e meta de rodadas, editáveis em /perfil.
+// Uma linha por conta: nome usado na saudação, tempo de estudo padrão e meta de rodadas, editáveis em /perfil.
 export const perfil = pgTable("perfil", {
-  id: integer("id").primaryKey().default(1),
+  dono: text("dono").primaryKey(),
   nome: text("nome"),
   estudoSegundos: integer("estudo_segundos").notNull().default(600), // tempo de estudo padrão da roleta
   metaRodadas: integer("meta_rodadas").notNull().default(4), // "Rodada de hoje · x de N" no Início (sessão 14)

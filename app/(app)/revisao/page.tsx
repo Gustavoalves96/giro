@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { TEXTO_SOBRE_TINTA, tintaClara } from "@/lib/cores";
 import { minutosRevisao, proximaRevisao, resumoRevisao } from "@/lib/db/revisao";
 import { RevisarAgora } from "./revisar-agora";
+import { dono } from "@/lib/auth/require-user";
 
 export const metadata: Metadata = { title: "Revisão do dia · Giro" };
 
@@ -25,15 +26,16 @@ const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um :
 
 // Banco é dado da requisição: fica dentro de <Suspense> (Cache Components).
 async function Conteudo() {
+  const conta = await dono();
   await connection(); // "agora" é da requisição, não do build
   const agora = new Date();
-  const porDisciplina = await resumoRevisao(agora);
+  const porDisciplina = await resumoRevisao(conta, agora);
   const questoes = porDisciplina.reduce((t, d) => t + d.questoes, 0);
   const procedimentos = porDisciplina.reduce((t, d) => t + d.procedimentos, 0);
   const total = questoes + procedimentos;
 
   if (!total) {
-    const proxima = await proximaRevisao(agora);
+    const proxima = await proximaRevisao(conta, agora);
     return (
       <section className={CARD} data-revisao-vazia>
         <h2 className="font-display text-[24px] font-extrabold">Nada para revisar hoje</h2>

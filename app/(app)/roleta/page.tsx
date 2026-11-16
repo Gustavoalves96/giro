@@ -14,20 +14,22 @@ import { listarTopicosRoleta } from "@/lib/db/topicos";
 import { hojeEmSP, topicosComProvaEm14Dias } from "@/lib/domain/provas";
 import { candidatoDe } from "@/lib/domain/roleta";
 import { ESTUDO_PADRAO } from "@/lib/perfil/schema";
+import { dono } from "@/lib/auth/require-user";
 
 export const metadata: Metadata = { title: "Roleta · Giro" };
 
 // Banco é dado da requisição: fica dentro de <Suspense> (Cache Components). Só carrega as fatias; não sorteia.
 async function Conteudo() {
+  const conta = await dono();
   await connection(); // "agora" é da requisição, não do build
   const agora = new Date();
   const hoje = hojeEmSP(agora);
   const [linhas, perfil, provas, aberta, disciplinasAtivas] = await Promise.all([
-    listarTopicosRoleta(),
-    getPerfil(),
-    provasDesde(hoje),
-    rodadaAbertaHoje(agora),
-    contarDisciplinasAtivas(),
+    listarTopicosRoleta(conta),
+    getPerfil(conta),
+    provasDesde(conta, hoje),
+    rodadaAbertaHoje(conta, agora),
+    contarDisciplinasAtivas(conta),
   ]);
   const comProva = topicosComProvaEm14Dias(provas, hoje);
   return (

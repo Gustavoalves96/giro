@@ -10,6 +10,7 @@ import { getDisciplina, listarTopicos } from "@/lib/db/topicos";
 import { IdSchema } from "@/lib/disciplinas/schema";
 import { EditorTopico } from "./editor-topico";
 import { ExcluirTopico } from "./excluir-topico";
+import { dono } from "@/lib/auth/require-user";
 
 export const metadata: Metadata = { title: "Disciplina · Giro" };
 
@@ -74,10 +75,11 @@ function LinhaTopico({ t, cor, disciplinaId }: { t: Topico; cor: string; discipl
 
 // params e banco são dados da requisição: ficam dentro de <Suspense> (Cache Components).
 async function Conteudo({ id }: { id: string }) {
+  const conta = await dono();
   if (!IdSchema.safeParse(id).success) notFound();
-  const disciplina = await getDisciplina(id);
+  const disciplina = await getDisciplina(conta, id);
   if (!disciplina) notFound();
-  const topicos = await listarTopicos(id);
+  const topicos = await listarTopicos(conta, id);
 
   return (
     <>

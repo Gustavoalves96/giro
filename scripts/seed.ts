@@ -274,7 +274,11 @@ const DADOS: DisciplinaSeed[] = [
 // IDs fixos e determinísticos: é o que torna o seed idempotente.
 const seedId = (n: number) => `5eed0000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 
-const linhasDisciplinas = DADOS.map((d, di) => ({ id: seedId((di + 1) * 10000), nome: d.nome, cor: d.cor, ordem: di }));
+// Conta que recebe o conteúdo de exemplo (ids fixos: o seed vai para uma conta só).
+const DONO = process.env.SEED_DONO?.trim().toLowerCase() ?? "";
+if (!DONO) throw new Error("Defina SEED_DONO com o e-mail da conta que recebe o conteúdo de exemplo.");
+
+const linhasDisciplinas = DADOS.map((d, di) => ({ id: seedId((di + 1) * 10000), dono: DONO, nome: d.nome, cor: d.cor, ordem: di }));
 const linhasTopicos = DADOS.flatMap((d, di) =>
   d.topicos.map((t, ti) => ({
     id: seedId((di + 1) * 10000 + (ti + 1) * 100),
@@ -304,7 +308,7 @@ async function main() {
   const d = await db.insert(disciplinas).values(linhasDisciplinas).onConflictDoNothing().returning({ id: disciplinas.id });
   const t = await db.insert(topicos).values(linhasTopicos).onConflictDoNothing().returning({ id: topicos.id });
   const q = await db.insert(questoes).values(linhasQuestoes).onConflictDoNothing().returning({ id: questoes.id });
-  const p = await db.insert(perfil).values({ id: 1 }).onConflictDoNothing().returning({ id: perfil.id });
+  const p = await db.insert(perfil).values({ dono: DONO }).onConflictDoNothing().returning({ dono: perfil.dono });
   console.log(
     `Seed: disciplinas +${d.length}/${linhasDisciplinas.length}, tópicos +${t.length}/${linhasTopicos.length}, ` +
       `questões +${q.length}/${linhasQuestoes.length}, perfil +${p.length}/1`,

@@ -5,6 +5,7 @@ import { carregarSessao } from "@/app/(app)/(foco)/roleta/sessao/[id]/carregar";
 import { Button } from "@/components/ui/button";
 import { respostasDaSessao } from "@/lib/db/sessoes";
 import { cn } from "@/lib/utils";
+import { dono } from "@/lib/auth/require-user";
 
 const ROTULO = "text-[13px] font-bold tracking-[0.06em] text-ink3 uppercase";
 const CARD = "rounded-3xl border border-line bg-sf p-5 md:p-6";
@@ -18,9 +19,10 @@ type Props = {
 // Resultado da revisão e do caderno de erros: sem recorde (só da roleta) e sem domínio de um tópico só
 // (misturam tópicos). Tudo vem do banco.
 export async function ResultadoSimples({ id, modo, textos }: Props) {
+  const conta = await dono();
   const s = await carregarSessao(id, modo);
   if (!s.finalizadaEm) redirect(`/${modo}/sessao/${s.id}/questoes`);
-  const rs = await respostasDaSessao(s.id);
+  const rs = await respostasDaSessao(conta, s.id);
   const numeros = [
     { rotulo: "Acertos", valor: `${s.acertos}/${s.totalQuestoes}` },
     { rotulo: "Maior sequência", valor: `x${s.maiorSequencia}` },

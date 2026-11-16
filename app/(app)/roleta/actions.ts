@@ -1,10 +1,10 @@
 "use server";
 
 import { z } from "zod";
-import { requireUser } from "@/lib/auth/require-user";
+import { dono } from "@/lib/auth/require-user";
 import { criarSessaoRoleta, fecharERecalcular, respostasDaSessao, salvarEstudoSessao } from "@/lib/db/sessoes";
 import { provasDesde } from "@/lib/db/provas";
-import { listarTopicosRoleta } from "@/lib/db/topicos";
+import { getTopico, listarTopicosRoleta } from "@/lib/db/topicos";
 import { hojeEmSP, topicosComProvaEm14Dias } from "@/lib/domain/provas";
 import { IdSchema } from "@/lib/disciplinas/schema";
 import { resumoSessao } from "@/lib/domain/pontuacao";
@@ -21,11 +21,11 @@ export type ResultadoGiro = { fatias: Fatia[]; sorteadoId: string | null; motivo
 
 // Sorteio no servidor (CLAUDE.md §4.2); o cliente só anima até a fatia sorteada. Não grava nada.
 export async function girar(entrada: z.input<typeof GirarSchema>): Promise<ResultadoGiro> {
-  await requireUser();
+  const conta = await dono();
   const filtro = GirarSchema.parse(entrada);
   const agora = new Date();
   const hoje = hojeEmSP(agora);
-  const [linhas, provas] = await Promise.all([listarTopicosRoleta(), provasDesde(hoje)]);
+  const [linhas, provas] = await Promise.all([listarTopicosRoleta(conta), provasDesde(conta, hoje)]);
   const comProva = topicosComProvaEm14Dias(provas, hoje);
   const candidatos = linhas.map((l) => candidatoDe(l, agora, comProva));
   const fatias = montarFatias(candidatos, filtro.modo, filtro);
@@ -40,27 +40,29 @@ export async function girar(entrada: z.input<typeof GirarSchema>): Promise<Resul
 
 // "Começar estudo": cria a sessão e devolve a URL do estudo. O tempo escolhido (só desta rodada) vai na URL.
 export async function comecarEstudo(topicoId: string, estudoSegundos: number) {
-  await requireUser();
+  const conta = await dono();
   const segundos = EstudoSegundosSchema.parse(estudoSegundos);
-  const id = await criarSessaoRoleta(IdSchema.parse(topicoId));
+  const topico = await getTopico(conta, IdSchema.parse(topicoId));
+  if (!topico) throw new Error("Tópico não encontrado.");
+  const id = await criarSessaoRoleta(conta, topico.id);
   return `/roleta/sessao/${id}/estudo?s=${segundos}`;
 }
 
 // Tempo efetivo (sem pausas), gravado ao sair do estudo. Teto de 4 h contra valor absurdo do cliente.
 export async function registrarEstudo(sessaoId: string, segundos: number) {
-  await requireUser();
+  const conta = await dono();
   const s = z.number().int().min(0).max(4 * 3600).parse(Math.round(segundos));
-  await salvarEstudoSessao(IdSchema.parse(sessaoId), s);
+  await salvarEstudoSessao(conta, IdSchema.parse(sessaoId), s);
 }
 
 // Qualquer modo. Resumo calculado aqui a partir das respostas gravadas da sessão (não do cliente); só a 1ª
 // chamada grava e recalcula o domínio de todo tópico com resposta na sessão.
 export async function finalizar(sessaoId: string) {
-  await requireUser();
+  const conta = await dono();
   const id = IdSchema.parse(sessaoId);
-  const rs = await respostasDaSessao(id);
+  const rs = await respostasDaSessao(conta, id);
   const r = resumoSessao(rs);
-  await fecharERecalcular(id, rs, {
+  await fecharERecalcular(conta, id, rs, {
     totalQuestoes: rs.length,
     acertos: r.acertos,
     pontuacao: r.total,

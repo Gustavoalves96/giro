@@ -28,7 +28,7 @@ export function MapaCalor({ semanas }: { semanas: DiaMapa[][] }) {
         role="img"
         aria-label={descricao}
         data-mapa-total={total}
-        className="grid max-w-[560px] grid-flow-col grid-rows-7 gap-1"
+        className="grid grid-flow-col grid-rows-7 gap-1"
         style={{ gridTemplateColumns: `repeat(${semanas.length}, minmax(0, 1fr))` }}
       >
         {semanas.flat().map((d) => (

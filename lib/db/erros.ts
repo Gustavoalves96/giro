@@ -1,12 +1,13 @@
 import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { cadernoDeErros } from "@/lib/domain/erros";
 import type { Nota } from "@/lib/domain/procedimento";
+import { questaoDoDono } from "./dono";
 import { db } from "./index";
 import { disciplinas, questoes, respostas, topicos } from "./schema";
 
 // Caderno de erros: última resposta de cada questão (DISTINCT ON) quando foi errada; só itens ativos de
 // disciplinas não arquivadas (como a revisão e a roleta). Traz o gabarito: a lista mostra resposta × gabarito.
-export async function listarErros() {
+export async function listarErros(dono: string) {
   const ultima = db
     .selectDistinctOn([respostas.questaoId], {
       id: respostas.id,
@@ -16,6 +17,7 @@ export async function listarErros() {
       respondidaEm: respostas.respondidaEm,
     })
     .from(respostas)
+    .where(questaoDoDono(dono, respostas.questaoId))
     .orderBy(asc(respostas.questaoId), desc(respostas.respondidaEm), desc(respostas.id))
     .as("ultima");
 
@@ -43,7 +45,7 @@ export async function listarErros() {
     .innerJoin(questoes, eq(questoes.id, ultima.questaoId))
     .innerJoin(topicos, eq(topicos.id, questoes.topicoId))
     .innerJoin(disciplinas, eq(disciplinas.id, topicos.disciplinaId))
-    .where(and(eq(ultima.acertou, false), eq(questoes.ativa, true), eq(disciplinas.arquivada, false)));
+    .where(and(eq(disciplinas.dono, dono), eq(ultima.acertou, false), eq(questoes.ativa, true), eq(disciplinas.arquivada, false)));
   return cadernoDeErros(linhas);
 }
 

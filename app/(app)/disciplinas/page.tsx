@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { listarDisciplinas } from "@/lib/db/disciplinas";
 import { arquivar, mover } from "./actions";
 import { EditorDisciplina } from "./editor-disciplina";
+import { dono } from "@/lib/auth/require-user";
 
 export const metadata: Metadata = { title: "Disciplinas · Giro" };
 
@@ -93,7 +94,8 @@ function LinhaArquivada({ d }: { d: Linha }) {
 
 // Banco = dado da requisição: fica dentro de <Suspense> (Cache Components).
 async function Lista() {
-  const todas = await listarDisciplinas();
+  const conta = await dono();
+  const todas = await listarDisciplinas(conta);
   const ativas = todas.filter((d) => !d.arquivada);
   const arquivadas = todas.filter((d) => d.arquivada);
 

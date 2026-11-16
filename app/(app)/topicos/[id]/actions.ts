@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireUser } from "@/lib/auth/require-user";
+import { dono } from "@/lib/auth/require-user";
 import {
   criarQuestao,
   type DadosQuestao,
@@ -11,6 +11,7 @@ import {
   inserirQuestoes,
   listarEnunciados,
 } from "@/lib/db/questoes";
+import { getTopico } from "@/lib/db/topicos";
 import { IdSchema } from "@/lib/disciplinas/schema";
 import { lerProcedimentos, lerResposta } from "@/lib/import/parse-json";
 import {
@@ -24,11 +25,16 @@ import {
 type Campo = "tipo" | "enunciado" | "alternativas" | "gabarito" | "explicacao" | "fonte" | "dificuldade" | "origem";
 export type EstadoQuestao = { erros?: Partial<Record<Campo, string[]>>; salvo?: boolean };
 
+// Antes de criar no tópico: ele tem de ser da conta.
+async function topicoDaConta(conta: string, topicoId: string) {
+  if (!(await getTopico(conta, topicoId))) throw new Error("Tópico não encontrado.");
+}
+
 const texto = (v: FormDataEntryValue | null) => (typeof v === "string" ? v : undefined);
 
 // Cria quando o form não traz id; edita quando traz. Mesmo schema da importação (CLAUDE.md §5).
 export async function salvarQuestao(_anterior: EstadoQuestao, form: FormData): Promise<EstadoQuestao> {
-  await requireUser();
+  const conta = await dono();
   const topicoId = IdSchema.parse(form.get("topicoId"));
   const id = form.get("id") ? IdSchema.parse(form.get("id")) : null;
   const tipo = texto(form.get("tipo"));
@@ -67,8 +73,11 @@ export async function salvarQuestao(_anterior: EstadoQuestao, form: FormData): P
     fonte: q.fonte ?? null,
     dificuldade: q.dificuldade,
   };
-  if (id) await editarQuestao(id, origem ? { ...dados, origem: origem.data } : dados);
-  else await criarQuestao(topicoId, { ...dados, origem: origem!.data });
+  if (id) await editarQuestao(conta, id, origem ? { ...dados, origem: origem.data } : dados);
+  else {
+    await topicoDaConta(conta, topicoId);
+    await criarQuestao(topicoId, { ...dados, origem: origem!.data });
+  }
   revalidatePath(`/topicos/${topicoId}`);
   return { salvo: true };
 }
@@ -77,9 +86,10 @@ export type EstadoImportacao = { importadas: number } | { erro: string };
 
 // Recebe o texto colado e lê de novo aqui: a prévia do cliente não é confiável.
 export async function importarQuestoes(topicoId: string, texto: string): Promise<EstadoImportacao> {
-  await requireUser();
+  const conta = await dono();
   const id = IdSchema.parse(topicoId);
-  const leitura = lerResposta(z.string().max(500_000).parse(texto), await listarEnunciados(id));
+  await topicoDaConta(conta, id);
+  const leitura = lerResposta(z.string().max(500_000).parse(texto), await listarEnunciados(conta, id));
   if (!leitura.ok) return { erro: leitura.erro.causa };
   await inserirQuestoes(
     id,
@@ -125,7 +135,7 @@ function linhaProcedimento(p: ProcedimentoImport, ids: (string | undefined)[] = 
 }
 
 export async function salvarProcedimento(_anterior: EstadoProcedimento, form: FormData): Promise<EstadoProcedimento> {
-  await requireUser();
+  const conta = await dono();
   const topicoId = IdSchema.parse(form.get("topicoId"));
   const id = form.get("id") ? IdSchema.parse(form.get("id")) : null;
   let passosBrutos: unknown;
@@ -159,17 +169,21 @@ export async function salvarProcedimento(_anterior: EstadoProcedimento, form: Fo
     proc.data,
     ids.data.map((p) => p.id),
   );
-  if (id) await editarQuestao(id, origem ? { ...dados, origem: origem.data } : dados);
-  else await criarQuestao(topicoId, { ...dados, origem: origem!.data });
+  if (id) await editarQuestao(conta, id, origem ? { ...dados, origem: origem.data } : dados);
+  else {
+    await topicoDaConta(conta, topicoId);
+    await criarQuestao(topicoId, { ...dados, origem: origem!.data });
+  }
   revalidatePath(`/topicos/${topicoId}`);
   return { salvo: true };
 }
 
 // Mesmo caminho da importação de questões: lê de novo aqui, duplicata = nome entre os procedimentos do tópico.
 export async function importarProcedimentos(topicoId: string, texto: string): Promise<EstadoImportacao> {
-  await requireUser();
+  const conta = await dono();
   const id = IdSchema.parse(topicoId);
-  const leitura = lerProcedimentos(z.string().max(500_000).parse(texto), await listarEnunciados(id, true));
+  await topicoDaConta(conta, id);
+  const leitura = lerProcedimentos(z.string().max(500_000).parse(texto), await listarEnunciados(conta, id, true));
   if (!leitura.ok) return { erro: leitura.erro.causa };
   await inserirQuestoes(
     id,
@@ -180,8 +194,9 @@ export async function importarProcedimentos(topicoId: string, texto: string): Pr
 }
 
 export async function marcar(id: string, topicoId: string, campo: "ativa" | "sinalizadaComErro", valor: boolean) {
-  await requireUser();
+  const conta = await dono();
   await definirMarcacao(
+    conta,
     IdSchema.parse(id),
     z.enum(["ativa", "sinalizadaComErro"]).parse(campo),
     z.boolean().parse(valor),

@@ -8,6 +8,7 @@ import { filtrarErros, listarErros } from "@/lib/db/erros";
 import { respostasDaSessao } from "@/lib/db/sessoes";
 import { opcoesDaQuestao } from "@/lib/domain/selecao-questoes";
 import { FiltroErrosSchema } from "@/lib/erros/schema";
+import { dono } from "@/lib/auth/require-user";
 
 export const metadata: Metadata = { title: "Caderno de erros · Giro" };
 
@@ -16,11 +17,12 @@ type Props = PageProps<"/erros/sessao/[id]/questoes">;
 // Erros do filtro da URL ainda não respondidos nesta sessão, com feedback imediato. Recarregar continua:
 // o que já foi respondido aqui sai da lista (acertou → nem é mais erro; errou → já foi refeito).
 async function Conteudo({ params, searchParams }: Props) {
+  const conta = await dono();
   const [{ id }, sp] = await Promise.all([params, searchParams]);
   const s = await carregarSessao(id, "erros");
   const resultado = `/erros/sessao/${s.id}/resultado`;
   if (s.finalizadaEm) redirect(resultado);
-  const [feitas, erros] = await Promise.all([respostasDaSessao(s.id), listarErros()]);
+  const [feitas, erros] = await Promise.all([respostasDaSessao(conta, s.id), listarErros(conta)]);
   const respondidas = new Set(feitas.map((f) => f.questaoId));
   const pendentes = filtrarErros(erros, FiltroErrosSchema.parse(sp)).filter((e) => !respondidas.has(e.questaoId));
   return (

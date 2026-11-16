@@ -8,6 +8,7 @@ import { pontosFracos, respostasPorHora, resumoSessoes } from "@/lib/db/inicio";
 import { hojeEmSP } from "@/lib/domain/provas";
 import { acertosInicioFim, agregarPorDia, agregarPorSemana, maiorSequencia, streak, xpTotal } from "@/lib/domain/stats";
 import { SerieSemanal } from "./serie-semanal";
+import { dono } from "@/lib/auth/require-user";
 
 export const metadata: Metadata = { title: "Estatísticas · Giro" };
 
@@ -38,16 +39,17 @@ function Numero({ rotulo, valor, detalhe, dado, largo }: { rotulo: string; valor
 
 // auth(), banco e "agora" são da requisição: tudo dentro de <Suspense> (Cache Components).
 async function Conteudo() {
+  const conta = await dono();
   await connection();
   const hoje = hojeEmSP(new Date());
   const [horas, estudo, sessoes, ranking, top, praticou, passos] = await Promise.all([
-    respostasPorHora(),
-    estudoPorHora(),
-    resumoSessoes(),
-    pontosFracos(null),
-    topSessoes(),
-    praticouProcedimento(),
-    passosEsquecidos(),
+    respostasPorHora(conta),
+    estudoPorHora(conta),
+    resumoSessoes(conta),
+    pontosFracos(conta, null),
+    topSessoes(conta),
+    praticouProcedimento(conta),
+    passosEsquecidos(conta),
   ]);
 
   const diasLista = [...agregarPorDia(horas).keys()];

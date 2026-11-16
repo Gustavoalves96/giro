@@ -129,7 +129,9 @@ function Passo({ n, titulo, children }: { n: number; titulo: string; children: R
 function Painel({ tipo, topicoId, topico, disciplina, notebooklmUrl, enunciados }: Props) {
   const t: Textos = TIPOS[tipo];
   const id = useId();
-  const [quantidade, setQuantidade] = useState(t.quantidade.padrao);
+  // texto cru do campo: vazio enquanto ela apaga para digitar outro número
+  const [campo, setCampo] = useState(String(t.quantidade.padrao));
+  const quantidade = Math.min(t.quantidade.max, Math.max(1, Math.round(Number(campo)) || t.quantidade.padrao));
   const [copia, setCopia] = useState<"ok" | "falhou" | null>(null);
   const [texto, setTexto] = useState("");
   const [leitura, setLeitura] = useState<Leitura<ItemPrevia> | null>(null);
@@ -171,11 +173,12 @@ function Painel({ tipo, topicoId, topico, disciplina, notebooklmUrl, enunciados 
               inputMode="numeric"
               min={1}
               max={t.quantidade.max}
-              value={quantidade}
+              value={campo}
               onChange={(e) => {
-                setQuantidade(Math.min(t.quantidade.max, Math.max(1, Number(e.target.value) || 1)));
+                setCampo(e.target.value);
                 setCopia(null);
               }}
+              onBlur={() => setCampo(String(quantidade))}
               className={cn(CAMPO, "w-24 text-center tabular-nums")}
             />
             <Button variant="secondary" onClick={copiar}>

@@ -50,6 +50,20 @@
       "when": 1794668666286,
       "tag": "0006_simulado",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794853676343,
+      "tag": "0007_dono",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794853684998,
+      "tag": "0008_perfil_por_dono",
+      "breakpoints": true
     }
   ]
 }

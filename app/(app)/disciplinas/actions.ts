@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireUser } from "@/lib/auth/require-user";
+import { dono } from "@/lib/auth/require-user";
 import { criarDisciplina, definirArquivada, editarDisciplina, moverDisciplina } from "@/lib/db/disciplinas";
 import { DisciplinaSchema, IdSchema } from "@/lib/disciplinas/schema";
 
@@ -13,7 +13,7 @@ export type EstadoDisciplina = {
 
 // Cria quando o form não traz id; edita quando traz.
 export async function salvarDisciplina(_anterior: EstadoDisciplina, form: FormData): Promise<EstadoDisciplina> {
-  await requireUser();
+  const conta = await dono();
   const id = form.get("id") ? IdSchema.parse(form.get("id")) : null;
   const dados = DisciplinaSchema.safeParse({
     nome: form.get("nome"),
@@ -21,20 +21,20 @@ export async function salvarDisciplina(_anterior: EstadoDisciplina, form: FormDa
     notebooklmUrl: form.get("notebooklmUrl") ?? undefined,
   });
   if (!dados.success) return { erros: z.flattenError(dados.error).fieldErrors };
-  if (id) await editarDisciplina(id, dados.data);
-  else await criarDisciplina(dados.data);
+  if (id) await editarDisciplina(conta, id, dados.data);
+  else await criarDisciplina(conta, dados.data);
   revalidatePath("/disciplinas");
   return { salvo: true };
 }
 
 export async function mover(id: string, direcao: "subir" | "descer") {
-  await requireUser();
-  await moverDisciplina(IdSchema.parse(id), z.enum(["subir", "descer"]).parse(direcao));
+  const conta = await dono();
+  await moverDisciplina(conta, IdSchema.parse(id), z.enum(["subir", "descer"]).parse(direcao));
   revalidatePath("/disciplinas");
 }
 
 export async function arquivar(id: string, arquivada: boolean) {
-  await requireUser();
-  await definirArquivada(IdSchema.parse(id), z.boolean().parse(arquivada));
+  const conta = await dono();
+  await definirArquivada(conta, IdSchema.parse(id), z.boolean().parse(arquivada));
   revalidatePath("/disciplinas");
 }

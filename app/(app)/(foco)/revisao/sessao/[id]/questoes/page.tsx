@@ -7,6 +7,7 @@ import { iaDisponivel } from "@/lib/ai/provider";
 import { listarPendentesRevisao } from "@/lib/db/revisao";
 import { respostasDaSessao } from "@/lib/db/sessoes";
 import { opcoesDaQuestao } from "@/lib/domain/selecao-questoes";
+import { dono } from "@/lib/auth/require-user";
 
 export const metadata: Metadata = { title: "Revisão · Giro" };
 
@@ -14,11 +15,12 @@ type Props = PageProps<"/revisao/sessao/[id]/questoes">;
 
 // Todos os itens vencidos, com feedback imediato. Recarregar continua: os respondidos nesta sessão saem da lista.
 async function Conteudo({ params }: Props) {
+  const conta = await dono();
   const { id } = await params;
   const s = await carregarSessao(id, "revisao");
   const resultado = `/revisao/sessao/${s.id}/resultado`;
   if (s.finalizadaEm) redirect(resultado);
-  const [feitas, pendentes] = await Promise.all([respostasDaSessao(s.id), listarPendentesRevisao(s.id, new Date())]);
+  const [feitas, pendentes] = await Promise.all([respostasDaSessao(conta, s.id), listarPendentesRevisao(conta, s.id, new Date())]);
   return (
     <QuestoesSessao
       sessaoId={s.id}

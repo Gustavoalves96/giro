@@ -5,11 +5,13 @@ import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { disciplinasDoSimulado } from "@/lib/db/simulado";
 import { FormSimulado } from "./form-simulado";
+import { dono } from "@/lib/auth/require-user";
 
 export const metadata: Metadata = { title: "Simulado · Giro" };
 
 async function Conteudo() {
-  const disciplinas = await disciplinasDoSimulado();
+  const conta = await dono();
+  const disciplinas = await disciplinasDoSimulado(conta);
   if (!disciplinas.length)
     return (
       <section className="max-w-xl rounded-3xl border border-line bg-sf p-6">

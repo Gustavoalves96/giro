@@ -2,12 +2,14 @@ import { and, eq, getTableColumns, sql } from "drizzle-orm";
 import { db } from "./index";
 import type { Estado } from "@/lib/domain/fsrs";
 import type { Nota } from "@/lib/domain/procedimento";
+import { questaoDoDono } from "./dono";
 import { explicacoesIa, type NovaResposta, questoes, respostas, respostasPassos, revisoes } from "./schema";
 
 // Consultas da tela de questão (components/quiz). O gabarito só sai daqui depois da resposta.
+// getProcedimento/getGabarito filtram pela conta: quem grava resposta, revisão ou explicação passa antes por um deles.
 
 // Procedimento para a conferência: checklist só sai do servidor quando ela pede para conferir.
-export async function getProcedimento(id: string) {
+export async function getProcedimento(dono: string, id: string) {
   const [q] = await db
     .select({
       tipo: questoes.tipo,
@@ -17,12 +19,12 @@ export async function getProcedimento(id: string) {
       fonte: questoes.fonte,
     })
     .from(questoes)
-    .where(eq(questoes.id, id));
+    .where(and(eq(questoes.id, id), questaoDoDono(dono, questoes.id)));
   return q ?? null;
 }
 
 // Para conferir a resposta no servidor.
-export async function getGabarito(id: string) {
+export async function getGabarito(dono: string, id: string) {
   const [q] = await db
     .select({
       enunciado: questoes.enunciado,
@@ -33,7 +35,7 @@ export async function getGabarito(id: string) {
       fonte: questoes.fonte,
     })
     .from(questoes)
-    .where(eq(questoes.id, id));
+    .where(and(eq(questoes.id, id), questaoDoDono(dono, questoes.id)));
   return q ?? null;
 }
 

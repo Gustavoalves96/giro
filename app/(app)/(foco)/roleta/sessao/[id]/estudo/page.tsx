@@ -5,18 +5,20 @@ import { getPerfil } from "@/lib/db/perfil";
 import { ESTUDO_PADRAO, EstudoSegundosSchema } from "@/lib/perfil/schema";
 import { carregarSessao, rota } from "../carregar";
 import { Estudo } from "./estudo";
+import { dono } from "@/lib/auth/require-user";
 
 export const metadata: Metadata = { title: "Estudo · Giro" };
 
 type Props = PageProps<"/roleta/sessao/[id]/estudo">;
 
 async function Conteudo({ params, searchParams }: Props) {
+  const conta = await dono();
   const [{ id }, sp] = await Promise.all([params, searchParams]);
   const s = await carregarSessao(id, "roleta");
   if (s.finalizadaEm) redirect(rota(id, "resultado"));
   // ?s= é o tempo escolhido na roleta só para esta rodada; sem ele (ou inválido), o padrão do perfil
   const daRodada = EstudoSegundosSchema.safeParse(sp.s);
-  const segundos = daRodada.success ? daRodada.data : ((await getPerfil())?.estudoSegundos ?? ESTUDO_PADRAO);
+  const segundos = daRodada.success ? daRodada.data : ((await getPerfil(conta))?.estudoSegundos ?? ESTUDO_PADRAO);
   return (
     <Estudo
       sessaoId={s.id}

@@ -7,6 +7,7 @@ import { carregarSimulado } from "../carregar";
 import { opcoesDaQuestao } from "@/lib/domain/selecao-questoes";
 import { rngDeSemente, segundosRestantes } from "@/lib/domain/simulado";
 import { ProvaSimulado } from "./prova";
+import { dono } from "@/lib/auth/require-user";
 
 export const metadata: Metadata = { title: "Simulado · Giro" };
 
@@ -15,12 +16,13 @@ type Props = PageProps<"/simulado/sessao/[id]/questoes">;
 // Sem gabarito no cliente: só enunciado e opções. A ordem das alternativas sai de uma semente (sessão + questão),
 // então recarregar mostra a prova igual.
 async function Conteudo({ params }: Props) {
+  const conta = await dono();
   await connection();
   const { id } = await params;
   const s = await carregarSimulado(id);
   const resultado = `/simulado/sessao/${s.id}/resultado`;
   if (s.finalizadaEm) redirect(resultado);
-  const qs = await questoesDoSimulado(s.questaoIds ?? []);
+  const qs = await questoesDoSimulado(conta, s.questaoIds ?? []);
   const restante = segundosRestantes(s.iniciadaEm, s.limiteSegundos ?? 0, new Date());
   return (
     <ProvaSimulado

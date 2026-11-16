@@ -9,6 +9,7 @@ import { FiltroErrosSchema, queryFiltro } from "@/lib/erros/schema";
 import { ROTULO_TIPO } from "@/lib/questoes/rotulos";
 import { cn } from "@/lib/utils";
 import { Refazer } from "./refazer";
+import { dono } from "@/lib/auth/require-user";
 
 export const metadata: Metadata = { title: "Caderno de erros · Giro" };
 
@@ -104,7 +105,8 @@ function Item({ i }: { i: ItemErro }) {
 
 // Banco e search params são da requisição: ficam dentro de <Suspense> (Cache Components).
 async function Conteudo({ searchParams }: PageProps<"/erros">) {
-  const [todos, params] = await Promise.all([listarErros(), searchParams]);
+  const conta = await dono();
+  const [todos, params] = await Promise.all([listarErros(conta), searchParams]);
   const f = FiltroErrosSchema.parse(params);
   // vindo do resultado da roleta só com ?topico=: a disciplina é a do tópico
   const disciplina = f.disciplina ?? todos.find((i) => i.topicoId === f.topico)?.disciplinaId;

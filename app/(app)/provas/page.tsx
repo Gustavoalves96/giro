@@ -10,6 +10,7 @@ import { listarProvas, listarTodosTopicos } from "@/lib/db/provas";
 import { contagemRegressiva, diasAte, hojeEmSP, JANELA_PROVA_DIAS } from "@/lib/domain/provas";
 import { cn } from "@/lib/utils";
 import { EditorProva, ExcluirProva, type Opcoes } from "./editor-prova";
+import { dono } from "@/lib/auth/require-user";
 
 export const metadata: Metadata = { title: "Provas · Giro" };
 
@@ -67,9 +68,10 @@ function LinhaProva({ p, dias, topicos, opcoes }: { p: Prova; dias: number; topi
 
 // Banco e "hoje" são da requisição: ficam dentro de <Suspense> (Cache Components).
 async function Conteudo() {
+  const conta = await dono();
   await connection();
   const hoje = hojeEmSP(new Date());
-  const [provas, todosTopicos, disciplinas] = await Promise.all([listarProvas(), listarTodosTopicos(), listarDisciplinas()]);
+  const [provas, todosTopicos, disciplinas] = await Promise.all([listarProvas(conta), listarTodosTopicos(conta), listarDisciplinas(conta)]);
   const opcoes: Opcoes = {
     disciplinas: disciplinas.map(({ id, nome, arquivada }) => ({ id, nome, arquivada })),
     topicos: todosTopicos,

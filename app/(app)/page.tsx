@@ -24,6 +24,7 @@ import { candidatoDe, montarFatias } from "@/lib/domain/roleta";
 import { agregarPorDia, mapaDeCalor, rodadasHoje, streak, xpTotal } from "@/lib/domain/stats";
 import { META_PADRAO } from "@/lib/perfil/schema";
 import { RevisarAgora } from "./revisao/revisar-agora";
+import { dono } from "@/lib/auth/require-user";
 
 export const metadata: Metadata = { title: "Início · Giro" };
 
@@ -57,22 +58,23 @@ function Dominio({ nome, dominio, cor, novo = false }: { nome: string; dominio: 
 
 // auth(), banco e "agora" são da requisição: tudo dentro de <Suspense> (Cache Components).
 async function Conteudo() {
+  const conta = await dono();
   await connection();
   const agora = new Date();
   const hoje = hojeEmSP(agora);
   const [perfil, sessoes, horas, aberta, revisao, erros, prova, fracos, linhasRoleta, provas, disciplinasAtivas] =
     await Promise.all([
-      getPerfil(),
-      resumoSessoes(),
-      respostasPorHora(),
-      rodadaAbertaHoje(agora),
-      resumoRevisao(agora),
-      listarErros(),
-      proximaProva(hoje),
-      pontosFracos(),
-      listarTopicosRoleta(),
-      provasDesde(hoje),
-      contarDisciplinasAtivas(),
+      getPerfil(conta),
+      resumoSessoes(conta),
+      respostasPorHora(conta),
+      rodadaAbertaHoje(conta, agora),
+      resumoRevisao(conta, agora),
+      listarErros(conta),
+      proximaProva(conta, hoje),
+      pontosFracos(conta),
+      listarTopicosRoleta(conta),
+      provasDesde(conta, hoje),
+      contarDisciplinasAtivas(conta),
     ]);
 
   const porDia = agregarPorDia(horas);
@@ -115,7 +117,7 @@ async function Conteudo() {
         </ul>
       </header>
 
-      <div className="grid gap-4 md:gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+      <div className="grid gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
         <div className="flex min-w-0 flex-col gap-4 md:gap-6">
           {/* card escuro nos dois temas: a classe .dark troca os tokens só dentro dele */}
           <section aria-labelledby="rodada-titulo" className="dark rounded-3xl border border-line bg-sf p-5 text-ink md:p-6">
@@ -282,14 +284,15 @@ async function Conteudo() {
               <p className="mt-2 text-ink2">Aparecem aqui os 3 tópicos de menor domínio, depois das primeiras respostas.</p>
             )}
           </section>
-        </div>
 
-        <section aria-labelledby="atividade-titulo" className={`${CARD} lg:col-span-2`}>
-          <h2 id="atividade-titulo" className={`${ROTULO} mb-4`}>
-            Atividade · 14 semanas
-          </h2>
-          <MapaCalor semanas={mapaDeCalor(porDia, hoje)} />
-        </section>
+          {/* na coluna da direita: equilibra as duas colunas e o mapa ocupa o cartão inteiro */}
+          <section aria-labelledby="atividade-titulo" className={CARD}>
+            <h2 id="atividade-titulo" className={`${ROTULO} mb-4`}>
+              Atividade · 14 semanas
+            </h2>
+            <MapaCalor semanas={mapaDeCalor(porDia, hoje)} />
+          </section>
+        </div>
       </div>
     </>
   );

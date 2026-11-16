@@ -10,6 +10,7 @@ import { sair } from "./actions";
 import { FormEstudo } from "./form-estudo";
 import { FormMeta } from "./form-meta";
 import { FormNome } from "./form-nome";
+import { dono } from "@/lib/auth/require-user";
 
 export const metadata: Metadata = { title: "Meu perfil · Giro" };
 
@@ -21,7 +22,8 @@ function Rotulo({ children }: { children: React.ReactNode }) {
 
 // auth() e o banco são dados da requisição: ficam dentro de <Suspense> (Cache Components).
 async function Conta() {
-  const [sessao, perfil] = await Promise.all([auth(), getPerfil()]);
+  const conta = await dono();
+  const [sessao, perfil] = await Promise.all([auth(), getPerfil(conta)]);
   return (
     <>
       <section className={CARD}>
