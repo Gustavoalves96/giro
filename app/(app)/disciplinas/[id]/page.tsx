@@ -19,18 +19,21 @@ const ICONE = "size-11 px-0 has-[>svg]:px-0";
 
 type Topico = Awaited<ReturnType<typeof listarTopicos>>[number];
 
-// Mesmo modelo de /disciplinas: até md, ícones centralizados embaixo; a partir de md, uma fileira com os ícones à direita.
+// Até md, tudo centralizado e os ícones embaixo; a partir de md, uma fileira alinhada à esquerda com os ícones à direita.
 function LinhaTopico({ t, cor, disciplinaId }: { t: Topico; cor: string; disciplinaId: string }) {
   const dominio = Math.round(t.dominio);
   return (
     <li className="flex flex-col gap-3 rounded-3xl border border-line bg-sf p-4 md:flex-row md:items-center md:p-5">
       <div className="min-w-0 flex-1">
         <h2 className="font-display text-xl font-bold">
-          <Link href={`/topicos/${t.id}`} className="flex min-h-11 items-center underline-offset-4 hover:underline">
+          <Link
+            href={`/topicos/${t.id}`}
+            className="flex min-h-11 items-center justify-center underline-offset-4 hover:underline md:justify-start"
+          >
             <span className="truncate">{t.nome}</span>
           </Link>
         </h2>
-        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-ink3">
+        <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-ink3 md:justify-start">
           <span>
             {t.questoesAtivas} {t.questoesAtivas === 1 ? "questão ativa" : "questões ativas"}
           </span>
@@ -56,7 +59,7 @@ function LinhaTopico({ t, cor, disciplinaId }: { t: Topico; cor: string; discipl
             </span>
           )}
         </p>
-        {t.respondido && <BarraDominio valor={dominio} cor={cor} className="mt-2 max-w-60" />}
+        {t.respondido && <BarraDominio valor={dominio} cor={cor} className="mx-auto mt-2 max-w-60 md:mx-0" />}
       </div>
       {t.arquivado ? (
         <form action={arquivar.bind(null, t.id, disciplinaId, false)}>
@@ -104,7 +107,7 @@ async function Conteudo({ id }: { id: string }) {
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <h1 className="flex min-w-0 items-start gap-3 font-display text-[32px] font-extrabold md:text-[34px]">
           {/* bolinha na altura da 1ª linha quando o nome quebra */}
-          <span className="flex h-[1lh] shrink-0 items-center" aria-hidden>
+          <span className="flex h-lh shrink-0 items-center" aria-hidden>
             <span className="size-4 rounded-full" style={{ backgroundColor: disciplina.cor }} />
           </span>
           <span className="min-w-0 wrap-break-word">{disciplina.nome}</span>
