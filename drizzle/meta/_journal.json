@@ -85,6 +85,13 @@
       "when": 1794870929272,
       "tag": "0011_whole_reavers",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794951537631,
+      "tag": "0012_topicos_notebooklm_url",
+      "breakpoints": true
     }
   ]
 }

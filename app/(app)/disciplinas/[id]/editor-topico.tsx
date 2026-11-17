@@ -4,17 +4,21 @@ import { useActionState, useId, useState } from "react";
 import { CAMPO, EditorResponsivo } from "@/components/editor-responsivo";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { PILULA } from "@/app/(app)/topicos/[id]/editor-questao";
 import { type EstadoTopico, salvarTopico } from "./actions";
 
-type Topico = { id: string; nome: string; descricao: string | null };
+type Topico = { id: string; nome: string; descricao: string | null; notebooklmUrl: string | null };
 
 export function EditorTopico({
   disciplinaId,
   topico,
+  cadernoDisciplina,
   ...botao
 }: {
   disciplinaId: string;
   topico?: Topico;
+  /** Link do NotebookLM da disciplina, mostrado na opção "usar o caderno da disciplina". */
+  cadernoDisciplina: string | null;
   children: React.ReactNode;
   className?: string;
   variant?: "default" | "secondary" | "ghost";
@@ -25,7 +29,9 @@ export function EditorTopico({
       {...botao}
       titulo={topico ? "Editar tópico" : "Novo tópico"}
       descricao="Nome do tópico e o que focar no estudo."
-      conteudo={(fechar) => <FormTopico disciplinaId={disciplinaId} topico={topico} aoSalvar={fechar} />}
+      conteudo={(fechar) => (
+        <FormTopico disciplinaId={disciplinaId} topico={topico} cadernoDisciplina={cadernoDisciplina} aoSalvar={fechar} />
+      )}
     />
   );
 }
@@ -33,10 +39,12 @@ export function EditorTopico({
 function FormTopico({
   disciplinaId,
   topico,
+  cadernoDisciplina,
   aoSalvar,
 }: {
   disciplinaId: string;
   topico?: Topico;
+  cadernoDisciplina: string | null;
   aoSalvar: () => void;
 }) {
   const [estado, acao, salvando] = useActionState<EstadoTopico, FormData>(async (anterior, dados) => {
@@ -47,6 +55,8 @@ function FormTopico({
   // controlados: o React limpa campos não controlados depois da action, inclusive quando dá erro
   const [nome, setNome] = useState(topico?.nome ?? "");
   const [descricao, setDescricao] = useState(topico?.descricao ?? "");
+  const [proprio, setProprio] = useState(Boolean(topico?.notebooklmUrl));
+  const [url, setUrl] = useState(topico?.notebooklmUrl ?? "");
   const id = useId();
   const erro = (campo: keyof NonNullable<EstadoTopico["erros"]>) => estado.erros?.[campo]?.[0];
 
@@ -98,6 +108,42 @@ function FormTopico({
           {erro("descricao")}
         </p>
       </div>
+
+      <fieldset className="space-y-2">
+        <legend className="mb-2 font-bold">Caderno do NotebookLM</legend>
+        <div className="grid grid-cols-2 gap-2">
+          <label className={PILULA}>
+            <input type="radio" name="caderno" value="disciplina" checked={!proprio} onChange={() => setProprio(false)} className="sr-only" />
+            Da disciplina
+          </label>
+          <label className={PILULA}>
+            <input type="radio" name="caderno" value="proprio" checked={proprio} onChange={() => setProprio(true)} className="sr-only" />
+            Outro caderno
+          </label>
+        </div>
+        {!proprio && (
+          <p className="truncate text-[13px] text-ink3">{cadernoDisciplina ?? "A disciplina ainda não tem link."}</p>
+        )}
+        {proprio && (
+          <>
+            <input
+              name="notebooklmUrl"
+              type="url"
+              inputMode="url"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://notebooklm.google.com/notebook/…"
+              aria-label="Link do caderno deste tópico"
+              aria-invalid={erro("notebooklmUrl") ? true : undefined}
+              aria-describedby={`${id}-url-erro`}
+              className={CAMPO}
+            />
+            <p id={`${id}-url-erro`} className="text-warn empty:hidden">
+              {erro("notebooklmUrl")}
+            </p>
+          </>
+        )}
+      </fieldset>
 
       <Button type="submit" disabled={salvando} className="w-full sm:w-auto">
         {salvando ? "Salvando…" : "Salvar"}

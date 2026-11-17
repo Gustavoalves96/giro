@@ -1,5 +1,6 @@
 import { and, asc, desc, eq, gte, isNotNull, isNull, lt, lte, max, ne, sql } from "drizzle-orm";
 import { verificarConquistas } from "./conquistas";
+import { cadernoDoTopico } from "./topicos";
 import { db } from "./index";
 import { calcularDominio, topicosARecalcular } from "@/lib/domain/dominio";
 import { fracaoLembrada, type Nota } from "@/lib/domain/procedimento";
@@ -37,7 +38,7 @@ export async function getSessao(dono: string, id: string) {
       descricao: topicos.descricao,
       disciplina: disciplinas.nome,
       cor: disciplinas.cor,
-      notebooklmUrl: disciplinas.notebooklmUrl,
+      notebooklmUrl: cadernoDoTopico,
     })
     .from(sessoes)
     .leftJoin(topicos, eq(topicos.id, sessoes.topicoId))

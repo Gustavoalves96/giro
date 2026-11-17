@@ -3,7 +3,10 @@ import { db } from "./index";
 import { disciplinaDoDono, topicoDoDono } from "./dono";
 import { disciplinas, topicos } from "./schema";
 
-type Dados = { nome: string; descricao: string | null };
+type Dados = { nome: string; descricao: string | null; notebooklmUrl: string | null };
+
+/** Caderno que o tópico abre: o próprio ou, sem ele, o da disciplina. */
+export const cadernoDoTopico = sql<string | null>`coalesce(${topicos.notebooklmUrl}, ${disciplinas.notebooklmUrl})`;
 
 export async function getDisciplina(dono: string, id: string) {
   const [d] = await db.select().from(disciplinas).where(and(eq(disciplinas.id, id), eq(disciplinas.dono, dono)));
@@ -21,6 +24,7 @@ export async function listarTopicos(dono: string, disciplinaId: string) {
       id: topicos.id,
       nome: topicos.nome,
       descricao: topicos.descricao,
+      notebooklmUrl: topicos.notebooklmUrl,
       dominio: topicos.dominio,
       arquivado: topicos.arquivado,
       questoesAtivas: sql<number>`(select count(*) from questoes q where q.topico_id = "topicos"."id" and q.ativa and q.tipo <> 'procedimento')`.mapWith(
@@ -48,7 +52,7 @@ export async function getTopico(dono: string, id: string) {
       disciplinaId: disciplinas.id,
       disciplinaNome: disciplinas.nome,
       cor: disciplinas.cor,
-      notebooklmUrl: disciplinas.notebooklmUrl,
+      notebooklmUrl: cadernoDoTopico,
       respondido: sql<boolean>`exists (select 1 from respostas r join questoes q on q.id = r.questao_id where q.topico_id = "topicos"."id")`,
     })
     .from(topicos)
@@ -68,7 +72,7 @@ export async function listarTopicosRoleta(dono: string) {
       disciplinaId: disciplinas.id,
       disciplina: disciplinas.nome,
       cor: disciplinas.cor,
-      notebooklmUrl: disciplinas.notebooklmUrl,
+      notebooklmUrl: cadernoDoTopico,
       novo: sql<boolean>`not exists (select 1 from respostas r join questoes q on q.id = r.questao_id where q.topico_id = "topicos"."id")`,
     })
     .from(topicos)

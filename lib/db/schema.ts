@@ -57,6 +57,8 @@ export const topicos = pgTable(
       .references(() => disciplinas.id, { onDelete: "cascade" }),
     nome: text("nome").notNull(),
     descricao: text("descricao"),
+    // null = segue o caderno da disciplina
+    notebooklmUrl: text("notebooklm_url"),
     dominio: real("dominio").notNull().default(0),
     ultimaVezEstudado: timestamp("ultima_vez_estudado", tz),
     arquivado: boolean("arquivado").notNull().default(false),

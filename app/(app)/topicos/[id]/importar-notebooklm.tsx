@@ -209,12 +209,12 @@ function Painel({ tipo, topicoId, topico, disciplina, notebooklmUrl, enunciados 
             <Button variant="secondary" asChild>
               <a href={notebooklmUrl} target="_blank" rel="noopener noreferrer">
                 <ExternalLink aria-hidden />
-                Abrir caderno de {disciplina}
+                Abrir caderno de {topico}
               </a>
             </Button>
           ) : (
             <>
-              <p className="text-ink2">{disciplina} ainda não tem o link do caderno.</p>
+              <p className="text-ink2">Nem o tópico nem {disciplina} têm o link do caderno.</p>
               <Button variant="secondary" asChild>
                 <Link href="/disciplinas">Cadastrar o link em Disciplinas</Link>
               </Button>

@@ -8,7 +8,7 @@ import { IdSchema } from "@/lib/disciplinas/schema";
 import { TOPICO_COM_HISTORICO, TopicoSchema } from "@/lib/topicos/schema";
 
 export type EstadoTopico = {
-  erros?: Partial<Record<"nome" | "descricao", string[]>>;
+  erros?: Partial<Record<"nome" | "descricao" | "notebooklmUrl", string[]>>;
   salvo?: boolean;
 };
 
@@ -17,8 +17,15 @@ export async function salvarTopico(_anterior: EstadoTopico, form: FormData): Pro
   const conta = await dono();
   const disciplinaId = IdSchema.parse(form.get("disciplinaId"));
   const id = form.get("id") ? IdSchema.parse(form.get("id")) : null;
-  const dados = TopicoSchema.safeParse({ nome: form.get("nome"), descricao: form.get("descricao") ?? undefined });
+  const dados = TopicoSchema.safeParse({
+    nome: form.get("nome"),
+    descricao: form.get("descricao") ?? undefined,
+    // "seguir" = sem link próprio (null): abre o caderno da disciplina
+    notebooklmUrl: form.get("caderno") === "proprio" ? (form.get("notebooklmUrl") ?? undefined) : undefined,
+  });
   if (!dados.success) return { erros: z.flattenError(dados.error).fieldErrors };
+  if (form.get("caderno") === "proprio" && !dados.data.notebooklmUrl)
+    return { erros: { notebooklmUrl: ["Cole o link do caderno deste tópico."] } };
   if (id) await editarTopico(conta, id, dados.data);
   else if (!(await criarTopico(conta, disciplinaId, dados.data))) throw new Error("Disciplina não encontrada.");
   revalidatePath(`/disciplinas/${disciplinaId}`);

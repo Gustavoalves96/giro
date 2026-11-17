@@ -11,18 +11,19 @@ import { corrigirSimulado, MAX_QUESTOES, PONTOS_POR_ACERTO, sortearIds } from "@
 
 const ComecarSchema = z.object({
   disciplinaIds: z.array(IdSchema).min(1, "Escolha pelo menos uma disciplina.").max(200),
+  topicoIds: z.array(IdSchema).max(2000).default([]),
   questoes: z.number().int().min(1).max(MAX_QUESTOES),
   minutos: z.number().int().min(1).max(300),
 });
 
 export type Comeco = { ok: true; url: string } | { ok: false; mensagem: string };
 
-// Sorteio no servidor: N questões ativas aleatórias das disciplinas escolhidas, guardadas na sessão na ordem da prova.
+// Sorteio no servidor: N questões ativas aleatórias dos tópicos escolhidos, guardadas na sessão na ordem da prova.
 export async function comecarSimulado(entrada: z.input<typeof ComecarSchema>): Promise<Comeco> {
   const conta = await dono();
   const r = ComecarSchema.safeParse(entrada);
   if (!r.success) return { ok: false, mensagem: r.error.issues[0].message };
-  const ids = sortearIds(await idsElegiveis(conta, r.data.disciplinaIds), r.data.questoes);
+  const ids = sortearIds(await idsElegiveis(conta, r.data.disciplinaIds, r.data.topicoIds), r.data.questoes);
   if (!ids.length) return { ok: false, mensagem: "Essas disciplinas ainda não têm questões ativas." };
   const id = await criarSessaoSimulado(conta, ids, r.data.minutos * 60);
   return { ok: true, url: `/simulado/sessao/${id}/questoes` };

@@ -20,7 +20,7 @@ const ICONE = "size-11 px-0 has-[>svg]:px-0";
 type Topico = Awaited<ReturnType<typeof listarTopicos>>[number];
 
 // Até md, tudo centralizado e os ícones embaixo; a partir de md, uma fileira alinhada à esquerda com os ícones à direita.
-function LinhaTopico({ t, cor, disciplinaId }: { t: Topico; cor: string; disciplinaId: string }) {
+function LinhaTopico({ t, cor, disciplinaId, caderno }: { t: Topico; cor: string; disciplinaId: string; caderno: string | null }) {
   const dominio = Math.round(t.dominio);
   return (
     <li className="flex flex-col gap-3 rounded-3xl border border-line bg-sf p-4 md:flex-row md:items-center md:p-5">
@@ -70,7 +70,7 @@ function LinhaTopico({ t, cor, disciplinaId }: { t: Topico; cor: string; discipl
         </form>
       ) : (
         <div className="flex items-center justify-center gap-1">
-          <EditorTopico disciplinaId={disciplinaId} topico={t} variant="ghost" className={ICONE} ariaLabel={`Editar ${t.nome}`}>
+          <EditorTopico disciplinaId={disciplinaId} topico={t} cadernoDisciplina={caderno} variant="ghost" className={ICONE} ariaLabel={`Editar ${t.nome}`}>
             <Pencil aria-hidden />
           </EditorTopico>
           <form action={arquivar.bind(null, t.id, disciplinaId, true)}>
@@ -122,7 +122,7 @@ async function Conteudo({ id }: { id: string }) {
               </a>
             </Button>
           )}
-          <EditorTopico disciplinaId={id} variant="default" className="w-full sm:w-auto">
+          <EditorTopico disciplinaId={id} cadernoDisciplina={disciplina.notebooklmUrl} variant="default" className="w-full sm:w-auto">
             <Plus aria-hidden />
             Novo tópico
           </EditorTopico>
@@ -140,7 +140,7 @@ async function Conteudo({ id }: { id: string }) {
       ) : (
         <ul className="space-y-3">
           {topicos.map((t) => (
-            <LinhaTopico key={t.id} t={t} cor={disciplina.cor} disciplinaId={id} />
+            <LinhaTopico key={t.id} t={t} cor={disciplina.cor} disciplinaId={id} caderno={disciplina.notebooklmUrl} />
           ))}
         </ul>
       )}
@@ -152,7 +152,7 @@ async function Conteudo({ id }: { id: string }) {
           </summary>
           <ul className="mt-3 space-y-3 opacity-80">
             {arquivados.map((t) => (
-              <LinhaTopico key={t.id} t={t} cor={disciplina.cor} disciplinaId={id} />
+              <LinhaTopico key={t.id} t={t} cor={disciplina.cor} disciplinaId={id} caderno={disciplina.notebooklmUrl} />
             ))}
           </ul>
         </details>

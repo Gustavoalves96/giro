@@ -1,0 +1,1 @@
+ALTER TABLE "topicos" ADD COLUMN "notebooklm_url" text;

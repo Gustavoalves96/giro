@@ -20,7 +20,7 @@ const DIFICULDADES = ["facil", "media", "dificil"] as const;
 const ORIGENS = ["manual", "prova_antiga"] as const;
 
 // Pílula de rádio (input escondido dentro do label): marcada = tinta cheia.
-const PILULA =
+export const PILULA =
   "flex min-h-11 cursor-pointer items-center justify-center rounded-[14px] border border-line bg-sf px-4 text-center font-bold text-ink2 " +
   "has-checked:border-ink has-checked:bg-ink has-checked:text-bg has-focus-visible:ring-[3px] has-focus-visible:ring-ring";
 

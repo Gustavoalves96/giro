@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { NotebookUrlSchema } from "@/lib/disciplinas/schema";
 
 // Fora de lib/db: lib/db/index.ts exige DATABASE_URL e quebraria o Vitest.
 export const TopicoSchema = z.object({
@@ -19,6 +20,8 @@ export const TopicoSchema = z.object({
       return linhas.length ? linhas.join("\n") : null;
     })
     .pipe(z.string().max(1000, "Use no máximo 1000 caracteres.").nullable()),
+  // caderno próprio do tópico; null = segue o da disciplina
+  notebooklmUrl: NotebookUrlSchema,
 });
 
 // Excluir tópico só sem respostas (sessão 12): o diálogo e a action usam o mesmo texto.

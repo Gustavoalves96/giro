@@ -1,5 +1,13 @@
 import { z } from "zod";
 
+// campo vazio = sem link
+export const NotebookUrlSchema = z
+  .string()
+  .trim()
+  .optional()
+  .transform((u) => u || null)
+  .pipe(z.url({ protocol: /^https?$/, error: "Cole um link válido (https://…)." }).nullable());
+
 // Fora de lib/db: lib/db/index.ts exige DATABASE_URL e quebraria o Vitest.
 export const DisciplinaSchema = z.object({
   nome: z
@@ -12,13 +20,7 @@ export const DisciplinaSchema = z.object({
     .trim()
     .regex(/^#[0-9a-fA-F]{6}$/, "Use uma cor no formato #RRGGBB.")
     .transform((c) => c.toUpperCase()),
-  // campo vazio = sem link
-  notebooklmUrl: z
-    .string()
-    .trim()
-    .optional()
-    .transform((u) => u || null)
-    .pipe(z.url({ protocol: /^https?$/, error: "Cole um link válido (https://…)." }).nullable()),
+  notebooklmUrl: NotebookUrlSchema,
 });
 
 export const IdSchema = z.uuid();

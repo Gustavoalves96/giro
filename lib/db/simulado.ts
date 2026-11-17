@@ -7,25 +7,33 @@ import { disciplinas, questoes, respostas, sessoes, topicos } from "./schema";
 const elegivel = (dono: string) =>
   and(eq(disciplinas.dono, dono), eq(questoes.ativa, true), ne(questoes.tipo, "procedimento"), eq(disciplinas.arquivada, false), eq(topicos.arquivado, false));
 
-/** Disciplinas não arquivadas com o nº de questões que podem cair no simulado. */
-export async function disciplinasDoSimulado(dono: string) {
+/** Tópicos (não arquivados, de disciplina não arquivada) com o nº de questões que podem cair no simulado. */
+export async function topicosDoSimulado(dono: string) {
   return db
-    .select({ id: disciplinas.id, nome: disciplinas.nome, cor: disciplinas.cor, questoes: count(questoes.id) })
+    .select({
+      id: topicos.id,
+      nome: topicos.nome,
+      disciplinaId: disciplinas.id,
+      disciplina: disciplinas.nome,
+      cor: disciplinas.cor,
+      peso: count(questoes.id),
+    })
     .from(disciplinas)
     .innerJoin(topicos, eq(topicos.disciplinaId, disciplinas.id))
     .innerJoin(questoes, eq(questoes.topicoId, topicos.id))
     .where(elegivel(dono))
-    .groupBy(disciplinas.id, disciplinas.nome, disciplinas.cor, disciplinas.ordem, disciplinas.criadoEm)
-    .orderBy(asc(disciplinas.ordem), asc(disciplinas.criadoEm));
+    .groupBy(topicos.id, topicos.nome, topicos.criadoEm, disciplinas.id, disciplinas.nome, disciplinas.cor, disciplinas.ordem, disciplinas.criadoEm)
+    .orderBy(asc(disciplinas.ordem), asc(disciplinas.criadoEm), asc(topicos.criadoEm), asc(topicos.nome));
 }
 
-export async function idsElegiveis(dono: string, disciplinaIds: string[]) {
+/** topicoIds vazio = todos os tópicos das disciplinas. */
+export async function idsElegiveis(dono: string, disciplinaIds: string[], topicoIds: string[] = []) {
   const linhas = await db
     .select({ id: questoes.id })
     .from(questoes)
     .innerJoin(topicos, eq(topicos.id, questoes.topicoId))
     .innerJoin(disciplinas, eq(disciplinas.id, topicos.disciplinaId))
-    .where(and(elegivel(dono), inArray(disciplinas.id, disciplinaIds)));
+    .where(and(elegivel(dono), inArray(disciplinas.id, disciplinaIds), topicoIds.length ? inArray(topicos.id, topicoIds) : undefined));
   return linhas.map((l) => l.id);
 }
 

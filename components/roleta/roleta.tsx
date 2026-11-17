@@ -10,6 +10,7 @@ import { BarraDominio } from "@/components/barra-dominio";
 import { PonteiroRoleta, VISUAL_ROLETA } from "@/components/recompensas/visuais";
 import { CHAVE_REDUZIR, lerReduzirPainel } from "@/components/movimento-reduzido";
 import { SeletorEstudo } from "@/components/seletor-estudo";
+import { type ItemTopico, SeletorTopicos } from "@/components/seletor-topicos";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TEXTO_SOBRE_TINTA, tintaClara } from "@/lib/cores";
@@ -42,18 +43,13 @@ export function Roleta({
   // tempo só desta rodada; começa no padrão do perfil e não o altera
   const [estudo, setEstudo] = useState(estudoPadrao);
   const [comecando, iniciarEstudo] = useTransition();
-  const disciplinas = useMemo(() => {
-    const m = new Map<string, { id: string; nome: string; cor: string; topicos: number }>();
-    for (const c of candidatos) {
-      const d = m.get(c.disciplinaId) ?? { id: c.disciplinaId, nome: c.disciplina, cor: c.cor, topicos: 0 };
-      d.topicos++;
-      m.set(d.id, d);
-    }
-    return [...m.values()];
-  }, [candidatos]);
+  const itens = useMemo<ItemTopico[]>(
+    () => candidatos.map((c) => ({ id: c.topicoId, nome: c.nome, disciplinaId: c.disciplinaId, disciplina: c.disciplina, cor: c.cor, peso: 1 })),
+    [candidatos],
+  );
 
   const [modo, setModo] = useState<Modo>("inteligente");
-  const [desligadas, setDesligadas] = useState<string[]>([]);
+  const [desligados, setDesligados] = useState<string[]>([]);
   const [estado, setEstado] = useState<Estado>("antes");
   const [giro, setGiro] = useState<ResultadoGiro | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -75,8 +71,9 @@ export function Roleta({
     } catch {}
   }
 
-  const ligadas = disciplinas.filter((d) => !desligadas.includes(d.id)).map((d) => d.id);
-  const locais = montarFatias(candidatos, modo, { disciplinaIds: ligadas });
+  const ligados = itens.filter((t) => !desligados.includes(t.id));
+  const filtro = { disciplinaIds: [...new Set(ligados.map((t) => t.disciplinaId))], topicoIds: ligados.map((t) => t.id) };
+  const locais = montarFatias(candidatos, modo, filtro);
   const fatias = giro?.fatias.length ? giro.fatias : locais;
 
   const rot = useMotionValue(0);
@@ -114,7 +111,7 @@ export function Roleta({
     setEstado("girando");
     let r: ResultadoGiro;
     try {
-      r = await girar({ modo, disciplinaIds: ligadas });
+      r = await girar({ modo, ...filtro });
     } catch {
       setErro("Não foi possível girar agora. Tente de novo.");
       setEstado(giro ? "sorteado" : "antes");
@@ -346,42 +343,22 @@ export function Roleta({
               </p>
             </div>
 
-            {disciplinas.length > 0 && (
+            {itens.length > 0 && (
               // celular: filtros de disciplina ocultos
               <div className="max-md:hidden">
                 <p className={ROTULO} id="disc-rotulo">
-                  Disciplinas
+                  Disciplinas e tópicos
                 </p>
-                <ul aria-labelledby="disc-rotulo" className="mt-2 grid grid-cols-2 gap-2 lg:grid-cols-1">
-                  {disciplinas.map((d) => {
-                    const ligada = !desligadas.includes(d.id);
-                    return (
-                      <li key={d.id}>
-                        <button
-                          type="button"
-                          role="checkbox"
-                          aria-checked={ligada}
-                          disabled={girando}
-                          onClick={() => setDesligadas((ds) => (ligada ? [...ds, d.id] : ds.filter((x) => x !== d.id)))}
-                          className={cn(
-                            "flex min-h-11 w-full items-center gap-3 rounded-[14px] border px-3 text-left outline-none focus-visible:ring-[3px] focus-visible:ring-ring",
-                            ligada ? "border-line bg-sf" : "border-dashed border-ink3/60 text-ink3",
-                          )}
-                        >
-                          <span
-                            className="size-4 shrink-0 rounded-[5px] border-2"
-                            style={{ borderColor: d.cor, backgroundColor: ligada ? d.cor : "transparent" }}
-                            aria-hidden
-                          />
-                          <span className="min-w-0 flex-1 truncate font-bold">{d.nome}</span>
-                          <span className="text-[13px] text-ink3 tabular-nums" aria-label={`${d.topicos} tópicos`}>
-                            {d.topicos}
-                          </span>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
+                <div aria-labelledby="disc-rotulo" role="group">
+                  <SeletorTopicos
+                    itens={itens}
+                    desligados={desligados}
+                    aoMudar={setDesligados}
+                    unidade={["tópico", "tópicos"]}
+                    disabled={girando}
+                    className="grid-cols-2 lg:grid-cols-1"
+                  />
+                </div>
               </div>
             )}
 

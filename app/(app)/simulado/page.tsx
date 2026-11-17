@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
-import { disciplinasDoSimulado } from "@/lib/db/simulado";
+import { topicosDoSimulado } from "@/lib/db/simulado";
 import { FormSimulado } from "./form-simulado";
 import { dono } from "@/lib/auth/require-user";
 
@@ -11,8 +11,8 @@ export const metadata: Metadata = { title: "Simulado · Giro" };
 
 async function Conteudo() {
   const conta = await dono();
-  const disciplinas = await disciplinasDoSimulado(conta);
-  if (!disciplinas.length)
+  const topicos = await topicosDoSimulado(conta);
+  if (!topicos.length)
     return (
       <section className="max-w-xl rounded-3xl border border-line bg-sf p-6">
         <h2 className="font-display text-[22px] font-extrabold">Ainda não há questões</h2>
@@ -25,7 +25,7 @@ async function Conteudo() {
         </Button>
       </section>
     );
-  return <FormSimulado disciplinas={disciplinas} />;
+  return <FormSimulado topicos={topicos} />;
 }
 
 export default function Page() {
