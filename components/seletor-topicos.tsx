@@ -40,7 +40,7 @@ export function SeletorTopicos({
   const conta = (n: number) => `${n} ${n === 1 ? unidade[0] : unidade[1]}`;
 
   return (
-    <ul className={cn("mt-2 grid items-start gap-2", className)}>
+    <ul className={cn("mt-2 grid gap-2", className)}>
       {[...grupos.values()].map((d) => {
         const ids = d.topicos.map((t) => t.id);
         const ligados = d.topicos.filter((t) => !fora.has(t.id));
@@ -52,7 +52,8 @@ export function SeletorTopicos({
         return (
           // aberta ocupa a linha toda da grade: os tópicos ganham largura e não sobra buraco ao lado
           <li key={d.id} className={cn(aberta && "col-span-full")}>
-            <div className="flex gap-1">
+            {/* fechada: mesma altura das vizinhas da linha (a caixa estica, a seta fica no meio) */}
+            <div className={cn("flex items-center gap-1", !aberta && "h-full")}>
               <button
                 type="button"
                 role="checkbox"
@@ -60,15 +61,16 @@ export function SeletorTopicos({
                 disabled={disabled}
                 // marcada (toda ou em parte) desmarca tudo; desmarcada marca tudo
                 onClick={() => aoMudar(estado ? [...new Set([...desligados, ...ids])] : desligados.filter((x) => !ids.includes(x)))}
-                className={cn(LINHA, estado ? "border-line bg-sf" : "border-dashed border-ink3/60 text-ink3")}
+                // min-w-0: sem ele o botão não encolhe abaixo do conteúdo e empurra a seta para fora da coluna
+                className={cn(LINHA, "min-w-0 self-stretch", estado ? "border-line bg-sf" : "border-dashed border-ink3/60 text-ink3")}
               >
                 <Caixa cor={d.cor} estado={estado} />
-                <span className="min-w-0 flex-1 truncate font-bold">{d.nome}</span>
-                <span
-                  className="text-[13px] whitespace-nowrap text-ink3 tabular-nums"
-                  aria-label={estado === "mixed" ? `${conta(marcado)} de ${total}` : conta(total)}
-                >
-                  {estado === "mixed" ? `${marcado} de ${total}` : total}
+                {/* contagem embaixo do nome: no celular o nome fica com a largura toda da linha */}
+                <span className="min-w-0 flex-1 py-1.5">
+                  <span className="block font-bold hyphens-auto wrap-break-word">{d.nome}</span>
+                  <span className="block text-[13px] text-ink3 tabular-nums">
+                    {estado === "mixed" ? `${marcado} de ${conta(total)}` : conta(total)}
+                  </span>
                 </span>
               </button>
               <button
@@ -98,7 +100,7 @@ export function SeletorTopicos({
                         className={cn(LINHA, "border-transparent", !ligado && "text-ink3")}
                       >
                         <Caixa cor={d.cor} estado={ligado} />
-                        <span className="min-w-0 flex-1 py-2 wrap-break-word">{t.nome}</span>
+                        <span className="min-w-0 flex-1 py-2 hyphens-auto wrap-break-word">{t.nome}</span>
                         {/* contando tópicos, cada um vale 1: o número ao lado não diz nada */}
                         {unidade[0] !== "tópico" && (
                           <span className="text-[13px] text-ink3 tabular-nums" aria-label={conta(t.peso)}>

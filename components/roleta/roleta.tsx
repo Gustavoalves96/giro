@@ -344,8 +344,7 @@ export function Roleta({
             </div>
 
             {itens.length > 0 && (
-              // celular: filtros de disciplina ocultos
-              <div className="max-md:hidden">
+              <div>
                 <p className={ROTULO} id="disc-rotulo">
                   Disciplinas e tópicos
                 </p>
@@ -356,7 +355,7 @@ export function Roleta({
                     aoMudar={setDesligados}
                     unidade={["tópico", "tópicos"]}
                     disabled={girando}
-                    className="grid-cols-2 lg:grid-cols-1"
+                    className="grid-cols-1 sm:grid-cols-2 lg:grid-cols-1"
                   />
                 </div>
               </div>
