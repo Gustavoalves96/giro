@@ -3,11 +3,20 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { MarcaGiro } from "@/components/marca";
 import { LinkPerfil, LinkPerfilAtivo, ListaDestinos, ListaDestinosAtiva } from "@/components/navegacao/itens";
+import { dono } from "@/lib/auth/require-user";
+import { desbloqueiosDaConta } from "@/lib/db/conquistas";
 
 // Uma navegação só; o CSS decide: < md barra inferior · md trilho de 96 px · xl barra lateral de 240 px.
 // Telas de foco (app/(app)/(foco)) marcam [data-foco] e a navegação some só com CSS, sem piscar.
 // Ao sair pelo cliente o Next guarda a tela anterior no DOM com display: none (Activity): essa não conta.
 const SOME_NO_FOCO = "group-has-[[data-foco]:not([style*='display:_none'])]/app:hidden";
+
+// Banco é da requisição (Cache Components): dentro do <Suspense> da navegação. O layout não re-renderiza ao
+// navegar pelo cliente; quem muda a contagem chama revalidatePath("/", "layout").
+async function Destinos() {
+  const { atuais, vistas } = await desbloqueiosDaConta(await dono());
+  return <ListaDestinosAtiva novidade={atuais > vistas} />;
+}
 
 export default function AppLayout({ children }: LayoutProps<"/">) {
   return (
@@ -43,7 +52,7 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
           <span className="hidden font-display text-[28px] font-extrabold xl:inline">Giro</span>
         </Link>
         <Suspense fallback={<ListaDestinos pathname={null} />}>
-          <ListaDestinosAtiva />
+          <Destinos />
         </Suspense>
         <Suspense fallback={<LinkPerfil pathname={null} />}>
           <LinkPerfilAtivo />

@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { dono } from "@/lib/auth/require-user";
 import { getRevisao, gravarResposta } from "@/lib/db/quiz";
@@ -68,6 +69,7 @@ export async function entregarSimulado(entrada: z.input<typeof EntregarSchema>) 
     pontuacao: acertos * PONTOS_POR_ACERTO,
     maiorSequencia: 0,
   });
+  revalidatePath("/", "layout"); // XP e medalhas novos: bolinha de Recompensas na navegação
 }
 
 export async function sairDoSimulado(sessaoId: string) {

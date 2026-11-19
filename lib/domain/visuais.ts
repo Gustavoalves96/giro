@@ -1,6 +1,6 @@
 // Visuais desbloqueáveis (CLAUDE.md §4.7). Só os dados e a regra; o desenho fica nos componentes.
 import { medalhaPorId } from "./conquistas";
-import { tituloDoNivel } from "./nivel";
+import { nivel, TITULOS, tituloDoNivel } from "./nivel";
 
 export type Libera = { nivel: number } | { medalha: string } | null; // null = livre desde o início
 
@@ -42,6 +42,20 @@ export function textoLibera(libera: Libera) {
   if (!libera) return "Livre";
   if ("nivel" in libera) return `Libera no nível ${libera.nivel} (${tituloDoNivel(libera.nivel)})`;
   return `Libera com a medalha “${medalhaPorId(libera.medalha)?.nome ?? libera.medalha}”`;
+}
+
+/**
+ * Quantas recompensas a conta já desbloqueou: medalhas, títulos acima do primeiro e visuais não livres.
+ * Só cresce (XP e medalhas não diminuem), então comparar com o número já visto basta para a bolinha.
+ */
+export function contarDesbloqueios(n: number, medalhas: ReadonlySet<string>) {
+  const visuais = [...ESTILOS_ROLETA, ...MOLDURAS].filter((v) => v.libera && liberado(v.libera, n, medalhas)).length;
+  return medalhas.size + TITULOS.filter((t) => t.nivel > 1 && n >= t.nivel).length + visuais;
+}
+
+/** Bolinha em Recompensas: há desbloqueio que ela ainda não viu na página. */
+export function temNovidade(xp: number, medalhas: ReadonlySet<string>, vistas: number) {
+  return contarDesbloqueios(nivel(xp).nivel, medalhas) > vistas;
 }
 
 /** Estilo salvo no perfil, ou o padrão se não houver (ou se o id não existir mais). */

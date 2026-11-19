@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { dono } from "@/lib/auth/require-user";
 import { criarSessaoRoleta, fecharERecalcular, respostasDaSessao, salvarEstudoSessao } from "@/lib/db/sessoes";
@@ -15,6 +16,7 @@ const GirarSchema = z.object({
   modo: z.enum(["inteligente", "sorte"]),
   disciplinaIds: z.array(IdSchema).max(200),
   topicoIds: z.array(IdSchema).max(2000).default([]),
+  soProcedimentos: z.boolean().default(false),
 });
 
 export type ResultadoGiro = { fatias: Fatia[]; sorteadoId: string | null; motivo: string };
@@ -29,7 +31,10 @@ export async function girar(entrada: z.input<typeof GirarSchema>): Promise<Resul
   const comProva = topicosComProvaEm14Dias(provas, hoje);
   const candidatos = linhas.map((l) => candidatoDe(l, agora, comProva));
   const fatias = montarFatias(candidatos, filtro.modo, filtro);
-  if (!fatias.length) return { fatias, sorteadoId: null, motivo: motivoVazio(candidatos.length) };
+  if (!fatias.length) {
+    const total = filtro.soProcedimentos ? candidatos.filter((c) => c.procedimentos).length : candidatos.length;
+    return { fatias, sorteadoId: null, motivo: motivoVazio(total, filtro.soProcedimentos) };
+  }
   const sorteado = sortear(fatias);
   return {
     fatias,
@@ -39,12 +44,12 @@ export async function girar(entrada: z.input<typeof GirarSchema>): Promise<Resul
 }
 
 // "Começar estudo": cria a sessão e devolve a URL do estudo. O tempo escolhido (só desta rodada) vai na URL.
-export async function comecarEstudo(topicoId: string, estudoSegundos: number) {
+export async function comecarEstudo(topicoId: string, estudoSegundos: number, soProcedimentos = false) {
   const conta = await dono();
   const segundos = EstudoSegundosSchema.parse(estudoSegundos);
   const topico = await getTopico(conta, IdSchema.parse(topicoId));
   if (!topico) throw new Error("Tópico não encontrado.");
-  const id = await criarSessaoRoleta(conta, topico.id);
+  const id = await criarSessaoRoleta(conta, topico.id, z.boolean().parse(soProcedimentos));
   return `/roleta/sessao/${id}/estudo?s=${segundos}`;
 }
 
@@ -68,4 +73,5 @@ export async function finalizar(sessaoId: string) {
     pontuacao: r.total,
     maiorSequencia: r.maiorSequencia,
   });
+  revalidatePath("/", "layout"); // XP e medalhas novos: bolinha de Recompensas na navegação
 }

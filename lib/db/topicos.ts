@@ -74,6 +74,7 @@ export async function listarTopicosRoleta(dono: string) {
       cor: disciplinas.cor,
       notebooklmUrl: cadernoDoTopico,
       novo: sql<boolean>`not exists (select 1 from respostas r join questoes q on q.id = r.questao_id where q.topico_id = "topicos"."id")`,
+      procedimentos: sql<boolean>`exists (select 1 from questoes q where q.topico_id = "topicos"."id" and q.ativa and q.tipo = 'procedimento')`,
     })
     .from(topicos)
     .innerJoin(disciplinas, eq(disciplinas.id, topicos.disciplinaId))

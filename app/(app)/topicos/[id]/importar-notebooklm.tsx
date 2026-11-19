@@ -2,8 +2,9 @@
 
 import { AlertTriangle, Check, Copy, ExternalLink, Upload } from "lucide-react";
 import Link from "next/link";
-import { useId, useState, useTransition } from "react";
+import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { CAMPO, EditorResponsivo } from "@/components/editor-responsivo";
+import { useMovimentoReduzido } from "@/components/movimento-reduzido";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { type Leitura, lerProcedimentos, lerResposta } from "@/lib/import/parse-json";
@@ -137,7 +138,13 @@ function Painel({ tipo, topicoId, topico, disciplina, notebooklmUrl, enunciados 
   const [leitura, setLeitura] = useState<Leitura<ItemPrevia> | null>(null);
   const [resultado, setResultado] = useState<EstadoImportacao | null>(null);
   const [importando, iniciar] = useTransition();
-  const prompt = t.prompt({ quantidade, topico, disciplina });
+  const prompt = t.prompt({ quantidade, topico, disciplina, existentes: enunciados });
+  // a prévia (ou o resultado) aparece abaixo do botão, fora da tela: rola até ela
+  const retorno = useRef<HTMLDivElement>(null);
+  const reduzir = useMovimentoReduzido();
+  useEffect(() => {
+    if (leitura || resultado) retorno.current?.scrollIntoView({ block: "start", behavior: reduzir ? "auto" : "smooth" });
+  }, [leitura, resultado, reduzir]);
 
   async function copiar() {
     try {
@@ -243,7 +250,7 @@ function Painel({ tipo, topicoId, topico, disciplina, notebooklmUrl, enunciados 
         </Passo>
       </ol>
 
-      <div aria-live="polite">
+      <div ref={retorno} aria-live="polite" className="scroll-mt-4">
         {resultado && "importadas" in resultado && (
           <p className="flex items-center gap-2 rounded-2xl border border-ok p-4 font-bold text-ok">
             <Check aria-hidden />

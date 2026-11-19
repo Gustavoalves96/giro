@@ -43,9 +43,12 @@ export function Roleta({
   // tempo só desta rodada; começa no padrão do perfil e não o altera
   const [estudo, setEstudo] = useState(estudoPadrao);
   const [comecando, iniciarEstudo] = useTransition();
+  // "Praticar": questões (com até 1 procedimento) ou só procedimentos
+  const [soProcedimentos, setSoProcedimentos] = useState(false);
+  const base = useMemo(() => (soProcedimentos ? candidatos.filter((c) => c.procedimentos) : candidatos), [candidatos, soProcedimentos]);
   const itens = useMemo<ItemTopico[]>(
-    () => candidatos.map((c) => ({ id: c.topicoId, nome: c.nome, disciplinaId: c.disciplinaId, disciplina: c.disciplina, cor: c.cor, peso: 1 })),
-    [candidatos],
+    () => base.map((c) => ({ id: c.topicoId, nome: c.nome, disciplinaId: c.disciplinaId, disciplina: c.disciplina, cor: c.cor, peso: 1 })),
+    [base],
   );
 
   const [modo, setModo] = useState<Modo>("inteligente");
@@ -72,8 +75,8 @@ export function Roleta({
   }
 
   const ligados = itens.filter((t) => !desligados.includes(t.id));
-  const filtro = { disciplinaIds: [...new Set(ligados.map((t) => t.disciplinaId))], topicoIds: ligados.map((t) => t.id) };
-  const locais = montarFatias(candidatos, modo, filtro);
+  const filtro = { disciplinaIds: [...new Set(ligados.map((t) => t.disciplinaId))], topicoIds: ligados.map((t) => t.id), soProcedimentos };
+  const locais = montarFatias(base, modo, filtro);
   const fatias = giro?.fatias.length ? giro.fatias : locais;
 
   const rot = useMotionValue(0);
@@ -188,7 +191,7 @@ export function Roleta({
                   </Button>
                 </>
               ) : (
-                <p className="max-w-xs text-ink2">{motivoVazio(candidatos.length)}</p>
+                <p className="max-w-xs text-ink2">{motivoVazio(base.length, soProcedimentos)}</p>
               )}
             </div>
           ) : (
@@ -275,7 +278,7 @@ export function Roleta({
                 onClick={() =>
                   iniciarEstudo(async () => {
                     try {
-                      router.push(await comecarEstudo(sorteado.topicoId, estudo));
+                      router.push(await comecarEstudo(sorteado.topicoId, estudo, soProcedimentos));
                     } catch {
                       setErro("Não foi possível começar agora. Tente de novo.");
                     }
@@ -340,6 +343,42 @@ export function Roleta({
                 {modo === "inteligente"
                   ? "Pontos fracos, tópicos nunca estudados e os de prova nos próximos 14 dias ganham fatias maiores."
                   : "Todos os tópicos com a mesma chance."}
+              </p>
+            </div>
+
+            <div>
+              <p className={ROTULO} id="praticar-rotulo">
+                Praticar
+              </p>
+              <div role="group" aria-labelledby="praticar-rotulo" className="mt-2 grid grid-cols-2 gap-1 rounded-[14px] bg-sf2 p-1">
+                {(
+                  [
+                    [false, "Questões"],
+                    [true, "Procedimentos"],
+                  ] as const
+                ).map(([so, rotulo]) => (
+                  <button
+                    key={rotulo}
+                    type="button"
+                    aria-pressed={soProcedimentos === so}
+                    disabled={girando}
+                    onClick={() => {
+                      setSoProcedimentos(so);
+                      setErro(null);
+                    }}
+                    className={cn(
+                      "h-11 rounded-[10px] font-bold text-ink2 outline-none focus-visible:ring-[3px] focus-visible:ring-ring",
+                      soProcedimentos === so && "bg-sf text-ink shadow-sm",
+                    )}
+                  >
+                    {rotulo}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-2 text-[13px] text-ink3">
+                {soProcedimentos
+                  ? "Só tópicos com procedimento; a rodada traz até 3 procedimentos e nenhuma questão."
+                  : "Questões do tópico, com no máximo 1 procedimento por rodada."}
               </p>
             </div>
 

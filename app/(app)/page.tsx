@@ -7,11 +7,13 @@ import { BarraDominio } from "@/components/barra-dominio";
 import { ContinuarRodada } from "@/components/continuar-rodada";
 import { MapaCalor } from "@/components/mapa-calor";
 import { MarcaGiro } from "@/components/marca";
+import { PontoNovidade } from "@/components/navegacao/itens";
 import { Moldura } from "@/components/recompensas/visuais";
 import { Roda } from "@/components/roleta/roda";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { TEXTO_SOBRE_TINTA, tintaClara } from "@/lib/cores";
+import { medalhasDaConta } from "@/lib/db/conquistas";
 import { listarErros } from "@/lib/db/erros";
 import { contarDisciplinasAtivas, pontosFracos, resumoSessoes, respostasPorHora } from "@/lib/db/inicio";
 import { getPerfil } from "@/lib/db/perfil";
@@ -23,7 +25,7 @@ import { primeiroPasso, saudacao, TEXTO_PRIMEIRO_PASSO } from "@/lib/domain/inic
 import { contagemRegressiva, diasAte, hojeEmSP, topicosComProvaEm14Dias } from "@/lib/domain/provas";
 import { nivel } from "@/lib/domain/nivel";
 import { candidatoDe, montarFatias } from "@/lib/domain/roleta";
-import { molduraDe } from "@/lib/domain/visuais";
+import { molduraDe, temNovidade } from "@/lib/domain/visuais";
 import { agregarPorDia, mapaDeCalor, rodadasHoje, streak, xpTotal } from "@/lib/domain/stats";
 import { META_PADRAO } from "@/lib/perfil/schema";
 import { RevisarAgora } from "./revisao/revisar-agora";
@@ -65,7 +67,7 @@ async function Conteudo() {
   await connection();
   const agora = new Date();
   const hoje = hojeEmSP(agora);
-  const [perfil, sessoes, horas, aberta, revisao, erros, prova, fracos, linhasRoleta, provas, disciplinasAtivas] =
+  const [perfil, sessoes, horas, aberta, revisao, erros, prova, fracos, linhasRoleta, provas, disciplinasAtivas, medalhas] =
     await Promise.all([
       getPerfil(conta),
       resumoSessoes(conta),
@@ -78,12 +80,14 @@ async function Conteudo() {
       listarTopicosRoleta(conta),
       provasDesde(conta, hoje),
       contarDisciplinasAtivas(conta),
+      medalhasDaConta(conta),
     ]);
 
   const porDia = agregarPorDia(horas);
   const sequencia = streak(porDia.keys(), hoje);
   const xp = xpTotal(sessoes);
   const niv = nivel(xp);
+  const novidade = temNovidade(xp, new Set(medalhas.map((m) => m.medalha)), perfil?.recompensasVistas ?? 0);
   const feitas = rodadasHoje(sessoes, hoje);
   const meta = perfil?.metaRodadas ?? META_PADRAO;
   const comProva = topicosComProvaEm14Dias(provas, hoje);
@@ -125,7 +129,10 @@ async function Conteudo() {
           <li>
             <Badge asChild variant="chip" className="relative hover:bg-sf2 after:absolute after:inset-x-0 after:-inset-y-1 after:content-['']" data-nivel={niv.nivel}>
               <Link href="/recompensas">
-                <Trophy className="text-gold" aria-hidden />
+                <span className="relative">
+                  <Trophy className="size-4 text-gold" aria-hidden />
+                  {novidade && <PontoNovidade />}
+                </span>
                 <span>
                   Nível <span className="tabular-nums">{niv.nivel}</span> · {niv.titulo}
                   <span className="sr-only">

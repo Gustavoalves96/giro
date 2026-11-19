@@ -17,6 +17,7 @@ export type Candidato = FatoresPeso & {
   cor: string;
   notebooklmUrl: string | null;
   novo: boolean; // sem nenhuma resposta: domínio exibido como "novo"
+  procedimentos: boolean; // tem procedimento ativo (opção "Praticar: Procedimentos")
 };
 
 export type Fatia = Candidato & { peso: number };
@@ -43,7 +44,11 @@ export function motivoPeso(f: FatoresPeso) {
 
 export const MOTIVO_SORTE = "Sorte pura: todos os tópicos tinham a mesma chance.";
 
-export function motivoVazio(totalCandidatos: number) {
+export function motivoVazio(totalCandidatos: number, soProcedimentos = false) {
+  if (soProcedimentos)
+    return totalCandidatos === 0
+      ? "Nenhum tópico tem procedimento ativo ainda. Cadastre procedimentos no tópico para praticar só eles."
+      : "Nenhuma disciplina ligada tem tópicos com procedimentos. Ligue pelo menos uma.";
   return totalCandidatos === 0
     ? "Nenhum tópico tem questão ativa ainda. Crie questões para a roleta ganhar fatias."
     : "Nenhuma disciplina ligada tem tópicos com questões. Ligue pelo menos uma.";
@@ -66,16 +71,16 @@ export function candidatoDe(
   };
 }
 
-/** Filtra por disciplinas ligadas (e tópicos marcados, se houver) e dá o peso do modo. */
+/** Filtra por disciplinas ligadas (e tópicos marcados, se houver; só com procedimento, se pedido) e dá o peso do modo. */
 export function montarFatias(
   candidatos: Candidato[],
   modo: Modo,
-  filtro: { disciplinaIds: string[]; topicoIds?: string[] },
+  filtro: { disciplinaIds: string[]; topicoIds?: string[]; soProcedimentos?: boolean },
 ): Fatia[] {
   const disc = new Set(filtro.disciplinaIds);
   const tops = filtro.topicoIds?.length ? new Set(filtro.topicoIds) : null;
   return candidatos
-    .filter((c) => disc.has(c.disciplinaId) && (!tops || tops.has(c.topicoId)))
+    .filter((c) => disc.has(c.disciplinaId) && (!tops || tops.has(c.topicoId)) && (!filtro.soProcedimentos || c.procedimentos))
     .map((c) => ({ ...c, peso: modo === "sorte" ? 1 : pesoTopico(c) }));
 }
 

@@ -36,3 +36,11 @@ export async function salvarVisualPerfil(dono: string, visual: { estiloRoleta: s
     .values({ dono, ...visual })
     .onConflictDoUpdate({ target: perfil.dono, set: { ...visual, atualizadoEm: new Date() } });
 }
+
+/** Quantos desbloqueios ela já viu em /recompensas (contarDesbloqueios); some a bolinha da navegação. */
+export async function salvarRecompensasVistas(dono: string, recompensasVistas: number) {
+  await db
+    .insert(perfil)
+    .values({ dono, recompensasVistas })
+    .onConflictDoUpdate({ target: perfil.dono, set: { recompensasVistas, atualizadoEm: new Date() } });
+}

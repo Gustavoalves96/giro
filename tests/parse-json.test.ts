@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { extrairJson, lerResposta, normalizarEnunciado, repararJson } from "@/lib/import/parse-json";
-import { montarPrompt } from "@/lib/prompts/notebooklm";
+import { MAX_EXISTENTES, montarPrompt } from "@/lib/prompts/notebooklm";
 
 const alternativas = ["A", "B", "C", "D", "E"].map((letra) => ({ letra, texto: `Opção ${letra}` }));
 const me = (enunciado: string, extra: Record<string, unknown> = {}) => ({
@@ -116,5 +116,16 @@ describe("montarPrompt", () => {
     const p = montarPrompt({ quantidade: 10, topico: "Insuficiência cardíaca", disciplina: "Cardiologia" });
     expect(p).toContain('crie 10 questões sobre o tópico\n"Insuficiência cardíaca" da disciplina "Cardiologia"');
     expect(p).not.toContain("{{");
+    expect(p).not.toContain("JÁ EXISTEM");
+  });
+  it("lista as questões que já existem (as mais recentes, cortadas)", () => {
+    const existentes = Array.from({ length: MAX_EXISTENTES + 5 }, (_, i) => `Questão número ${i} sobre $& o tema`);
+    existentes.push("x".repeat(300));
+    const p = montarPrompt({ quantidade: 5, topico: "IC", disciplina: "Cardio", existentes });
+    expect(p).toContain("JÁ EXISTEM");
+    expect(p).not.toContain("Questão número 5 sobre");
+    expect(p).toContain("- Questão número 64 sobre $& o tema");
+    expect(p).toContain(`- ${"x".repeat(119)}…\n\nResponda`);
+    expect(p.match(/^- (Questão número|x)/gm)).toHaveLength(MAX_EXISTENTES);
   });
 });

@@ -4,7 +4,12 @@ import { Suspense } from "react";
 import type { QuestaoExibida } from "@/components/quiz/Questao";
 import { iaDisponivel } from "@/lib/ai/provider";
 import { listarCandidatasSessao, respostasDaSessao } from "@/lib/db/sessoes";
-import { MAX_PROCEDIMENTOS_POR_RODADA, opcoesDaQuestao, selecionarRodada } from "@/lib/domain/selecao-questoes";
+import {
+  MAX_PROCEDIMENTOS_POR_RODADA,
+  opcoesDaQuestao,
+  PROCEDIMENTOS_POR_RODADA_SO,
+  selecionarRodada,
+} from "@/lib/domain/selecao-questoes";
 import { carregarSessao, rota } from "../carregar";
 import { QuestoesSessao } from "./questoes";
 import { dono } from "@/lib/auth/require-user";
@@ -26,12 +31,15 @@ async function Conteudo({ params }: Props) {
     s.topicoId ? listarCandidatasSessao(conta, s.topicoId, s.id) : [],
   ]);
   const procsFeitos = feitas.filter((f) => f.tipo === "procedimento").length;
+  // "Praticar: Procedimentos": só procedimentos, até PROCEDIMENTOS_POR_RODADA_SO
+  const so = s.soProcedimentos;
+  const total = so ? PROCEDIMENTOS_POR_RODADA_SO : POR_SESSAO;
   // procedimento vai só com o nome (opcoes vazias); o checklist sai na hora de conferir
   const questoes: QuestaoExibida[] = selecionarRodada(
-    candidatas,
-    Math.max(0, POR_SESSAO - feitas.length),
+    so ? candidatas.filter((c) => c.tipo === "procedimento") : candidatas,
+    Math.max(0, total - feitas.length),
     new Date(),
-    MAX_PROCEDIMENTOS_POR_RODADA - procsFeitos,
+    so ? total : MAX_PROCEDIMENTOS_POR_RODADA - procsFeitos,
   ).map((q) => ({
     id: q.id,
     tipo: q.tipo,
@@ -47,7 +55,11 @@ async function Conteudo({ params }: Props) {
       feitas={feitas.map(({ acertou, tempoMs, fracao }) => ({ acertou, tempoMs, fracao }))}
       questoes={questoes}
       resultado={rota(s.id, "resultado")}
-      vazio="Este tópico ficou sem questões ativas. A rodada fecha só com o estudo."
+      vazio={
+        so
+          ? "Este tópico ficou sem procedimentos ativos. A rodada fecha só com o estudo."
+          : "Este tópico ficou sem questões ativas. A rodada fecha só com o estudo."
+      }
       ia={iaDisponivel()}
     />
   );

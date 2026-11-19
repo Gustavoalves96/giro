@@ -10,8 +10,8 @@ import { disciplinas, questoes, respostas, revisoes, type Sessao, sessoes, topic
 // Sessões de todos os modos: roleta (estudo → questões → resultado), revisão, erros e simulado.
 
 // Quem chama já conferiu que o tópico é da conta (sorteio sobre listarTopicosRoleta).
-export async function criarSessaoRoleta(dono: string, topicoId: string) {
-  const [s] = await db.insert(sessoes).values({ dono, modo: "roleta", topicoId }).returning({ id: sessoes.id });
+export async function criarSessaoRoleta(dono: string, topicoId: string, soProcedimentos = false) {
+  const [s] = await db.insert(sessoes).values({ dono, modo: "roleta", topicoId, soProcedimentos }).returning({ id: sessoes.id });
   return s.id;
 }
 
@@ -33,6 +33,7 @@ export async function getSessao(dono: string, id: string) {
       acertos: sessoes.acertos,
       pontuacao: sessoes.pontuacao,
       maiorSequencia: sessoes.maiorSequencia,
+      soProcedimentos: sessoes.soProcedimentos,
       topicoId: topicos.id,
       topico: topicos.nome,
       descricao: topicos.descricao,

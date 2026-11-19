@@ -11,10 +11,11 @@ import { getPerfil } from "@/lib/db/perfil";
 import { MEDALHAS } from "@/lib/domain/conquistas";
 import { nivel, TITULOS, xpParaNivel } from "@/lib/domain/nivel";
 import { xpTotal } from "@/lib/domain/stats";
-import { ESTILOS_ROLETA, estiloRoletaDe, liberado, MOLDURAS, molduraDe, textoLibera, type TipoVisual } from "@/lib/domain/visuais";
+import { ESTILOS_ROLETA, estiloRoletaDe, liberado, MOLDURAS, molduraDe, temNovidade, textoLibera, type TipoVisual } from "@/lib/domain/visuais";
 import { cn } from "@/lib/utils";
 import { escolherVisual } from "./actions";
 import { BotaoUsar } from "./botao-usar";
+import { MarcarVistas } from "./marcar-vistas";
 
 export const metadata: Metadata = { title: "Recompensas · Giro" };
 
@@ -48,6 +49,7 @@ async function Conteudo() {
 
   return (
     <div className="grid gap-4 md:gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start">
+      {temNovidade(xp, medalhasGanhas, perfil?.recompensasVistas ?? 0) && <MarcarVistas />}
       <section aria-labelledby="nivel-titulo" className={CARD} data-nivel={n.nivel} data-xp={xp}>
         <h2 id="nivel-titulo" className={ROTULO}>
           Seu nível

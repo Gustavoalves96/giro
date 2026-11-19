@@ -10,7 +10,8 @@ Regras:
 - Explicação de 2 a 4 frases dizendo por que a correta está certa e por que as outras não.
 - Em "fonte", indique de qual material/slide/página veio a informação.
 - Varie a dificuldade (fácil, média, difícil).
-- Não invente nada que não esteja nas fontes.
+- Não repita: cada questão cobre um ponto diferente do material; nada de reformular outra questão.
+- Não invente nada que não esteja nas fontes.{{existentes}}
 
 Responda SOMENTE com JSON válido, sem texto antes ou depois, neste formato:
 {"questoes":[{"tipo":"multipla_escolha","enunciado":"...","alternativas":[{"letra":"A","texto":"..."}],
@@ -31,16 +32,46 @@ Regras:
 - Em "material", liste o que é preciso separar antes (lista vazia se não houver).
 - Em "pontosDeAtencao", 2 a 4 frases com indicação, cuidados e erros comuns.
 - Em "fonte", indique de qual material/slide/página veio o roteiro.
-- Não invente nem complete passos que não estejam nas fontes.
+- Não repita procedimentos: cada um aparece uma vez só.
+- Não invente nem complete passos que não estejam nas fontes.{{existentes}}
 
 Responda SOMENTE com JSON válido, sem texto antes ou depois, neste formato:
 {"procedimentos":[{"nome":"...","material":["..."],"passos":[{"texto":"...","critico":true},
 {"texto":"...","critico":false}],"pontosDeAtencao":"...","fonte":"..."}]}`;
 
-type Dados = { quantidade: number; topico: string; disciplina: string };
+/** existentes = enunciados (ou nomes de procedimento) já no tópico, do mais antigo ao mais recente */
+type Dados = { quantidade: number; topico: string; disciplina: string; existentes?: string[] };
 
-const preencher = (modelo: string, { quantidade, topico, disciplina }: Dados) =>
-  modelo.replace("{{quantidade}}", String(quantidade)).replace("{{topico}}", topico).replace("{{disciplina}}", disciplina);
+// shortcut: só os 60 mais recentes, cortados em 120 caracteres, para o prompt caber na caixa do NotebookLM;
+// aumentar se ainda vier repetida em tópico grande.
+export const MAX_EXISTENTES = 60;
+const MAX_CARACTERES = 120;
 
-export const montarPrompt = (dados: Dados) => preencher(PROMPT_NOTEBOOKLM, dados);
-export const montarPromptProcedimentos = (dados: Dados) => preencher(PROMPT_PROCEDIMENTOS, dados);
+function listaExistentes(existentes: string[], cabecalho: string) {
+  if (!existentes.length) return "";
+  const linhas = existentes.slice(-MAX_EXISTENTES).map((e) => {
+    const t = e.replace(/\s+/g, " ").trim();
+    return `- ${t.length > MAX_CARACTERES ? `${t.slice(0, MAX_CARACTERES - 1)}…` : t}`;
+  });
+  return `\n\n${cabecalho}\n${linhas.join("\n")}`;
+}
+
+const preencher = (modelo: string, { quantidade, topico, disciplina }: Dados, existentes: string) =>
+  modelo
+    .replace("{{quantidade}}", String(quantidade))
+    .replace("{{topico}}", topico)
+    .replace("{{disciplina}}", disciplina)
+    .replace("{{existentes}}", () => existentes); // função: "$" no texto dela não vira padrão de replace
+
+export const montarPrompt = (dados: Dados) =>
+  preencher(
+    PROMPT_NOTEBOOKLM,
+    dados,
+    listaExistentes(dados.existentes ?? [], "Estas questões JÁ EXISTEM no tópico. NÃO crie questões iguais, parecidas ou reformuladas sobre o mesmo ponto:"),
+  );
+export const montarPromptProcedimentos = (dados: Dados) =>
+  preencher(
+    PROMPT_PROCEDIMENTOS,
+    dados,
+    listaExistentes(dados.existentes ?? [], "Estes procedimentos JÁ EXISTEM no tópico. NÃO repita nenhum deles:"),
+  );

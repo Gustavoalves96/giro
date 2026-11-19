@@ -93,6 +93,7 @@ sessoes
   total_questoes int, acertos int, pontuacao int, maior_sequencia int,
   questao_ids uuid[] null, limite_segundos int null  -- só simulado (sessão 17): questões sorteadas
                                                      -- na ordem da prova (sem FK) e o tempo total
+  so_procedimentos bool default false                -- só roleta (19/11/2026): rodada "Praticar: Procedimentos"
 
 provas
   id uuid pk, disciplina_id fk, titulo text, data date, topico_ids uuid[]
@@ -111,6 +112,7 @@ perfil                                  -- uma linha por conta, editável em /pe
   estudo_segundos int default 600,      -- tempo de estudo padrão da roleta (5 a 60 min)
   meta_rodadas int default 4,           -- "Rodada de hoje · x de N" do Início (1 a 20; sessão 14)
   estilo_roleta text null, moldura text null,  -- visuais de /recompensas (sessão 20); null = padrão
+  recompensas_vistas int default 0,     -- desbloqueios já vistos em /recompensas (bolinha; 19/11/2026)
   atualizado_em timestamptz
 ```
 
@@ -135,6 +137,7 @@ Dois modos:
 - **Sorte pura:** todos os pesos iguais.
 
 Antes de girar, ela pode filtrar por disciplinas e, abrindo a disciplina, escolher os tópicos (`components/seletor-topicos.tsx`, o mesmo do simulado; 17/11/2026).
+**Praticar** (19/11/2026): "Questões" (padrão, com até 1 procedimento por rodada) ou "Procedimentos": só tópicos com procedimento ativo (`Candidato.procedimentos`, `montarFatias` com `soProcedimentos`) e a rodada traz só procedimentos, até `PROCEDIMENTOS_POR_RODADA_SO` (3). Gravado em `sessoes.so_procedimentos`; "Continuar rodada" segue igual.
 Só entram tópicos com pelo menos 1 questão ativa. Se a lista ficar vazia, mostrar o motivo.
 **O sorteio é feito no servidor** (Server Action). O cliente recebe o resultado e só anima a roleta até parar na fatia correta.
 
@@ -176,6 +179,7 @@ Como a usuária é uma só, o ranking é **contra ela mesma**:
 - Sequência de dias estudando (streak) e total de XP (soma das pontuações)
 - Mapa de calor de atividade (estilo contribuições do GitHub)
 - **Nível** (sessão 20, `lib/domain/nivel.ts`): sai do XP total, sem tabela. Do nível n ao n+1 são `80 × n` XP (total `40·n·(n−1)`); títulos por faixa em `TITULOS` (Ciclo básico 1 … Referência 40, Dr/a. Aura 42). Chip no Início (leva a `/recompensas`), `CardNivel` em todo resultado (antes = `xpAte(fim da sessão)` − pontos dela; selo "Subiu para o nível N!") e a página **Recompensas** (`/recompensas`, no menu só a partir de `md`).
+- **Bolinha de novidade** (19/11/2026): `contarDesbloqueios` (`lib/domain/visuais.ts`: medalhas + títulos acima do 1º + visuais não livres; só cresce) maior que `perfil.recompensas_vistas` = bolinha Brasa (`PontoNovidade`) no ícone Recompensas da navegação (layout, `desbloqueiosDaConta`) e no chip de nível do Início. Abrir `/recompensas` chama `marcarRecompensasVistas` (conta no servidor). O layout não re-renderiza na navegação pelo cliente: `finalizar`, `entregarSimulado` e a marcação fazem `revalidatePath("/", "layout")`.
 - **Medalhas** (sessão 20, `MEDALHAS` em `lib/domain/conquistas.ts`; o `id` vai ao banco, nunca renomear): primeiro giro, ofensiva 3/7/30/100 dias (maior sequência de sempre), 1.000/5.000/20.000 XP, 100/500/1.000 respostas, rodada perfeita (roleta 5+), nota 10 (simulado 10+), procedimento 100%, domínio 100 (10+ respostas), revisão em dia, caderno limpo. `verificarConquistas` (`lib/db/conquistas.ts`) roda no fim de `fecharERecalcular` (todo modo; falha só vai ao log) e grava as novas em `conquistas` com a `sessao_id`, que o resultado comemora (`RecompensasDaSessao`). Retroativas (conta sem medalha que já tinha outra sessão, ou vindas de `/recompensas`) entram com `sessao_id` null, sem comemoração.
 - **Visuais** (sessão 20, `ESTILOS_ROLETA`/`MOLDURAS` em `lib/domain/visuais.ts`; o `id` vai ao perfil, nunca renomear; o 1º de cada lista é o padrão, livre): cada um libera por nível ou medalha (`liberado`). Estilo da roleta = ponteiro e botão central (`VISUAL_ROLETA` em `components/recompensas/visuais.tsx`; fatias e aro seguem a cor da disciplina); moldura = ícone ao lado da saudação do Início. Escolha em `/recompensas` (`escolherVisual`, que confere de novo no servidor se está liberado); id salvo desconhecido cai no padrão (`estiloRoletaDe`/`molduraDe`). Dourado sobre fundo escuro fixo (`TEXTO_SOBRE_TINTA`) nos dois temas.
 
@@ -191,8 +195,8 @@ Esta é a forma **principal** de criar questões.
 2. O app copia para a área de transferência o prompt abaixo, já preenchido com disciplina e tópico.
 3. Ela cola no caderno da disciplina no NotebookLM, que gera as questões com base nos arquivos dela.
 4. Ela copia a resposta e cola num `<textarea>` do app → **"Importar"**.
-5. O app extrai o JSON (aceitar resposta envolta em blocos ```json e texto antes/depois), valida com Zod (se o `JSON.parse` falhar, `repararJson` em `lib/import/parse-json.ts` conserta a cópia em markdown do NotebookLM: `\_`, `\.`, `\\n` e aspas sem escape dentro do texto; visto com resposta real em 14/11/2026) e mostra uma **pré-visualização** com as questões válidas e as inválidas (com o motivo). Ela confirma → salva com `origem = 'notebooklm'`.
-6. Evitar duplicatas: ignorar questão cujo enunciado normalizado (minúsculo, sem acento, sem espaços extras) já exista no tópico.
+5. "Ler resposta" rola sozinho até a prévia (e até o resultado ao importar). O app extrai o JSON (aceitar resposta envolta em blocos ```json e texto antes/depois), valida com Zod (se o `JSON.parse` falhar, `repararJson` em `lib/import/parse-json.ts` conserta a cópia em markdown do NotebookLM: `\_`, `\.`, `\\n` e aspas sem escape dentro do texto; visto com resposta real em 14/11/2026) e mostra uma **pré-visualização** com as questões válidas e as inválidas (com o motivo). Ela confirma → salva com `origem = 'notebooklm'`.
+6. Evitar duplicatas: o prompt lista as questões que já existem no tópico (as 60 mais recentes, cortadas em 120 caracteres; `MAX_EXISTENTES`) e pede para não repetir nem reformular (19/11/2026). Na importação, ignorar questão cujo enunciado normalizado (minúsculo, sem acento, sem espaços extras) já exista no tópico.
 
 ### Schema de importação (Zod)
 ```ts
@@ -222,7 +226,9 @@ Regras:
 - Explicação de 2 a 4 frases dizendo por que a correta está certa e por que as outras não.
 - Em "fonte", indique de qual material/slide/página veio a informação.
 - Varie a dificuldade (fácil, média, difícil).
+- Não repita: cada questão cobre um ponto diferente do material; nada de reformular outra questão.
 - Não invente nada que não esteja nas fontes.
+[se o tópico já tem questões: "Estas questões JÁ EXISTEM no tópico. NÃO crie…" + lista]
 
 Responda SOMENTE com JSON válido, sem texto antes ou depois, neste formato:
 {"questoes":[{"tipo":"multipla_escolha","enunciado":"...","alternativas":[{"letra":"A","texto":"..."}],

@@ -1,9 +1,12 @@
 import { and, asc, eq, sql } from "drizzle-orm";
 import { eRetroativa, type Fatos, feitosDeSessoes, medalhasGanhas } from "@/lib/domain/conquistas";
 import { agregarPorDia, maiorSequencia, xpTotal } from "@/lib/domain/stats";
+import { nivel } from "@/lib/domain/nivel";
+import { contarDesbloqueios } from "@/lib/domain/visuais";
 import { listarErros } from "./erros";
 import { db } from "./index";
-import { respostasPorHora } from "./inicio";
+import { respostasPorHora, resumoSessoes } from "./inicio";
+import { getPerfil } from "./perfil";
 import { resumoRevisao } from "./revisao";
 import { conquistas, sessoes } from "./schema";
 
@@ -79,4 +82,11 @@ export async function medalhasDaSessao(dono: string, sessaoId: string) {
     .from(conquistas)
     .where(and(eq(conquistas.dono, dono), eq(conquistas.sessaoId, sessaoId)));
   return r.map((x) => x.medalha);
+}
+
+/** Desbloqueios atuais e quantos ela já viu em /recompensas (bolinha na navegação e no chip do Início). */
+export async function desbloqueiosDaConta(dono: string) {
+  const [ss, gravadas, p] = await Promise.all([resumoSessoes(dono), medalhasDaConta(dono), getPerfil(dono)]);
+  const atuais = contarDesbloqueios(nivel(xpTotal(ss)).nivel, new Set(gravadas.map((g) => g.medalha)));
+  return { atuais, vistas: p?.recompensasVistas ?? 0 };
 }

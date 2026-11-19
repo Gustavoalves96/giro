@@ -104,7 +104,7 @@ describe("montarFatias / candidatoDe", () => {
   const agora = new Date("2026-11-13T12:00:00Z");
   const linha = (topicoId: string, disciplinaId: string, ultima: Date | null, dominio = 0) =>
     candidatoDe(
-      { topicoId, nome: topicoId, disciplinaId, disciplina: disciplinaId, cor: "#000000", notebooklmUrl: null, novo: true, dominio, ultimaVezEstudado: ultima },
+      { topicoId, nome: topicoId, disciplinaId, disciplina: disciplinaId, cor: "#000000", notebooklmUrl: null, novo: true, procedimentos: topicoId !== "t2", dominio, ultimaVezEstudado: ultima },
       agora,
     );
   const cands: Candidato[] = [
@@ -126,8 +126,12 @@ describe("montarFatias / candidatoDe", () => {
     expect(montarFatias(cands, "sorte", { disciplinaIds: ["d1", "d2"], topicoIds: ["t3"] }).map((f) => f.topicoId)).toEqual(["t3"]);
     expect(montarFatias(cands, "inteligente", { disciplinaIds: [] })).toEqual([]);
   });
+  it("só procedimentos: fica fora o tópico sem procedimento ativo", () => {
+    expect(montarFatias(cands, "sorte", { disciplinaIds: ["d1", "d2"], soProcedimentos: true }).map((f) => f.topicoId)).toEqual(["t1", "t3"]);
+    expect(montarFatias(cands, "sorte", { disciplinaIds: ["d1", "d2"], soProcedimentos: false })).toHaveLength(3);
+  });
   it("tópico com prova em 14 dias dobra o peso", () => {
-    const l = { topicoId: "t1", nome: "t1", disciplinaId: "d1", disciplina: "d1", cor: "#000000", notebooklmUrl: null, novo: true, dominio: 0, ultimaVezEstudado: null };
+    const l = { topicoId: "t1", nome: "t1", disciplinaId: "d1", disciplina: "d1", cor: "#000000", notebooklmUrl: null, novo: true, procedimentos: false, dominio: 0, ultimaVezEstudado: null };
     const com = candidatoDe(l, agora, new Set(["t1"]));
     expect(com.temProvaEm14Dias).toBe(true);
     expect(montarFatias([com], "inteligente", { disciplinaIds: ["d1"] })[0].peso).toBe(15);

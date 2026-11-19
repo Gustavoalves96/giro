@@ -36,7 +36,17 @@ const ATIVO = "bg-ac/12 text-acink hover:text-acink";
 
 type Item = { href: string; rotulo: string; Icone: typeof House; soTelaGrande?: boolean };
 
-function LinkNav({ item, pathname, className }: { item: Item; pathname: string | null; className?: string }) {
+/** Bolinha de novidade (Brasa) no canto de um ícone; o pai precisa ser `relative`. */
+export function PontoNovidade({ className }: { className?: string }) {
+  return (
+    <>
+      <span className={cn("absolute -top-0.5 -right-0.5 size-2.5 rounded-full bg-ac ring-2 ring-sf", className)} aria-hidden data-novidade />
+      <span className="sr-only">, novidade</span>
+    </>
+  );
+}
+
+function LinkNav({ item, pathname, className, novidade }: { item: Item; pathname: string | null; className?: string; novidade?: boolean }) {
   const ativo = estaAtivo(item.href, pathname);
   return (
     <Link
@@ -44,19 +54,25 @@ function LinkNav({ item, pathname, className }: { item: Item; pathname: string |
       aria-current={ativo ? "page" : undefined}
       className={cn(ITEM, ativo && ATIVO, item.soTelaGrande && "max-md:hidden", className)}
     >
-      <item.Icone className="size-6 shrink-0" aria-hidden />
+      <span className="relative shrink-0">
+        <item.Icone className="size-6" aria-hidden />
+        {novidade && <PontoNovidade />}
+      </span>
       <span>{item.rotulo}</span>
     </Link>
   );
 }
 
-/** Lista dos 7 destinos. `pathname` null = sem destaque (fallback do Suspense). */
-export function ListaDestinos({ pathname }: { pathname: string | null }) {
-  return DESTINOS.map((d) => <LinkNav key={d.href} item={d} pathname={pathname} />);
+/**
+ * Lista dos 7 destinos. `pathname` null = sem destaque (fallback do Suspense).
+ * `novidade` = desbloqueio que ela ainda não viu: bolinha em Recompensas.
+ */
+export function ListaDestinos({ pathname, novidade = false }: { pathname: string | null; novidade?: boolean }) {
+  return DESTINOS.map((d) => <LinkNav key={d.href} item={d} pathname={pathname} novidade={novidade && d.href === "/recompensas"} />);
 }
 
-export function ListaDestinosAtiva() {
-  return <ListaDestinos pathname={usePathname()} />;
+export function ListaDestinosAtiva({ novidade }: { novidade?: boolean }) {
+  return <ListaDestinos pathname={usePathname()} novidade={novidade} />;
 }
 
 /** Meu perfil no rodapé do trilho / barra lateral (md+). */

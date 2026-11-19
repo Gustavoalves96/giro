@@ -3,9 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { dono } from "@/lib/auth/require-user";
-import { medalhasDaConta } from "@/lib/db/conquistas";
+import { desbloqueiosDaConta, medalhasDaConta } from "@/lib/db/conquistas";
 import { resumoSessoes } from "@/lib/db/inicio";
-import { salvarVisualPerfil } from "@/lib/db/perfil";
+import { salvarRecompensasVistas, salvarVisualPerfil } from "@/lib/db/perfil";
 import { nivel } from "@/lib/domain/nivel";
 import { xpTotal } from "@/lib/domain/stats";
 import { liberado, visuaisDo } from "@/lib/domain/visuais";
@@ -23,5 +23,14 @@ export async function escolherVisual(form: FormData) {
     throw new Error("Este visual ainda está bloqueado.");
   }
   await salvarVisualPerfil(conta, tipo === "roleta" ? { estiloRoleta: id } : { moldura: id });
+  revalidatePath("/", "layout");
+}
+
+/** Ela abriu /recompensas: tudo o que está desbloqueado conta como visto e a bolinha some. Conta no servidor. */
+export async function marcarRecompensasVistas() {
+  const conta = await dono();
+  const { atuais, vistas } = await desbloqueiosDaConta(conta);
+  if (atuais <= vistas) return;
+  await salvarRecompensasVistas(conta, atuais);
   revalidatePath("/", "layout");
 }

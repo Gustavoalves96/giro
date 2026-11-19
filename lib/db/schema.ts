@@ -107,6 +107,8 @@ export const sessoes = pgTable(
     // só simulado (sessão 17): as questões sorteadas, na ordem da prova (sem FK, como provas.topico_ids), e o tempo total
     questaoIds: uuid("questao_ids").array(),
     limiteSegundos: integer("limite_segundos"),
+    // só roleta (19/11/2026): rodada só com procedimentos (opção "Praticar: Procedimentos")
+    soProcedimentos: boolean("so_procedimentos").notNull().default(false),
   },
   (t) => [index("sessoes_dono_iniciada_em_idx").on(t.dono, t.iniciadaEm)],
 );
@@ -193,6 +195,8 @@ export const perfil = pgTable("perfil", {
   // visuais escolhidos em /recompensas (sessão 20): id em ESTILOS_ROLETA / MOLDURAS; null = padrão
   estiloRoleta: text("estilo_roleta"),
   moldura: text("moldura"),
+  // nº de desbloqueios (contarDesbloqueios) que ela já viu em /recompensas; menor que o atual = bolinha na navegação
+  recompensasVistas: integer("recompensas_vistas").notNull().default(0),
   atualizadoEm: timestamp("atualizado_em", tz).notNull().defaultNow(),
 });
 

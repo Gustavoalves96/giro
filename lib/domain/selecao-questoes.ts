@@ -23,6 +23,8 @@ export function selecionarQuestoes<T extends Candidata>(candidatas: T[], n: numb
 }
 
 export const MAX_PROCEDIMENTOS_POR_RODADA = 1;
+/** Rodada "Praticar: Procedimentos": só procedimentos, até este número. */
+export const PROCEDIMENTOS_POR_RODADA_SO = 3;
 
 /**
  * Mesma prioridade de selecionarQuestoes, com no máximo `maxProcedimentos` procedimentos no lote
